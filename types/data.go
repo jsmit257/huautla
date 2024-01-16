@@ -5,34 +5,29 @@ import (
 )
 
 type (
+	UUID string
+
 	EventType struct {
-		ID string `json:"id,omitempty"`
+		UUID `json:"-"`
+	}
+
+	Lifecycle struct {
+		UUID `json:"-"`
+		Name string `json:"lifecycle_stage"`
 	}
 
 	Event struct {
-		ID    string `json:"id,omitempty"`
-		MTime time.Time
-		CTime time.Time
+		UUID        `json:"-"`
+		Temperature int8      `json:"temp"` // temp? sounds like temporary instead of temperature
+		MTime       time.Time `json:"modified_date"`
+		CTime       time.Time `json:"create_date"`
+		EventType   EventType `json:"-"`
+		Lifecycle   Lifecycle `json:"-"`
 	}
 
-	InnoculationEvent struct {
-		Event
-		Complete int8
-	}
+	Lifecycler interface{}
 
-	BinEvent struct {
-		Event
-	}
-
-	ColonizationEvent struct {
-		Event
-	}
-
-	HarvestEvent struct {
-		Event
-	}
-
-	SunsetEvent struct {
-		Event
+	DB interface {
+		Lifecycler
 	}
 )

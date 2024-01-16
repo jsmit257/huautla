@@ -1,5 +1,5 @@
 ## Huautla
-Named after the town in Jiménez that was the bridge between native traditions and what qualifies as a modern understanding of psychedelics. We're not endorsing nor recommending the use of psychedelics, and that's not the point of this project. Our name is just a nod to a very influential force in human evolution.
+Named after the town in Jiménez that was the bridge between native traditions and what qualifies as a modern understanding of psychedelics. We neither recommend nor encourag the use of psychedelics, and that's not the point of this project. Our name is just a nod to a very influential force in human evolution.
 
 ### Overview
 The goal of this project is to track analytics observing the lifecycle of fungi. We wanted it to be more multi-purpose - like for plants and animals and such - but that seems impractical. There are 3 major lifecycle events that we track with their own sets of details.
