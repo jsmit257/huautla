@@ -7,13 +7,56 @@ import (
 type (
 	UUID string
 
-	EventType struct {
+	Vendor struct {
 		UUID `json:"-"`
+		Name string `json:"name"`
+	}
+
+	Substrate struct {
+		UUID   `json:"-"`
+		Name   string `json:"name"`
+		Vendor `json:"vendor"`
+	}
+
+	Ingredient struct {
+		UUID      `json:"-"`
+		Name      string `json:"name"`
+		Substrate `json:"substrate"`
+	}
+
+	Strain struct {
+		UUID   `json:"-"`
+		Name   string `json:"name"`
+		Vendor `json:"vendor"`
+	}
+
+	StrainAttribute struct {
+		UUID   `json:"-"`
+		Name   string `json:"name"`
+		Value  string `json:"value"`
+		Strain `json:"strain"`
+	}
+
+	Stage struct {
+		UUID `json:"-"`
+		Name string `json:"name"`
+	}
+
+	EventType struct {
+		UUID  `json:"-"`
+		Name  string `json:"name"`
+		Stage `json:"stage"`
 	}
 
 	Lifecycle struct {
-		UUID `json:"-"`
-		Name string `json:"lifecycle_stage"`
+		UUID           `json:"-"`
+		GrainCost      int16     `json:"grain_cost"`
+		BulkCost       int16     `json:"bulk_cost"`
+		Yield          int16     `json:"Yield"`
+		Count          int16     `json:"count"`
+		Name           string    `json:"name"`
+		GrainSubstrate Substrate `json:"grain_substrate"`
+		BulkSubstrate  Substrate `json:"bulk_substrate"`
 	}
 
 	Event struct {
@@ -21,13 +64,25 @@ type (
 		Temperature int8      `json:"temp"` // temp? sounds like temporary instead of temperature
 		MTime       time.Time `json:"modified_date"`
 		CTime       time.Time `json:"create_date"`
-		EventType   EventType `json:"-"`
-		Lifecycle   Lifecycle `json:"-"`
+		Lifecycle   Lifecycle `json:"lifecycle"`
+		EventType   EventType `json:"event_type"`
 	}
 
-	Lifecycler interface{}
+	Eventer      interface{}
+	EventTyper   interface{}
+	Ingredienter interface{}
+	Lifecycler   interface{}
+	Stager       interface{}
+	Substrater   interface{}
+	Vendorer     interface{}
 
 	DB interface {
+		Eventer
+		EventTyper
+		Ingredienter
 		Lifecycler
+		Stager
+		Substrater
+		Vendorer
 	}
 )
