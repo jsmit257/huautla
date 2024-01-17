@@ -1,0 +1,7 @@
+---
+
+select-all-vendors: select uuid, name from vendor order by name
+select-vendor: select name from vendor where uuid = ?
+update-vendor: upadte vendor set name = ? where uuid = ?
+insert-vendor: insert into vendor (uuid, name) values (?, ?)
+delete-vendor: delete from vendor where uuid = ?

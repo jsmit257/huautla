@@ -8,7 +8,7 @@ create table vendors (
 create table substrates (
   uuid        varchar(40)  not null primary key,
   name        varchar(512) not null unique,
-  vendor_uuid varchar(40) not null references vendors(uuid)
+  vendor_uuid varchar(40)  not null references vendors(uuid)
 );
 
 create table grain_substrates () inherits (substrates);
@@ -32,7 +32,7 @@ create table strains (
   uuid        varchar(40)  not null primary key,
   name        varchar(512) not null unique,
   vendor_uuid varchar(40)  not null references vendors(uuid)
-  -- maybe unique should be vendor+strain, just because
+  -- maybe unique should be vendor+name, just because
 );
 
 create table strain_attributes (
@@ -58,7 +58,11 @@ create table lifecycle (
   grain_cost           decimal(8,2) not null,
   bulk_cost            decimal(8,2) not null,
   yield                decimal(4,2) not null default 0,
-  headcount            decimal(4,2) not null default 0,fl
+  headcount            decimal(4,2) not null default 0,
+  gross                decimal(5,2) not null default 0,
+  mtime                datetime     not null default `now`,
+  ctime                datetime     not null default `now`,
+  strain_uuid          varchar(40)  not null foreign key references strains(uuid),
   grain_substrate_uuid varchar(40)  not null foreign key references grain_substrates(uuid),
   bulk_substrate_uuid  varchar(40)  not null foreign key references bulk_substrates(uuid)
 );

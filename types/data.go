@@ -7,6 +7,8 @@ import (
 type (
 	UUID string
 
+	CID string
+
 	Vendor struct {
 		UUID `json:"-"`
 		Name string `json:"name"`
@@ -55,6 +57,10 @@ type (
 		Yield          int16     `json:"Yield"`
 		Count          int16     `json:"count"`
 		Name           string    `json:"name"`
+		Gross          int16     `json:"gross"`
+		MTime          time.Time `json:"modified_date"`
+		CTime          time.Time `json:"create_date"`
+		Strain         `json:"strain"`
 		GrainSubstrate Substrate `json:"grain_substrate"`
 		BulkSubstrate  Substrate `json:"bulk_substrate"`
 	}
