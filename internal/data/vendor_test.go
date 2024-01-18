@@ -17,12 +17,12 @@ import (
 	"github.com/jsmit257/huautla/types"
 )
 
-var sqls = readSQL("pgsql.yaml")
+var sqls = readSQL("pgsql.yaml")["vendor"]
 
 func Test_SelectAllVendors(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["select-all-vendors"],
+	querypat, l := sqls["select-all"],
 		log.WithField("test", "SelectVendor")
 
 	tcs := map[string]struct {
@@ -81,7 +81,7 @@ func Test_SelectAllVendors(t *testing.T) {
 func Test_SelectVendor(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["select-vendor"]
+	var querypat = sqls["select"]
 
 	l := log.WithField("test", "SelectVendor")
 
@@ -137,7 +137,7 @@ func Test_SelectVendor(t *testing.T) {
 func Test_InsertVendor(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["insert-vendor"]
+	var querypat = sqls["insert"]
 
 	l := log.WithField("test", "InsertVendor")
 
@@ -208,7 +208,7 @@ func Test_InsertVendor(t *testing.T) {
 func Test_UpdateVendor(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["update-vendor"]
+	var querypat = sqls["update"]
 
 	l := log.WithField("test", "UpdateVendor")
 
@@ -275,7 +275,7 @@ func Test_UpdateVendor(t *testing.T) {
 func Test_DeleteVendor(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["delete-vendor"]
+	var querypat = sqls["delete"]
 
 	l := log.WithField("test", "deleteVendor")
 

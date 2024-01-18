@@ -1,7 +1,15 @@
 ---
 
-select-all-vendors: select uuid, name from vendor order by name
-select-vendor: select name from vendor where uuid = ?
-update-vendor: upadte vendor set name = ? where uuid = ?
-insert-vendor: insert into vendor (uuid, name) values (?, ?)
-delete-vendor: delete from vendor where uuid = ?
+stage:
+  select-all: select uuid, name from stages order by name
+  select: select name from stages where uuid = ?
+  update: update stages set name = ? where uuid = ?
+  insert: insert into stages(uuid, name) values(?, ?)
+  delete: delete from stages where uuid = ?
+
+vendor:
+  select-all: select uuid, name from vendors order by name
+  select: select name from vendors where uuid = ?
+  update: update vendors set name = ? where uuid = ?
+  insert: insert into vendors(uuid, name) values(?, ?)
+  delete: delete from vendors where uuid = ?

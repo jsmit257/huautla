@@ -27,7 +27,7 @@ type (
 		query
 		generateUUID uuidgen
 		logger       *log.Entry
-		sql          map[string]string
+		sql          map[string]map[string]string
 	}
 
 	uuidgen func() uuid.UUID
@@ -58,10 +58,10 @@ func New(logger *log.Entry) (types.DB, error) {
 	return result, err
 }
 
-func readSQL(filename string) map[string]string {
+func readSQL(filename string) map[string]map[string]string {
 	var err error
 
-	result := make(map[string]string)
+	result := make(map[string]map[string]string)
 
 	// open the file,
 	// parse as yaml or panic

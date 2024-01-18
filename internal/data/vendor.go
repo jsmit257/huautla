@@ -18,11 +18,11 @@ func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Ve
 
 	result := make([]types.Vendor, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["select-all-vendors"])
+	rows, err = db.query.QueryContext(ctx, db.sql["vendor"]["select-all"])
 	if err != nil {
 		return nil, err
 	} else if rows == nil {
-		return nil, fmt.Errorf("no result returned from SelectAllVendor")
+		return nil, fmt.Errorf("no result returned from SelectAllVendors")
 	}
 
 	for rows.Next() {
@@ -42,7 +42,7 @@ func (db *Conn) SelectVendor(ctx context.Context, id types.UUID, cid types.CID) 
 
 	result := types.Vendor{UUID: id}
 	err = db.
-		QueryRowContext(ctx, db.sql["select-vendor"], id).
+		QueryRowContext(ctx, db.sql["vendor"]["select"], id).
 		Scan(&result.Name)
 
 	return result, err
@@ -56,7 +56,7 @@ func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID)
 	deferred, start, l := initVendorFuncs("InsertVendor", db.logger, err, v.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["insert-vendor"], v.UUID, v.Name)
+	result, err := db.ExecContext(ctx, db.sql["vendor"]["insert"], v.UUID, v.Name)
 	if err != nil {
 		// FIXME: choose what to do based on the tupe of error
 		duplicatePrimaryKeyErr := false
@@ -79,7 +79,7 @@ func (db *Conn) UpdateVendor(ctx context.Context, id types.UUID, v types.Vendor,
 	deferred, start, l := initVendorFuncs("UpdateVendor", db.logger, err, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["update-vendor"], v.Name, id)
+	result, err := db.ExecContext(ctx, db.sql["vendor"]["update"], v.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
@@ -100,7 +100,7 @@ func (db *Conn) DeleteVendor(ctx context.Context, id types.UUID, cid types.CID) 
 
 	l.Info("starting work")
 
-	result, err = db.ExecContext(ctx, db.sql["delete-vendor"], id)
+	result, err = db.ExecContext(ctx, db.sql["vendor"]["delete"], id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

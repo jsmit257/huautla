@@ -30,9 +30,9 @@ create table bulk_ingredients (
 
 create table strains (
   uuid        varchar(40)  not null primary key,
-  name        varchar(512) not null unique,
-  vendor_uuid varchar(40)  not null references vendors(uuid)
-  -- maybe unique should be vendor+name, just because
+  name        varchar(512) not null,
+  vendor_uuid varchar(40)  not null references vendors(uuid),
+  unique (name, vendor_uuid)
 );
 
 create table strain_attributes (
