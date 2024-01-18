@@ -2,74 +2,43 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/jsmit257/huautla/types"
-
-	log "github.com/sirupsen/logrus"
 )
 
-const (
-	selectVendor = "select-vendor"
-	updateVendor = "update-vendor"
-	insertVendor = "insert-vendor"
-	deleteVendor = "delete-vendor"
-)
-
-func (db *Conn) selectAllVendors(ctx context.Context, cid types.CID) ([]types.Vendor, error) {
-	start := time.Now()
-	l := db.logger.WithFields(log.Fields{
-		"method": "selectAllVendors",
-		"cid":    cid,
-	})
-
+func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Vendor, error) {
 	var err error
 
-	defer func() {
-		duration := time.Since(start)
+	deferred, start, l := initVendorFuncs("SelectAllVendors", db.logger, err, types.UUID("nil"), cid)
+	defer deferred(start, err, l)
 
-		l.
-			WithField("duration", duration).
-			WithError(err).
-			Infof("finished work")
-
-		// TODO: metrics
-	}()
+	var rows *sql.Rows
 
 	result := make([]types.Vendor, 0, 100)
 
-	if rows, err := db.query.ExecContext(ctx, db.sql["select-vendor"]); err != nil {
+	rows, err = db.query.QueryContext(ctx, db.sql["select-all-vendors"])
+	if err != nil {
 		return nil, err
 	} else if rows == nil {
-		return nil, fmt.Errorf("no result returned from selectAllVendor")
+		return nil, fmt.Errorf("no result returned from SelectAllVendor")
+	}
+
+	for rows.Next() {
+		row := types.Vendor{}
+		rows.Scan(&row.UUID, &row.Name)
+		result = append(result, row)
 	}
 
 	return result, err
 }
 
-func (db *Conn) selectVendor(ctx context.Context, id types.UUID, cid types.CID) (types.Vendor, error) {
-	start := time.Now()
-	l := db.logger.WithFields(log.Fields{
-		"method": "selectVendor",
-		"cid":    cid,
-		"id":     id,
-	})
-
+func (db *Conn) SelectVendor(ctx context.Context, id types.UUID, cid types.CID) (types.Vendor, error) {
 	var err error
 
-	l.Info("starting work")
-
-	defer func() {
-		duration := time.Since(start)
-
-		l.
-			WithField("duration", duration).
-			WithError(err).
-			Infof("finished work")
-
-		// TODO: metrics
-	}()
+	deferred, start, l := initVendorFuncs("SelectVendor", db.logger, err, id, cid)
+	defer deferred(start, err, l)
 
 	result := types.Vendor{UUID: id}
 	err = db.
@@ -77,4 +46,69 @@ func (db *Conn) selectVendor(ctx context.Context, id types.UUID, cid types.CID) 
 		Scan(&result.Name)
 
 	return result, err
+}
+
+func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID) (types.Vendor, error) {
+	var err error
+
+	v.UUID = types.UUID(db.generateUUID().String())
+
+	deferred, start, l := initVendorFuncs("InsertVendor", db.logger, err, v.UUID, cid)
+	defer deferred(start, err, l)
+
+	result, err := db.ExecContext(ctx, db.sql["insert-vendor"], v.UUID, v.Name)
+	if err != nil {
+		// FIXME: choose what to do based on the tupe of error
+		duplicatePrimaryKeyErr := false
+		if duplicatePrimaryKeyErr {
+			return db.InsertVendor(ctx, v, cid) // FIXME: infinite loop?
+		}
+		return v, err
+	} else if rows, err := result.RowsAffected(); err != nil {
+		return v, err
+	} else if rows != 1 {
+		return v, fmt.Errorf("vendor was not added")
+	}
+
+	return v, err
+}
+
+func (db *Conn) UpdateVendor(ctx context.Context, id types.UUID, v types.Vendor, cid types.CID) error {
+	var err error
+
+	deferred, start, l := initVendorFuncs("UpdateVendor", db.logger, err, id, cid)
+	defer deferred(start, err, l)
+
+	result, err := db.ExecContext(ctx, db.sql["update-vendor"], v.Name, id)
+	if err != nil {
+		return err
+	} else if rows, err := result.RowsAffected(); err != nil {
+		return err
+	} else if rows != 1 {
+		return fmt.Errorf("vendor was not updated: '%s'", id)
+	}
+	return nil
+}
+
+func (db *Conn) DeleteVendor(ctx context.Context, id types.UUID, cid types.CID) error {
+	var err error
+
+	deferred, start, l := initVendorFuncs("DeleteVendor", db.logger, err, id, cid)
+	defer deferred(start, err, l)
+
+	var result sql.Result
+
+	l.Info("starting work")
+
+	result, err = db.ExecContext(ctx, db.sql["delete-vendor"], id)
+	if err != nil {
+		return err
+	} else if rows, err := result.RowsAffected(); err != nil {
+		return err
+	} else if rows != 1 {
+		// this won't be reported in the WithError log in `defer ...`, b/c it's operator error
+		return fmt.Errorf("vendor could not be deleted: '%s'", id)
+	}
+
+	return err
 }

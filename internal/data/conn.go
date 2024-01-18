@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/jsmit257/huautla/internal/metrics"
 	"github.com/jsmit257/huautla/types"
 
-	// "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -31,11 +33,13 @@ type (
 	uuidgen func() uuid.UUID
 
 	getMockDB func() *sql.DB
+
+	deferred func(start time.Time, err error, l *log.Entry)
 )
 
 const connformat = ""
 
-// var mtrcs = metrics.DataMetrics.MustCurryWith(prometheus.Labels{"pkg": "mysql"})
+var mtrcs = metrics.DataMetrics.MustCurryWith(prometheus.Labels{"pkg": "data"})
 
 func New(logger *log.Entry) (types.DB, error) {
 
@@ -44,7 +48,7 @@ func New(logger *log.Entry) (types.DB, error) {
 	result := &Conn{
 		generateUUID: uuid.New,
 		logger:       logger,
-		sql:          readSQL(""),
+		sql:          readSQL("pgsql.yaml"),
 	}
 
 	result.query, err = sql.Open(
@@ -68,6 +72,26 @@ func readSQL(filename string) map[string]string {
 	return result
 }
 
-func mockUUIDGen() uuid.UUID {
-	return uuid.Must(uuid.FromBytes([]byte("0123456789abcdef")))
+func initVendorFuncs(method string, l *log.Entry, err error, id types.UUID, cid types.CID) (deferred, time.Time, *log.Entry) {
+	start := time.Now()
+	l = l.WithFields(log.Fields{
+		"method": method,
+		"cid":    cid,
+		"id":     id,
+	})
+
+	l.Info("starting work")
+
+	return func(start time.Time, err error, l *log.Entry) {
+			duration := time.Since(start)
+
+			l.
+				WithField("duration", duration).
+				WithError(err).
+				Infof("finished work")
+
+			// TODO: metrics
+		},
+		start,
+		l
 }
