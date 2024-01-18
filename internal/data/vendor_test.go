@@ -23,7 +23,7 @@ func Test_SelectAllVendors(t *testing.T) {
 	t.Parallel()
 
 	querypat, l := sqls["select-all"],
-		log.WithField("test", "SelectVendor")
+		log.WithField("test", "SelectAllVendors")
 
 	tcs := map[string]struct {
 		db     getMockDB

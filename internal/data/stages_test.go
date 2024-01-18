@@ -23,7 +23,7 @@ func Test_SelectAllStages(t *testing.T) {
 	t.Parallel()
 
 	querypat, l := sqls["select-all"],
-		log.WithField("test", "SelectStage")
+		log.WithField("test", "SelectAllStages")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -94,12 +94,12 @@ func Test_SelectStage(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name"}).
-						AddRow("stage 0").
-						AddRow("stage 1").
-						AddRow("stage 2"))
+				mock.
+					ExpectQuery(querypat).
+					WillReturnRows(
+						sqlmock.
+							NewRows([]string{"name"}).
+							AddRow("stage 0"))
 				return db
 			},
 			id:     "0",
@@ -182,6 +182,18 @@ func Test_InsertStage(t *testing.T) {
 			result: types.Stage{"30313233-3435-3637-3839-616263646566", "stage 0"},
 			err:    fmt.Errorf("some error"),
 		},
+		"result_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec(querypat).
+					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				return db
+			},
+			id:     "0",
+			result: types.Stage{"30313233-3435-3637-3839-616263646566", "stage 0"},
+			err:    fmt.Errorf("some error"),
+		},
 	}
 
 	for name, tc := range tcs {
@@ -215,7 +227,6 @@ func Test_UpdateStage(t *testing.T) {
 	tcs := map[string]struct {
 		db  getMockDB
 		id  types.UUID
-		v   types.Stage
 		err error
 	}{
 		"happy_path": {
@@ -245,6 +256,17 @@ func Test_UpdateStage(t *testing.T) {
 				mock.
 					ExpectExec(querypat).
 					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			id:  "0",
+			err: fmt.Errorf("some error"),
+		},
+		"result_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec(querypat).
+					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			id:  "0",
@@ -316,6 +338,17 @@ func Test_DeleteStage(t *testing.T) {
 			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
+		"result_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec(querypat).
+					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				return db
+			},
+			id:  "0",
+			err: fmt.Errorf("some error"),
+		},
 	}
 
 	for name, tc := range tcs {
@@ -330,7 +363,7 @@ func Test_DeleteStage(t *testing.T) {
 			}).DeleteStage(
 				context.Background(),
 				tc.id,
-				"Test_DeleteVendors")
+				"Test_DeleteStages")
 
 			require.Equal(t, tc.err, err)
 		})

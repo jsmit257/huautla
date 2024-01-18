@@ -7,8 +7,9 @@ create table vendors (
 
 create table substrates (
   uuid        varchar(40)  not null primary key,
-  name        varchar(512) not null unique,
-  vendor_uuid varchar(40)  not null references vendors(uuid)
+  name        varchar(512) not null,
+  vendor_uuid varchar(40)  not null references vendors(uuid),
+  unique (name, vendor_uuid)
 );
 
 create table grain_substrates () inherits (substrates);

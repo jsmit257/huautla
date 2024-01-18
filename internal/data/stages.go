@@ -21,8 +21,6 @@ func (db *Conn) SelectAllStages(ctx context.Context, cid types.CID) ([]types.Sta
 	rows, err = db.query.QueryContext(ctx, db.sql["stage"]["select-all"])
 	if err != nil {
 		return nil, err
-	} else if rows == nil {
-		return nil, fmt.Errorf("no result returned from SelectAllStages")
 	}
 
 	for rows.Next() {
@@ -48,38 +46,38 @@ func (db *Conn) SelectStage(ctx context.Context, id types.UUID, cid types.CID) (
 	return result, err
 }
 
-func (db *Conn) InsertStage(ctx context.Context, v types.Stage, cid types.CID) (types.Stage, error) {
+func (db *Conn) InsertStage(ctx context.Context, s types.Stage, cid types.CID) (types.Stage, error) {
 	var err error
 
-	v.UUID = types.UUID(db.generateUUID().String())
+	s.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertStage", db.logger, err, v.UUID, cid)
+	deferred, start, l := initVendorFuncs("InsertStage", db.logger, err, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["stage"]["insert"], v.UUID, v.Name)
+	result, err := db.ExecContext(ctx, db.sql["stage"]["insert"], s.UUID, s.Name)
 	if err != nil {
 		// FIXME: choose what to do based on the tupe of error
 		duplicatePrimaryKeyErr := false
 		if duplicatePrimaryKeyErr {
-			return db.InsertStage(ctx, v, cid) // FIXME: infinite loop?
+			return db.InsertStage(ctx, s, cid) // FIXME: infinite loop?
 		}
-		return v, err
+		return s, err
 	} else if rows, err := result.RowsAffected(); err != nil {
-		return v, err
+		return s, err
 	} else if rows != 1 {
-		return v, fmt.Errorf("stage was not added")
+		return s, fmt.Errorf("stage was not added")
 	}
 
-	return v, err
+	return s, err
 }
 
-func (db *Conn) UpdateStage(ctx context.Context, id types.UUID, v types.Stage, cid types.CID) error {
+func (db *Conn) UpdateStage(ctx context.Context, id types.UUID, s types.Stage, cid types.CID) error {
 	var err error
 
 	deferred, start, l := initVendorFuncs("UpdateStage", db.logger, err, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], v.Name, id)
+	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], s.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
