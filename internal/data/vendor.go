@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Vendor, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllVendors", db.logger, err, types.UUID("nil"), cid)
+	deferred, start, l := initVendorFuncs("SelectAllVendors", db.logger, err, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows

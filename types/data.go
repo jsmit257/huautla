@@ -21,10 +21,11 @@ type (
 	}
 
 	Ingredient struct {
-		UUID      `json:"-"`
-		Name      string `json:"name"`
-		Substrate `json:"substrate"`
+		UUID `json:"-"`
+		Name string `json:"name"`
 	}
+
+	SubstrateIngredient []struct{}
 
 	Strain struct {
 		UUID   `json:"-"`

@@ -8,26 +8,22 @@ create table vendors (
 create table substrates (
   uuid        varchar(40)  not null primary key,
   name        varchar(512) not null,
+  type        varchar(25)  not null check in ('Grain', 'Bulk')
   vendor_uuid varchar(40)  not null references vendors(uuid),
   unique (name, vendor_uuid)
 );
 
-create table grain_substrates () inherits (substrates);
-
-create table bulk_substrates () inherits (substrates);
-
-create table substrate_ingredients (
+create table ingredients (
   uuid            varchar(40)  not null primary key,
   name            varchar(512) not null unique
 );
 
-create table grain_ingredients (
-  grain_substrate_uuid varchar(40) not null foreign key references grain_substrates(uuid)
-) inherits (substrate_ingredients);
-
-create table bulk_ingredients (
-  bulk_substrate_uuid varchar(40) not null foreign key references bulk_substrates(uuid)
-) inherits (substrate_ingredients);
+create table substrate_ingredients {
+  uuid           varchar(40)  not null primary key,
+  substrate_uuid varchar(40) not null foreign key references substrates(uuid),
+  ingredient_id  varchar(40) not null foreign key references ingredients(uuid),
+  unique (substrate_uuid, ingredient_id)
+}
 
 create table strains (
   uuid        varchar(40)  not null primary key,

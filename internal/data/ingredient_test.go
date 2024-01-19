@@ -17,18 +17,16 @@ import (
 	"github.com/jsmit257/huautla/types"
 )
 
-var sqls = readSQL("pgsql.yaml")["vendor"]
-
-func Test_SelectAllVendors(t *testing.T) {
+func Test_SelectAllIngredients(t *testing.T) {
 	t.Parallel()
 
 	querypat, l := sqls["select-all"],
-		log.WithField("test", "SelectAllVendors")
+		log.WithField("test", "SelectAllIngredients")
 
 	tcs := map[string]struct {
 		db     getMockDB
 		id     types.UUID
-		result []types.Vendor
+		result []types.Ingredient
 		err    error
 	}{
 		"happy_path": {
@@ -37,15 +35,15 @@ func Test_SelectAllVendors(t *testing.T) {
 				mock.ExpectQuery(querypat).
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
-						AddRow("0", "vendor 0").
-						AddRow("1", "vendor 1").
-						AddRow("2", "vendor 2"))
+						AddRow("0", "ingredient 0").
+						AddRow("1", "ingredient 1").
+						AddRow("2", "ingredient 2"))
 				return db
 			},
-			result: []types.Vendor{
-				types.Vendor{"0", "vendor 0"},
-				types.Vendor{"1", "vendor 1"},
-				types.Vendor{"2", "vendor 2"},
+			result: []types.Ingredient{
+				types.Ingredient{"0", "ingredient 0"},
+				types.Ingredient{"1", "ingredient 1"},
+				types.Ingredient{"2", "ingredient 2"},
 			},
 		},
 		"query_fails": {
@@ -70,7 +68,7 @@ func Test_SelectAllVendors(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectAllVendors(context.Background(), "Test_SelectAllVendors")
+			}).SelectAllIngredients(context.Background(), "Test_SelectAllIngredients")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, result)
@@ -78,17 +76,17 @@ func Test_SelectAllVendors(t *testing.T) {
 	}
 }
 
-func Test_SelectVendor(t *testing.T) {
+func Test_SelectIngredient(t *testing.T) {
 	t.Parallel()
 
 	var querypat = sqls["select"]
 
-	l := log.WithField("test", "SelectVendor")
+	l := log.WithField("test", "SelectIngredient")
 
 	tcs := map[string]struct {
 		db     getMockDB
 		id     types.UUID
-		result types.Vendor
+		result types.Ingredient
 		err    error
 	}{
 		"happy_path": {
@@ -97,13 +95,11 @@ func Test_SelectVendor(t *testing.T) {
 				mock.ExpectQuery(querypat).
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name"}).
-						AddRow("vendor 0").
-						AddRow("vendor 1").
-						AddRow("vendor 2"))
+						AddRow("ingredient 0"))
 				return db
 			},
 			id:     "0",
-			result: types.Vendor{"0", "vendor 0"},
+			result: types.Ingredient{"0", "ingredient 0"},
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -126,7 +122,7 @@ func Test_SelectVendor(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectVendor(context.Background(), tc.id, "Test_SelectVendors")
+			}).SelectIngredient(context.Background(), tc.id, "Test_SelectIngredients")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, result)
@@ -134,17 +130,17 @@ func Test_SelectVendor(t *testing.T) {
 	}
 }
 
-func Test_InsertVendor(t *testing.T) {
+func Test_InsertIngredients(t *testing.T) {
 	t.Parallel()
 
 	var querypat = sqls["insert"]
 
-	l := log.WithField("test", "InsertVendor")
+	l := log.WithField("test", "InsertIngredient")
 
 	tcs := map[string]struct {
 		db     getMockDB
 		id     types.UUID
-		result types.Vendor
+		result types.Ingredient
 		err    error
 	}{
 		"happy_path": {
@@ -156,7 +152,7 @@ func Test_InsertVendor(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
+			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -167,8 +163,8 @@ func Test_InsertVendor(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
-			err:    fmt.Errorf("vendor was not added"),
+			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
+			err:    fmt.Errorf("ingredient was not added"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -179,7 +175,7 @@ func Test_InsertVendor(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
+			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -191,7 +187,7 @@ func Test_InsertVendor(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
+			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -206,10 +202,10 @@ func Test_InsertVendor(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).InsertVendor(
+			}).InsertIngredient(
 				context.Background(),
-				types.Vendor{tc.id, "vendor " + string(tc.id)},
-				"Test_InsertVendors")
+				types.Ingredient{tc.id, "ingredient " + string(tc.id)},
+				"Test_InsertIngredients")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, result)
@@ -217,17 +213,16 @@ func Test_InsertVendor(t *testing.T) {
 	}
 }
 
-func Test_UpdateVendor(t *testing.T) {
+func Test_UpdateIngredients(t *testing.T) {
 	t.Parallel()
 
 	var querypat = sqls["update"]
 
-	l := log.WithField("test", "UpdateVendor")
+	l := log.WithField("test", "UpdateIngredient")
 
 	tcs := map[string]struct {
 		db  getMockDB
 		id  types.UUID
-		v   types.Vendor
 		err error
 	}{
 		"happy_path": {
@@ -249,7 +244,7 @@ func Test_UpdateVendor(t *testing.T) {
 				return db
 			},
 			id:  "0",
-			err: fmt.Errorf("vendor was not updated: '0'"),
+			err: fmt.Errorf("ingredient was not updated: '0'"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -284,23 +279,23 @@ func Test_UpdateVendor(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).UpdateVendor(
+			}).UpdateIngredient(
 				context.Background(),
 				tc.id,
-				types.Vendor{Name: "vendor " + string(tc.id)},
-				"Test_UpdateVendors")
+				types.Ingredient{Name: "ingredient " + string(tc.id)},
+				"Test_UpdateIngredients")
 
 			require.Equal(t, tc.err, err)
 		})
 	}
 }
 
-func Test_DeleteVendor(t *testing.T) {
+func Test_DeleteIngredients(t *testing.T) {
 	t.Parallel()
 
 	var querypat = sqls["delete"]
 
-	l := log.WithField("test", "deleteVendor")
+	l := log.WithField("test", "DeleteIngredient")
 
 	tcs := map[string]struct {
 		db  getMockDB
@@ -326,7 +321,7 @@ func Test_DeleteVendor(t *testing.T) {
 				return db
 			},
 			id:  "0",
-			err: fmt.Errorf("vendor could not be deleted: '0'"),
+			err: fmt.Errorf("ingredient could not be deleted: '0'"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -361,10 +356,10 @@ func Test_DeleteVendor(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).DeleteVendor(
+			}).DeleteIngredient(
 				context.Background(),
 				tc.id,
-				"Test_DeleteVendors")
+				"Test_DeleteIngredients")
 
 			require.Equal(t, tc.err, err)
 		})
