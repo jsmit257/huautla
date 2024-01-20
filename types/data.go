@@ -29,12 +29,11 @@ type (
 		Name string `json:"name"`
 	}
 
-	SubstrateIngredient []struct{}
-
 	Strain struct {
-		UUID   `json:"-"`
-		Name   string `json:"name"`
-		Vendor `json:"vendor"`
+		UUID       `json:"-"`
+		Name       string `json:"name"`
+		Vendor     `json:"vendor"`
+		Attributes []StrainAttribute `json:"attributes"`
 	}
 
 	StrainAttribute struct {

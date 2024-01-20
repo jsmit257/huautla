@@ -13,8 +13,15 @@ type (
 		Vendorer
 	}
 
-	Eventer    interface{}
-	EventTyper interface{}
+	Eventer interface{}
+
+	EventTyper interface {
+		SelectAllEventTypes(ctx context.Context, cid CID) ([]EventType, error)
+		SelectEventType(ctx context.Context, id UUID, cid CID) (EventType, error)
+		InsertEventType(ctx context.Context, s EventType, cid CID) (EventType, error)
+		UpdateEventType(ctx context.Context, id UUID, s EventType, cid CID) error
+		DeleteEventType(ctx context.Context, id UUID, cid CID) error
+	}
 
 	Ingredienter interface {
 		SelectAllIngredients(ctx context.Context, cid CID) ([]Ingredient, error)
@@ -34,12 +41,16 @@ type (
 		DeleteStage(ctx context.Context, id UUID, cid CID) error
 	}
 
+	StrainAttributer interface {
+	}
+
 	Strainer interface {
 		SelectAllStrains(ctx context.Context, cid CID) ([]Strain, error)
 		SelectStrain(ctx context.Context, id UUID, cid CID) (Strain, error)
 		InsertStrain(ctx context.Context, s Strain, cid CID) (Strain, error)
 		UpdateStrain(ctx context.Context, id UUID, s Strain, cid CID) error
 		DeleteStrain(ctx context.Context, id UUID, cid CID) error
+		GetAllAttributes(ctx context.Context, s *Strain, cid CID) error
 	}
 
 	Substrater interface {
@@ -48,6 +59,7 @@ type (
 		InsertSubstrate(ctx context.Context, s Substrate, cid CID) (Substrate, error)
 		UpdateSubstrate(ctx context.Context, id UUID, s Substrate, cid CID) error
 		DeleteSubstrate(ctx context.Context, id UUID, cid CID) error
+		GetAllIngredients(ctx context.Context, s *Substrate, cid CID) error
 	}
 
 	// vendors aren't meant to be a comprehensive list of attributes, really just

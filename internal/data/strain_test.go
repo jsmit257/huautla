@@ -36,9 +36,9 @@ func Test_SelectAllStrains(t *testing.T) {
 				return db
 			},
 			result: []types.Strain{
-				types.Strain{"0", "strain 0", types.Vendor{"0", "vendor 0"}},
-				types.Strain{"1", "strain 1", types.Vendor{"1", "vendor 1"}},
-				types.Strain{"2", "strain 2", types.Vendor{"1", "vendor 1"}},
+				types.Strain{"0", "strain 0", types.Vendor{"0", "vendor 0"}, nil},
+				types.Strain{"1", "strain 1", types.Vendor{"1", "vendor 1"}, nil},
+				types.Strain{"2", "strain 2", types.Vendor{"1", "vendor 1"}, nil},
 			},
 		},
 		"query_fails": {
@@ -94,7 +94,7 @@ func Test_SelectStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"0", "strain 0", types.Vendor{"0", "vendor 0"}},
+			result: types.Strain{"0", "strain 0", types.Vendor{"0", "vendor 0"}, nil},
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -147,7 +147,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}},
+			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -158,7 +158,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}},
+			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
 			err:    fmt.Errorf("strain was not added"),
 		},
 		"query_fails": {
@@ -170,7 +170,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}},
+			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -182,7 +182,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}},
+			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -199,7 +199,7 @@ func Test_InsertStrain(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertStrain(
 				context.Background(),
-				types.Strain{tc.id, "strain " + string(tc.id), types.Vendor{}},
+				types.Strain{tc.id, "strain " + string(tc.id), types.Vendor{}, nil},
 				"Test_InsertStrains")
 
 			require.Equal(t, tc.err, err)
@@ -357,6 +357,68 @@ func Test_DeleteStrain(t *testing.T) {
 				"Test_DeleteStrain")
 
 			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func Test_GetAllAttributes(t *testing.T) {
+	t.Parallel()
+
+	querypat, l := sqls["all-attributes"],
+		log.WithField("test", "GetAllAttributes")
+
+	tcs := map[string]struct {
+		db     getMockDB
+		id     types.UUID
+		result []types.StrainAttribute
+		err    error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery(querypat).
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name", "value"}).
+						AddRow("0", "name 0", "value 0").
+						AddRow("1", "name 1", "value 1").
+						AddRow("2", "name 2", "value 2"))
+				return db
+			},
+			result: []types.StrainAttribute{
+				types.StrainAttribute{"0", "name 0", "value 0", types.Strain{}},
+				types.StrainAttribute{"1", "name 1", "value 1", types.Strain{}},
+				types.StrainAttribute{"2", "name 2", "value 2", types.Strain{}},
+			},
+		},
+		"query_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectQuery(querypat).
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			result: []types.StrainAttribute{},
+			err:    fmt.Errorf("some error"),
+		},
+		// "query_result_nil": {}, // FIXME: how to mock?
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			s := &types.Strain{UUID: tc.id}
+
+			err := (&Conn{
+				query:        tc.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).GetAllAttributes(context.Background(), s, "Test_GetAllAttributes")
+
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, s.Attributes)
 		})
 	}
 }

@@ -42,6 +42,10 @@ strain:
      where vendor_uuid = ?
   update: update strains set name = ? where uuid = ?
   delete: delete from strains where uuid = ?
+  all-attributes: >
+    select uuid, name, value
+      from strain_attributes sa
+     where strain_uuid = ?
 
 substrate:
   select-all: >
