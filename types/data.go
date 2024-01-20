@@ -17,10 +17,11 @@ type (
 	}
 
 	Substrate struct {
-		UUID   `json:"-"`
-		Name   string        `json:"name"`
-		Type   SubstrateType `json:"type"`
-		Vendor `json:"vendor"`
+		UUID        `json:"-"`
+		Name        string        `json:"name"`
+		Type        SubstrateType `json:"type"`
+		Vendor      `json:"vendor"`
+		Ingredients []Ingredient `json:"ingredients,omitempty"`
 	}
 
 	Ingredient struct {

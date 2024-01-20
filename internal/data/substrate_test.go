@@ -36,9 +36,9 @@ func Test_SelectAllSubstrates(t *testing.T) {
 				return db
 			},
 			result: []types.Substrate{
-				types.Substrate{"0", "substrate 0", types.GrainType, types.Vendor{"0", "vendor 0"}},
-				types.Substrate{"1", "substrate 1", types.GrainType, types.Vendor{"1", "vendor 1"}},
-				types.Substrate{"2", "substrate 2", types.GrainType, types.Vendor{"1", "vendor 1"}},
+				types.Substrate{"0", "substrate 0", types.GrainType, types.Vendor{"0", "vendor 0"}, nil},
+				types.Substrate{"1", "substrate 1", types.GrainType, types.Vendor{"1", "vendor 1"}, nil},
+				types.Substrate{"2", "substrate 2", types.GrainType, types.Vendor{"1", "vendor 1"}, nil},
 			},
 		},
 		"query_fails": {
@@ -94,7 +94,7 @@ func Test_SelectSubstrate(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Substrate{"0", "substrate 0", types.GrainType, types.Vendor{"0", "vendor 0"}},
+			result: types.Substrate{"0", "substrate 0", types.GrainType, types.Vendor{"0", "vendor 0"}, nil},
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -149,7 +149,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}},
+			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -161,7 +161,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}},
+			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
 			err:    fmt.Errorf("substrate was not added"),
 		},
 		"query_fails": {
@@ -174,7 +174,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}},
+			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -187,7 +187,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}},
+			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -204,7 +204,7 @@ func Test_InsertSubstrate(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertSubstrate(
 				context.Background(),
-				types.Substrate{tc.id, "substrate " + string(tc.id), tc.tp, types.Vendor{}},
+				types.Substrate{tc.id, "substrate " + string(tc.id), tc.tp, types.Vendor{}, nil},
 				"Test_InsertSubstrate")
 
 			require.Equal(t, tc.err, err)
@@ -366,6 +366,67 @@ func Test_DeleteSubstrate(t *testing.T) {
 				"Test_DeleteSubstrate")
 
 			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func Test_GetAllIngredients(t *testing.T) {
+	t.Parallel()
+
+	querypat, l := sqls["all-ingredients"],
+		log.WithField("test", "GetAllIngredients")
+
+	tcs := map[string]struct {
+		db     getMockDB
+		id     types.UUID
+		result []types.Ingredient
+		err    error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery(querypat).
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name"}).
+						AddRow("0", "ingredient 0").
+						AddRow("1", "ingredient 1").
+						AddRow("2", "ingredient 2"))
+				return db
+			},
+			result: []types.Ingredient{
+				types.Ingredient{"0", "ingredient 0"},
+				types.Ingredient{"1", "ingredient 1"},
+				types.Ingredient{"2", "ingredient 2"},
+			},
+		},
+		"query_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectQuery(querypat).
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			result: []types.Ingredient{},
+			err:    fmt.Errorf("some error"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			s := &types.Substrate{UUID: tc.id}
+
+			err := (&Conn{
+				query:        tc.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).GetAllIngredients(context.Background(), s, "Test_GetAllIngredients")
+
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, s.Ingredients)
 		})
 	}
 }

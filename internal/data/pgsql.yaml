@@ -1,5 +1,7 @@
 ---
 
+eventtypes:
+
 ingredient:
   select-all: select uuid, name from ingredients order by name
   select: select name from ingredients where uuid = ?
@@ -67,6 +69,14 @@ substrate:
      where vendor_uuid = ?
   update: update substrates set name = ? where uuid = ?
   delete: delete from substrates where uuid = ?
+  all-ingredients: >
+    select i.uuid,
+           i.name 
+      from ingredients i
+      join substrate_ingredients si
+        on i.uuid = si.ingredient_uuid
+     where si.substrate_id = ?
+
 
 vendor:
   select-all: select uuid, name from vendors order by name

@@ -100,3 +100,29 @@ func (db *Conn) UpdateSubstrate(ctx context.Context, id types.UUID, s types.Subs
 func (db *Conn) DeleteSubstrate(ctx context.Context, id types.UUID, cid types.CID) error {
 	return db.deleteByUUID(ctx, id, cid, "DeleteSubstrate", "substrate", db.logger)
 }
+
+func (db *Conn) GetAllIngredients(ctx context.Context, s *types.Substrate, cid types.CID) error {
+	var err error
+
+	deferred, start, l := initVendorFuncs("GetAllIngredients", db.logger, err, "nil", cid)
+	defer deferred(start, err, l)
+
+	var rows *sql.Rows
+
+	s.Ingredients = make([]types.Ingredient, 0, 100)
+
+	rows, err = db.query.QueryContext(ctx, db.sql["substrate"]["all-ingredients"], s.UUID)
+	if err != nil {
+		return err
+	}
+
+	for rows.Next() {
+		row := types.Ingredient{}
+		rows.Scan(
+			&row.UUID,
+			&row.Name)
+		s.Ingredients = append(s.Ingredients, row)
+	}
+
+	return err
+}

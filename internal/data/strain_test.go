@@ -117,7 +117,7 @@ func Test_SelectStrain(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectStrain(context.Background(), tc.id, "Test_SelectStrains")
+			}).SelectStrain(context.Background(), tc.id, "Test_SelectStrain")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, result)
