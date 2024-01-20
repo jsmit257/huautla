@@ -13,10 +13,18 @@ type (
 		Vendorer
 	}
 
-	Eventer      interface{}
-	EventTyper   interface{}
-	Ingredienter interface{}
-	Lifecycler   interface{}
+	Eventer    interface{}
+	EventTyper interface{}
+
+	Ingredienter interface {
+		SelectAllIngredients(ctx context.Context, cid CID) ([]Ingredient, error)
+		SelectIngredient(ctx context.Context, id UUID, cid CID) (Ingredient, error)
+		InsertIngredient(ctx context.Context, s Ingredient, cid CID) (Ingredient, error)
+		UpdateIngredient(ctx context.Context, id UUID, s Ingredient, cid CID) error
+		DeleteIngredient(ctx context.Context, id UUID, cid CID) error
+	}
+
+	Lifecycler interface{}
 
 	Stager interface {
 		SelectAllStages(ctx context.Context, cid CID) ([]Stage, error)
@@ -27,14 +35,20 @@ type (
 	}
 
 	Strainer interface {
-		SelectAllStrains(ctx context.Context, cid CID) ([]Stage, error)
-		SelectStrains(ctx context.Context, id UUID, cid CID) (Stage, error)
-		InsertStrains(ctx context.Context, s Strain, cid CID) (Stage, error)
-		UpdateStrains(ctx context.Context, id UUID, s Strain, cid CID) error
-		DeleteStrains(ctx context.Context, id UUID, cid CID) error
+		SelectAllStrains(ctx context.Context, cid CID) ([]Strain, error)
+		SelectStrain(ctx context.Context, id UUID, cid CID) (Strain, error)
+		InsertStrain(ctx context.Context, s Strain, cid CID) (Strain, error)
+		UpdateStrain(ctx context.Context, id UUID, s Strain, cid CID) error
+		DeleteStrain(ctx context.Context, id UUID, cid CID) error
 	}
 
-	Substrater interface{}
+	Substrater interface {
+		SelectAllSubstrates(ctx context.Context, cid CID) ([]Substrate, error)
+		SelectSubstrate(ctx context.Context, id UUID, cid CID) (Substrate, error)
+		InsertSubstrate(ctx context.Context, s Substrate, cid CID) (Substrate, error)
+		UpdateSubstrate(ctx context.Context, id UUID, s Substrate, cid CID) error
+		DeleteSubstrate(ctx context.Context, id UUID, cid CID) error
+	}
 
 	// vendors aren't meant to be a comprehensive list of attributes, really just
 	// a name that makes a unique constraint with Strain.Name in the strain table;

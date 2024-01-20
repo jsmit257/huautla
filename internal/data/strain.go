@@ -96,22 +96,5 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 }
 
 func (db *Conn) DeleteStrain(ctx context.Context, id types.UUID, cid types.CID) error {
-	var err error
-
-	deferred, start, l := initVendorFuncs("DeleteStrain", db.logger, err, id, cid)
-	defer deferred(start, err, l)
-
-	var result sql.Result
-
-	result, err = db.ExecContext(ctx, db.sql["strain"]["delete"], id)
-	if err != nil {
-		return err
-	} else if rows, err := result.RowsAffected(); err != nil {
-		return err
-	} else if rows != 1 {
-		// this won't be reported in the WithError log in `defer ...`, b/c it's operator error
-		return fmt.Errorf("strain could not be deleted: '%s'", id)
-	}
-
-	return err
+	return db.deleteByUUID(ctx, id, cid, "DeleteStrain", "strain", db.logger)
 }

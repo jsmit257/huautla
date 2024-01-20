@@ -21,8 +21,6 @@ func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Ve
 	rows, err = db.query.QueryContext(ctx, db.sql["vendor"]["select-all"])
 	if err != nil {
 		return nil, err
-	} else if rows == nil {
-		return nil, fmt.Errorf("no result returned from SelectAllVendors")
 	}
 
 	for rows.Next() {
@@ -91,24 +89,5 @@ func (db *Conn) UpdateVendor(ctx context.Context, id types.UUID, v types.Vendor,
 }
 
 func (db *Conn) DeleteVendor(ctx context.Context, id types.UUID, cid types.CID) error {
-	var err error
-
-	deferred, start, l := initVendorFuncs("DeleteVendor", db.logger, err, id, cid)
-	defer deferred(start, err, l)
-
-	var result sql.Result
-
-	l.Info("starting work")
-
-	result, err = db.ExecContext(ctx, db.sql["vendor"]["delete"], id)
-	if err != nil {
-		return err
-	} else if rows, err := result.RowsAffected(); err != nil {
-		return err
-	} else if rows != 1 {
-		// this won't be reported in the WithError log in `defer ...`, b/c it's operator error
-		return fmt.Errorf("vendor could not be deleted: '%s'", id)
-	}
-
-	return err
+	return db.deleteByUUID(ctx, id, cid, "DeleteVendor", "vendor", db.logger)
 }

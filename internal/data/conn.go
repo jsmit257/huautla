@@ -58,6 +58,27 @@ func New(logger *log.Entry) (types.DB, error) {
 	return result, err
 }
 
+func (db *Conn) deleteByUUID(ctx context.Context, id types.UUID, cid types.CID, method, table string, l *log.Entry) error {
+	var err error
+
+	deferred, start, l := initVendorFuncs(method, l, err, id, cid)
+	defer deferred(start, err, l)
+
+	var result sql.Result
+
+	result, err = db.ExecContext(ctx, db.sql[table]["delete"], id)
+	if err != nil {
+		return err
+	} else if rows, err := result.RowsAffected(); err != nil {
+		return err
+	} else if rows != 1 {
+		// this won't be reported in the WithError log in `defer ...`, b/c it's operator error
+		return fmt.Errorf("%s could not be deleted: '%s'", table, id)
+	}
+
+	return err
+}
+
 func readSQL(filename string) map[string]map[string]string {
 	var err error
 

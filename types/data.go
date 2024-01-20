@@ -9,6 +9,8 @@ type (
 
 	CID string
 
+	SubstrateType string
+
 	Vendor struct {
 		UUID `json:"-"`
 		Name string `json:"name"`
@@ -16,7 +18,8 @@ type (
 
 	Substrate struct {
 		UUID   `json:"-"`
-		Name   string `json:"name"`
+		Name   string        `json:"name"`
+		Type   SubstrateType `json:"type"`
 		Vendor `json:"vendor"`
 	}
 

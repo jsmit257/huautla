@@ -1,5 +1,12 @@
 ---
 
+ingredient:
+  select-all: select uuid, name from ingredients order by name
+  select: select name from ingredients where uuid = ?
+  insert: insert into ingredients(uuid, name) values(?, ?)
+  update: update ingredients set name = ? where uuid = ?
+  delete: delete from ingredients where uuid = ?
+
 stage:
   select-all: select uuid, name from stages order by name
   select: select name from stages where uuid = ?
@@ -33,6 +40,33 @@ strain:
      where vendor_uuid = ?
   update: update strains set name = ? where uuid = ?
   delete: delete from strains where uuid = ?
+
+substrate:
+  select-all: >
+    select s.name, 
+           v.uuid as vendor_uuid,
+           v.name as vendor_name
+      from substrates s
+      join vendors v
+        on s.vendor_uuid = v.uuid
+     order
+        by s.name
+  select: >
+    select s.name, 
+           v.uuid as vendor_uuid,
+           v.name as vendor_name
+      from substrates s
+      join vendors v
+        on s.vendor_uuid = v.uuid
+     where s.uuid = ?
+  insert: >
+    insert 
+      into substrates(uuid, name, vendor_uuid)
+    select ?, ?, v.uuid 
+      from vendors v
+     where vendor_uuid = ?
+  update: update substrates set name = ? where uuid = ?
+  delete: delete from substrates where uuid = ?
 
 vendor:
   select-all: select uuid, name from vendors order by name

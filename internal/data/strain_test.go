@@ -354,7 +354,7 @@ func Test_DeleteStrain(t *testing.T) {
 			}).DeleteStrain(
 				context.Background(),
 				tc.id,
-				"Test_DeleteSttains")
+				"Test_DeleteStrain")
 
 			require.Equal(t, tc.err, err)
 		})
