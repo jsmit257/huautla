@@ -29,6 +29,12 @@ type (
 		Name string `json:"name"`
 	}
 
+	SubstrateIngredient struct {
+		UUID       `json:"-"`
+		Substrate  `json:"substrate"`
+		Ingredient `json:"ingredient"`
+	}
+
 	Strain struct {
 		UUID       `json:"-"`
 		Name       string `json:"name"`
