@@ -9,6 +9,9 @@ type (
 		Ingredienter
 		Lifecycler
 		Stager
+		StrainAttributer
+		Strainer
+		SubstrateIngredienter
 		Substrater
 		Vendorer
 	}
@@ -41,8 +44,7 @@ type (
 		DeleteStage(ctx context.Context, id UUID, cid CID) error
 	}
 
-	StrainAttributer interface {
-	}
+	StrainAttributer interface{}
 
 	Strainer interface {
 		SelectAllStrains(ctx context.Context, cid CID) ([]Strain, error)
@@ -51,6 +53,13 @@ type (
 		UpdateStrain(ctx context.Context, id UUID, s Strain, cid CID) error
 		DeleteStrain(ctx context.Context, id UUID, cid CID) error
 		GetAllAttributes(ctx context.Context, s *Strain, cid CID) error
+	}
+
+	SubstrateIngredienter interface {
+		GetAllIngredients(ctx context.Context, s *Substrate, cid CID) error
+		AddIngredient(ctx context.Context, s *Substrate, i Ingredient, cid CID) error
+		ChangeIngredient(ctx context.Context, s *Substrate, oldI, newI Ingredient, cid CID) error
+		RemoveIngredient(ctx context.Context, s *Substrate, i Ingredient, cid CID) error
 	}
 
 	Substrater interface {

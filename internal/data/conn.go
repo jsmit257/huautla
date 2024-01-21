@@ -116,3 +116,7 @@ func initVendorFuncs(method string, l *log.Entry, err error, id types.UUID, cid 
 		start,
 		l
 }
+
+func isUniqueViolation(err error) bool {
+	return false
+}

@@ -36,7 +36,8 @@ create table strain_attributes (
   uuid         varchar(40)  not null primary key,
   name         varchar(40)  not null,
   value        varchar(512) not null,
-  strain_uuid  varchar(40)  not null foreign key references strains(uuid)
+  strain_uuid  varchar(40)  not null foreign key references strains(uuid),
+  unique (name, strain_uuid)
 );
 
 create table stages (

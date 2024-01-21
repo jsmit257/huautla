@@ -63,9 +63,7 @@ func (db *Conn) InsertStrain(ctx context.Context, s types.Strain, cid types.CID)
 
 	result, err := db.ExecContext(ctx, db.sql["strain"]["insert"], s.UUID, s.Name, s.Vendor.UUID)
 	if err != nil {
-		// FIXME: choose what to do based on the tupe of error
-		duplicatePrimaryKeyErr := false
-		if duplicatePrimaryKeyErr {
+		if isUniqueViolation(err) {
 			return db.InsertStrain(ctx, s, cid) // FIXME: infinite loop?
 		}
 		return s, err
@@ -97,32 +95,4 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 
 func (db *Conn) DeleteStrain(ctx context.Context, id types.UUID, cid types.CID) error {
 	return db.deleteByUUID(ctx, id, cid, "DeleteStrain", "strain", db.logger)
-}
-
-func (db *Conn) GetAllAttributes(ctx context.Context, s *types.Strain, cid types.CID) error {
-	var err error
-
-	deferred, start, l := initVendorFuncs("GetAllAttributes", db.logger, err, "nil", cid)
-	defer deferred(start, err, l)
-
-	var rows *sql.Rows
-
-	s.Attributes = make([]types.StrainAttribute, 0, 100)
-
-	rows, err = db.query.QueryContext(ctx, db.sql["strain"]["all-attributes"])
-	if err != nil {
-		return err
-	}
-
-	for rows.Next() {
-		row := types.StrainAttribute{}
-		rows.Scan(
-			&row.UUID,
-			&row.Name,
-			&row.Value)
-		// row.Strain = *s // haha!
-		s.Attributes = append(s.Attributes, row)
-	}
-
-	return err
 }

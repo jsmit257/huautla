@@ -42,10 +42,49 @@ strain:
      where vendor_uuid = ?
   update: update strains set name = ? where uuid = ?
   delete: delete from strains where uuid = ?
+
+strainattribute:
+  get-unique-names: select distinct name from strainattributes
   all-attributes: >
     select uuid, name, value
       from strain_attributes sa
      where strain_uuid = ?
+  add: >
+    insert 
+      into strainattributes (uuid, name, value, strain_uuid)
+    select ?, ?, ?, s.uuid
+      from strain s
+     where s.uuid = ?
+  change:
+  remove: >
+    delete from strainattributes where uuid = ?
+
+substrate-ingredient:
+  all-ingredients: >
+    select i.uuid,
+           i.name 
+      from ingredients i
+      join substrate_ingredients si
+        on i.uuid = si.ingredient_uuid
+     where si.substrate_id = ?
+  add-ingredient: >
+      insert 
+      into substrate_ingredients (uuid, substrate_uuid, ingredient_uuid) 
+    select ?, s.uuid, i.uuid 
+      from substrates s,
+           ingredient i 
+     where s.uuid = ? 
+       and i.uuid = ?
+  change-ingredient: >
+    update substrate_ingredients 
+       set ingredient_uuid = ? 
+     where substrate_uuid = ? 
+       and ingredient_uuid = ?
+  remove-ingredient: >
+    delete 
+      from substrate_ingredients 
+     where substrate_uuid = ? 
+       and ingredient_uuid = ?
 
 substrate:
   select-all: >
@@ -73,37 +112,6 @@ substrate:
      where vendor_uuid = ?
   update: update substrates set name = ? where uuid = ?
   delete: delete from substrates where uuid = ?
-
-substrate-ingredient:
-  all-ingredients: >
-    select i.uuid,
-           i.name 
-      from ingredients i
-      join substrate_ingredients si
-        on i.uuid = si.ingredient_uuid
-     where si.substrate_id = ?
-  add-ingredient: >
-      insert 
-      into substrate_ingredients (uuid, substrate_uuid, ingredient_uuid) 
-    select ?, s.uuid, i.uuid 
-      from substrates s,
-           ingredient i 
-     where s.uuid = ? 
-       and i.uuid = ?
-    # insert 
-    #   into substrate_ingredients (uuid, substrate_uuid, ingredient_uuid) 
-    # select ?, s.uuid, i.uuid 
-    #   from substrates s 
-    #   join substrate_ingredients si 
-    #     on s.uuid = si.substrate_id 
-    #   join ingredient i 
-    #     on si.ingredient_id = i.uuid 
-    #  where s.uuid = ? 
-    #    and i.uuid = ?
-  change-ingredient: >
-    update substrate_ingredients set ingredient_uuid = ? where uuid = ?
-  remove-ingredient: >
-    delete from substrate_ingredients where uuid = ?
 
 vendor:
   select-all: select uuid, name from vendors order by name

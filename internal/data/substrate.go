@@ -65,9 +65,7 @@ func (db *Conn) InsertSubstrate(ctx context.Context, s types.Substrate, cid type
 
 	result, err := db.ExecContext(ctx, db.sql["substrate"]["insert"], s.UUID, s.Name, s.Type, s.Vendor.UUID)
 	if err != nil {
-		// FIXME: choose what to do based on the tupe of error
-		duplicatePrimaryKeyErr := false
-		if duplicatePrimaryKeyErr {
+		if isUniqueViolation(err) {
 			return db.InsertSubstrate(ctx, s, cid) // FIXME: infinite loop?
 		}
 		return s, err
