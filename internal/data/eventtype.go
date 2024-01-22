@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types.EventType, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllEventTypes", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("SelectAllEventTypes", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -23,15 +23,17 @@ func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 		row := types.EventType{}
-		err = rows.Scan(
+		if err = rows.Scan(
 			&row.UUID,
 			&row.Name,
 			&row.Stage.UUID,
-			&row.Stage.Name)
-		if err != nil {
-			break
+			&row.Stage.Name); err != nil {
+
+			return result, err
 		}
 		result = append(result, row)
 	}
@@ -42,10 +44,11 @@ func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types
 func (db *Conn) SelectEventType(ctx context.Context, id types.UUID, cid types.CID) (types.EventType, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectEventType", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("SelectEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.EventType{UUID: id}
+
 	err = db.
 		QueryRowContext(ctx, db.sql["eventtype"]["select"], id).
 		Scan(
@@ -61,14 +64,12 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 
 	e.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertEventType", db.logger, err, e.UUID, cid)
+	deferred, start, l := initVendorFuncs("InsertEventType", db.logger, e.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["eventtype"]["insert"], e.UUID, e.Name, e.Stage.UUID)
 	if err != nil {
-		// FIXME: choose what to do based on the tupe of error
-		duplicatePrimaryKeyErr := false
-		if duplicatePrimaryKeyErr {
+		if isUniqueViolation(err) {
 			return db.InsertEventType(ctx, e, cid) // FIXME: infinite loop?
 		}
 		return e, err
@@ -84,11 +85,14 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, s types.EventType, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateEventType", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("UpdateEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], s.Name, id)
 	if err != nil {
+		if isUniqueViolation(err) {
+			return db.UpdateEventType(ctx, id, s, cid) // FIXME: infinite loop?
+		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

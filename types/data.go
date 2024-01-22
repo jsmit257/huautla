@@ -11,6 +11,8 @@ type (
 
 	SubstrateType string
 
+	Config struct{}
+
 	Vendor struct {
 		UUID `json:"-"`
 		Name string `json:"name"`
@@ -37,10 +39,9 @@ type (
 	}
 
 	StrainAttribute struct {
-		UUID  `json:"-"`
+		UUID  `json:"id"`
 		Name  string `json:"name"`
 		Value string `json:"value"`
-		// Strain `json:"-"`
 	}
 
 	Stage struct {
@@ -55,7 +56,8 @@ type (
 	}
 
 	Lifecycle struct {
-		UUID           `json:"-"`
+		UUID           `json:"id"`
+		Location       string    `json:"location"`
 		GrainCost      int16     `json:"grain_cost"`
 		BulkCost       int16     `json:"bulk_cost"`
 		Yield          int16     `json:"yield"`
@@ -67,14 +69,15 @@ type (
 		Strain         `json:"strain"`
 		GrainSubstrate Substrate `json:"grain_substrate"`
 		BulkSubstrate  Substrate `json:"bulk_substrate"`
+		Events         []Event   `json:"events,omitempty"`
 	}
 
 	Event struct {
-		UUID        `json:"-"`
-		Temperature int8      `json:"temp"` // temp? sounds like temporary instead of temperature
+		UUID        `json:"id"`
+		Temperature float32   `json:"temperature"`
+		Humidity    int8      `json:"humidity,omitempty"`
 		MTime       time.Time `json:"modified_date"`
 		CTime       time.Time `json:"create_date"`
-		Lifecycle   Lifecycle `json:"lifecycle"`
 		EventType   EventType `json:"event_type"`
 	}
 )

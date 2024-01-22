@@ -15,8 +15,7 @@ import (
 func Test_SelectAllEventTypes(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["select-all"],
-		log.WithField("test", "Test_SelectAllEventTypes")
+	l := log.WithField("test", "Test_SelectAllEventTypes")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -27,7 +26,7 @@ func Test_SelectAllEventTypes(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "stage_uuid", "stage_name"}).
 						AddRow("0", "eventtype 0", "0", "stage 0").
@@ -36,22 +35,21 @@ func Test_SelectAllEventTypes(t *testing.T) {
 				return db
 			},
 			result: []types.EventType{
-				types.EventType{"0", "eventtype 0", types.Stage{"0", "stage 0"}},
-				types.EventType{"1", "eventtype 1", types.Stage{"1", "stage 1"}},
-				types.EventType{"2", "eventtype 2", types.Stage{"1", "stage 1"}},
+				{"0", "eventtype 0", types.Stage{"0", "stage 0"}},
+				{"1", "eventtype 1", types.Stage{"1", "stage 1"}},
+				{"2", "eventtype 2", types.Stage{"1", "stage 1"}},
 			},
 		},
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
-		// "query_result_nil": {}, // FIXME: how to mock?
 	}
 
 	for name, tc := range tcs {
@@ -74,8 +72,6 @@ func Test_SelectAllEventTypes(t *testing.T) {
 func Test_SelectEventType(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["select"]
-
 	l := log.WithField("test", "SelectStrain")
 
 	tcs := map[string]struct {
@@ -87,7 +83,7 @@ func Test_SelectEventType(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "stage_uuid", "stage_name"}).
 						AddRow("strain 0", "0", "stage 0"))
@@ -100,7 +96,7 @@ func Test_SelectEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -128,8 +124,6 @@ func Test_SelectEventType(t *testing.T) {
 func Test_InsertEventType(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["insert"]
-
 	l := log.WithField("test", "InsertEventType")
 
 	tcs := map[string]struct {
@@ -142,7 +136,7 @@ func Test_InsertEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -153,7 +147,7 @@ func Test_InsertEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -165,7 +159,7 @@ func Test_InsertEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -177,7 +171,7 @@ func Test_InsertEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -211,8 +205,6 @@ func Test_InsertEventType(t *testing.T) {
 func Test_UpdateEventType(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["update"]
-
 	l := log.WithField("test", "UpdateStrain")
 
 	tcs := map[string]struct {
@@ -224,7 +216,7 @@ func Test_UpdateEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -234,7 +226,7 @@ func Test_UpdateEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -245,7 +237,7 @@ func Test_UpdateEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -256,7 +248,7 @@ func Test_UpdateEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -288,8 +280,6 @@ func Test_UpdateEventType(t *testing.T) {
 func Test_DeleteEventType(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["delete"]
-
 	l := log.WithField("test", "DeleteStrain")
 
 	tcs := map[string]struct {
@@ -301,7 +291,7 @@ func Test_DeleteEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -311,7 +301,7 @@ func Test_DeleteEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -322,7 +312,7 @@ func Test_DeleteEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -333,7 +323,7 @@ func Test_DeleteEventType(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},

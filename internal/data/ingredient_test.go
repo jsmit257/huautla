@@ -20,8 +20,7 @@ import (
 func Test_SelectAllIngredients(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["select-all"],
-		log.WithField("test", "SelectAllIngredients")
+	l := log.WithField("test", "SelectAllIngredients")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -32,7 +31,7 @@ func Test_SelectAllIngredients(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
 						AddRow("0", "ingredient 0").
@@ -50,7 +49,7 @@ func Test_SelectAllIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -79,8 +78,6 @@ func Test_SelectAllIngredients(t *testing.T) {
 func Test_SelectIngredient(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["select"]
-
 	l := log.WithField("test", "SelectIngredient")
 
 	tcs := map[string]struct {
@@ -92,7 +89,7 @@ func Test_SelectIngredient(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name"}).
 						AddRow("ingredient 0"))
@@ -105,7 +102,7 @@ func Test_SelectIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -133,8 +130,6 @@ func Test_SelectIngredient(t *testing.T) {
 func Test_InsertIngredients(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["insert"]
-
 	l := log.WithField("test", "InsertIngredient")
 
 	tcs := map[string]struct {
@@ -147,7 +142,7 @@ func Test_InsertIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -158,7 +153,7 @@ func Test_InsertIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -170,7 +165,7 @@ func Test_InsertIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -182,7 +177,7 @@ func Test_InsertIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -216,8 +211,6 @@ func Test_InsertIngredients(t *testing.T) {
 func Test_UpdateIngredients(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["update"]
-
 	l := log.WithField("test", "UpdateIngredient")
 
 	tcs := map[string]struct {
@@ -229,7 +222,7 @@ func Test_UpdateIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -239,7 +232,7 @@ func Test_UpdateIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -250,7 +243,7 @@ func Test_UpdateIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -261,7 +254,7 @@ func Test_UpdateIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -293,8 +286,6 @@ func Test_UpdateIngredients(t *testing.T) {
 func Test_DeleteIngredients(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["delete"]
-
 	l := log.WithField("test", "DeleteIngredient")
 
 	tcs := map[string]struct {
@@ -306,7 +297,7 @@ func Test_DeleteIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -316,7 +307,7 @@ func Test_DeleteIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -327,7 +318,7 @@ func Test_DeleteIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -338,7 +329,7 @@ func Test_DeleteIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},

@@ -11,14 +11,14 @@ import (
 func (db *Conn) GetAllIngredients(ctx context.Context, s *types.Substrate, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("GetAllIngredients", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("GetAllIngredients", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
 
 	s.Ingredients = make([]types.Ingredient, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["substrate-ingredient"]["all-ingredients"], s.UUID)
+	rows, err = db.query.QueryContext(ctx, db.sql["substrate-ingredient"]["all"], s.UUID)
 	if err != nil {
 		return err
 	}
@@ -38,10 +38,10 @@ func (db *Conn) AddIngredient(ctx context.Context, s *types.Substrate, i types.I
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initVendorFuncs("AddIngredient", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("AddIngredient", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
-	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["add-ingredient"], db.generateUUID(), s.UUID, i.UUID)
+	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["add"], db.generateUUID(), s.UUID, i.UUID)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return db.AddIngredient(ctx, s, i, cid) // FIXME: infinite loop?
@@ -62,10 +62,10 @@ func (db *Conn) ChangeIngredient(ctx context.Context, s *types.Substrate, oldI, 
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initVendorFuncs("ChangeIngredient", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("ChangeIngredient", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
-	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["change-ingredient"], newI.UUID, s.UUID, oldI.UUID)
+	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["change"], newI.UUID, s.UUID, oldI.UUID)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return db.ChangeIngredient(ctx, s, oldI, newI, cid) // FIXME: infinite loop?
@@ -90,10 +90,10 @@ func (db *Conn) RemoveIngredient(ctx context.Context, s *types.Substrate, i type
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initVendorFuncs("RemoveIngredient", db.logger, err, s.UUID, cid)
+	deferred, start, l := initVendorFuncs("RemoveIngredient", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["remove-ingredient"], s.UUID, i.UUID)
+	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["remove"], s.UUID, i.UUID)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

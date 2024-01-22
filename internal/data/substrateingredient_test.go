@@ -15,8 +15,7 @@ import (
 func Test_GetAllIngredients(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["all-ingredients"],
-		log.WithField("test", "GetAllIngredients")
+	l := log.WithField("test", "GetAllIngredients")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -27,7 +26,7 @@ func Test_GetAllIngredients(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
 						AddRow("0", "ingredient 0").
@@ -45,7 +44,7 @@ func Test_GetAllIngredients(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -76,8 +75,6 @@ func Test_GetAllIngredients(t *testing.T) {
 func Test_AddIngredient(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["add-ingredient"]
-
 	l := log.WithField("test", "AddIngredient")
 
 	vermiculite := types.Ingredient{"0", "Vermiculite"}
@@ -91,7 +88,7 @@ func Test_AddIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -101,7 +98,7 @@ func Test_AddIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -111,7 +108,7 @@ func Test_AddIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -121,7 +118,7 @@ func Test_AddIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -155,8 +152,6 @@ func Test_AddIngredient(t *testing.T) {
 func Test_ChangeIngredient(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["change-ingredient"]
-
 	l := log.WithField("test", "ChangeIngredient")
 
 	vermiculite, millet, popcorn :=
@@ -176,7 +171,7 @@ func Test_ChangeIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -189,7 +184,7 @@ func Test_ChangeIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -199,7 +194,7 @@ func Test_ChangeIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -209,7 +204,7 @@ func Test_ChangeIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -245,8 +240,6 @@ func Test_ChangeIngredient(t *testing.T) {
 func Test_RemoveIngredient(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["remove-ingredient"]
-
 	l := log.WithField("test", "RemoveIngredient")
 
 	vermiculite, millet, popcorn :=
@@ -264,7 +257,7 @@ func Test_RemoveIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -275,7 +268,7 @@ func Test_RemoveIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -285,7 +278,7 @@ func Test_RemoveIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -295,7 +288,7 @@ func Test_RemoveIngredient(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},

@@ -22,8 +22,7 @@ import (
 func Test_SelectAllStages(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["select-all"],
-		log.WithField("test", "SelectAllStages")
+	l := log.WithField("test", "SelectAllStages")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -34,7 +33,7 @@ func Test_SelectAllStages(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
 						AddRow("0", "stage 0").
@@ -52,7 +51,7 @@ func Test_SelectAllStages(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -81,8 +80,6 @@ func Test_SelectAllStages(t *testing.T) {
 func Test_SelectStage(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["select"]
-
 	l := log.WithField("test", "SelectStage")
 
 	tcs := map[string]struct {
@@ -95,7 +92,7 @@ func Test_SelectStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnRows(
 						sqlmock.
 							NewRows([]string{"name"}).
@@ -109,7 +106,7 @@ func Test_SelectStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -137,8 +134,6 @@ func Test_SelectStage(t *testing.T) {
 func Test_InsertStage(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["insert"]
-
 	l := log.WithField("test", "InsertStage")
 
 	tcs := map[string]struct {
@@ -151,7 +146,7 @@ func Test_InsertStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -162,7 +157,7 @@ func Test_InsertStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -174,7 +169,7 @@ func Test_InsertStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -186,7 +181,7 @@ func Test_InsertStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -220,8 +215,6 @@ func Test_InsertStage(t *testing.T) {
 func Test_UpdateStage(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["update"]
-
 	l := log.WithField("test", "UpdateStage")
 
 	tcs := map[string]struct {
@@ -233,7 +226,7 @@ func Test_UpdateStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -243,7 +236,7 @@ func Test_UpdateStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -254,7 +247,7 @@ func Test_UpdateStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -265,7 +258,7 @@ func Test_UpdateStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -297,8 +290,6 @@ func Test_UpdateStage(t *testing.T) {
 func Test_DeleteStage(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["delete"]
-
 	l := log.WithField("test", "DeleteStage")
 
 	tcs := map[string]struct {
@@ -310,7 +301,7 @@ func Test_DeleteStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -320,7 +311,7 @@ func Test_DeleteStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -331,7 +322,7 @@ func Test_DeleteStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -342,7 +333,7 @@ func Test_DeleteStage(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},

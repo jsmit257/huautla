@@ -15,8 +15,7 @@ import (
 func Test_SelectAllSubstrates(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["select-all"],
-		log.WithField("test", "SelectAllSubstrates")
+	l := log.WithField("test", "SelectAllSubstrates")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -27,7 +26,7 @@ func Test_SelectAllSubstrates(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "type", "vendor_uuid", "vendor_name"}).
 						AddRow("0", "substrate 0", types.GrainType, "0", "vendor 0").
@@ -45,7 +44,7 @@ func Test_SelectAllSubstrates(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -74,8 +73,6 @@ func Test_SelectAllSubstrates(t *testing.T) {
 func Test_SelectSubstrate(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["select"]
-
 	l := log.WithField("test", "SelectSubstrate")
 
 	tcs := map[string]struct {
@@ -87,7 +84,7 @@ func Test_SelectSubstrate(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "type", "vendor_uuid", "vendor_name"}).
 						AddRow("substrate 0", types.GrainType, "0", "vendor 0"))
@@ -100,7 +97,7 @@ func Test_SelectSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -128,8 +125,6 @@ func Test_SelectSubstrate(t *testing.T) {
 func Test_InsertSubstrate(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["insert"]
-
 	l := log.WithField("test", "InsertSubstrate")
 
 	tcs := map[string]struct {
@@ -143,7 +138,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -155,7 +150,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -168,7 +163,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -181,7 +176,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -216,8 +211,6 @@ func Test_InsertSubstrate(t *testing.T) {
 func Test_UpdateSubstrate(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["update"]
-
 	l := log.WithField("test", "UpdateSubstrate")
 
 	tcs := map[string]struct {
@@ -229,7 +222,7 @@ func Test_UpdateSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -239,7 +232,7 @@ func Test_UpdateSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -250,7 +243,7 @@ func Test_UpdateSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -261,7 +254,7 @@ func Test_UpdateSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -290,14 +283,12 @@ func Test_UpdateSubstrate(t *testing.T) {
 	}
 }
 
-func foo(t *testing.T, querypat string) {
+func foo(t *testing.T, quux string) {
 
 }
 
 func Test_DeleteSubstrate(t *testing.T) {
 	t.Parallel()
-
-	var querypat = sqls["delete"]
 
 	l := log.WithField("test", "DeleteSubstrate")
 
@@ -310,7 +301,7 @@ func Test_DeleteSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -320,7 +311,7 @@ func Test_DeleteSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -331,7 +322,7 @@ func Test_DeleteSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -342,7 +333,7 @@ func Test_DeleteSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},

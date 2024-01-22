@@ -41,7 +41,7 @@ const connformat = ""
 
 var mtrcs = metrics.DataMetrics.MustCurryWith(prometheus.Labels{"pkg": "data"})
 
-func New(logger *log.Entry) (types.DB, error) {
+func New(cfg *types.Config, logger *log.Entry) (types.DB, error) {
 
 	var err error
 
@@ -61,7 +61,7 @@ func New(logger *log.Entry) (types.DB, error) {
 func (db *Conn) deleteByUUID(ctx context.Context, id types.UUID, cid types.CID, method, table string, l *log.Entry) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs(method, l, err, id, cid)
+	deferred, start, l := initVendorFuncs(method, l, id, cid)
 	defer deferred(start, err, l)
 
 	var result sql.Result
@@ -93,7 +93,7 @@ func readSQL(filename string) map[string]map[string]string {
 	return result
 }
 
-func initVendorFuncs(method string, l *log.Entry, err error, id types.UUID, cid types.CID) (deferred, time.Time, *log.Entry) {
+func initVendorFuncs(method string, l *log.Entry, id types.UUID, cid types.CID) (deferred, time.Time, *log.Entry) {
 	start := time.Now()
 	l = l.WithFields(log.Fields{
 		"method": method,

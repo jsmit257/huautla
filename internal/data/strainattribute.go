@@ -13,7 +13,7 @@ func (db *Conn) KnownAttributeNames(ctx context.Context, cid types.CID) ([]strin
 	var result = []string{}
 	var s string
 
-	deferred, start, l := initVendorFuncs("KnownAttributeNames", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("KnownAttributeNames", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -36,14 +36,14 @@ func (db *Conn) KnownAttributeNames(ctx context.Context, cid types.CID) ([]strin
 func (db *Conn) GetAllAttributes(ctx context.Context, s *types.Strain, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("GetAllAttributes", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("GetAllAttributes", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
 
 	s.Attributes = make([]types.StrainAttribute, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["all-attributes"])
+	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["all"])
 	if err != nil {
 		return err
 	}
@@ -67,10 +67,10 @@ func (db *Conn) AddAttribute(ctx context.Context, s *types.Strain, n, v string, 
 
 	id := types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("AddAttribute", db.logger, err, s.UUID, cid)
+	deferred, start, l := initVendorFuncs("AddAttribute", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["add-attribute"], id, n, v, s.UUID)
+	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["add"], id, n, v, s.UUID)
 
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -91,10 +91,10 @@ func (db *Conn) AddAttribute(ctx context.Context, s *types.Strain, n, v string, 
 func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, id types.UUID, n, v string, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("ChangeAttribute", db.logger, err, s.UUID, cid)
+	deferred, start, l := initVendorFuncs("ChangeAttribute", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["change-attribute"], v, n, s.UUID)
+	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["change"], v, n, s.UUID)
 
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -119,10 +119,10 @@ func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, id types.U
 func (db *Conn) RemoveAttribute(ctx context.Context, s *types.Strain, id types.UUID, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("RemoveAttribute", db.logger, err, s.UUID, cid)
+	deferred, start, l := initVendorFuncs("RemoveAttribute", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["remove-attribute"], id)
+	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["remove"], id)
 
 	if err != nil {
 		return err

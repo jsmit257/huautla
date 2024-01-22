@@ -15,8 +15,7 @@ import (
 func Test_SelectAllStrains(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["select-all"],
-		log.WithField("test", "Test_SelectAllStrains")
+	l := log.WithField("test", "Test_SelectAllStrains")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -27,7 +26,7 @@ func Test_SelectAllStrains(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "vendor_uuid", "vendor_name"}).
 						AddRow("0", "strain 0", "0", "vendor 0").
@@ -45,7 +44,7 @@ func Test_SelectAllStrains(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -74,8 +73,6 @@ func Test_SelectAllStrains(t *testing.T) {
 func Test_SelectStrain(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["select"]
-
 	l := log.WithField("test", "SelectStrain")
 
 	tcs := map[string]struct {
@@ -87,11 +84,11 @@ func Test_SelectStrain(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "vendor_uuid", "vendor_name"}).
 						AddRow("strain 0", "0", "vendor 0"))
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
 						AddRow("0", "name 0", "value 0").
@@ -110,7 +107,7 @@ func Test_SelectStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -138,8 +135,6 @@ func Test_SelectStrain(t *testing.T) {
 func Test_InsertStrain(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["insert"]
-
 	l := log.WithField("test", "InsertStrain")
 
 	tcs := map[string]struct {
@@ -152,7 +147,7 @@ func Test_InsertStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 
 				return db
@@ -164,7 +159,7 @@ func Test_InsertStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -176,7 +171,7 @@ func Test_InsertStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -188,7 +183,7 @@ func Test_InsertStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -222,8 +217,6 @@ func Test_InsertStrain(t *testing.T) {
 func Test_UpdateStrain(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["update"]
-
 	l := log.WithField("test", "UpdateStrain")
 
 	tcs := map[string]struct {
@@ -235,7 +228,7 @@ func Test_UpdateStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -245,7 +238,7 @@ func Test_UpdateStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -256,7 +249,7 @@ func Test_UpdateStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -267,7 +260,7 @@ func Test_UpdateStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -299,8 +292,6 @@ func Test_UpdateStrain(t *testing.T) {
 func Test_DeleteStrain(t *testing.T) {
 	t.Parallel()
 
-	var querypat = sqls["delete"]
-
 	l := log.WithField("test", "DeleteStrain")
 
 	tcs := map[string]struct {
@@ -312,7 +303,7 @@ func Test_DeleteStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -322,7 +313,7 @@ func Test_DeleteStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -333,7 +324,7 @@ func Test_DeleteStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -344,7 +335,7 @@ func Test_DeleteStrain(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},

@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllSubstrates(ctx context.Context, cid types.CID) ([]types.Substrate, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllSubstrates", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("SelectAllSubstrates", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -42,7 +42,7 @@ func (db *Conn) SelectAllSubstrates(ctx context.Context, cid types.CID) ([]types
 func (db *Conn) SelectSubstrate(ctx context.Context, id types.UUID, cid types.CID) (types.Substrate, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectSubstrate", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("SelectSubstrate", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Substrate{UUID: id}
@@ -64,7 +64,7 @@ func (db *Conn) InsertSubstrate(ctx context.Context, s types.Substrate, cid type
 
 	s.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertSubstrate", db.logger, err, s.UUID, cid)
+	deferred, start, l := initVendorFuncs("InsertSubstrate", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["substrate"]["insert"], s.UUID, s.Name, s.Type, s.Vendor.UUID)
@@ -86,11 +86,14 @@ func (db *Conn) InsertSubstrate(ctx context.Context, s types.Substrate, cid type
 func (db *Conn) UpdateSubstrate(ctx context.Context, id types.UUID, s types.Substrate, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateSubstrate", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("UpdateSubstrate", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["substrate"]["update"], s.Name, s.Type, s.Vendor.UUID, id)
 	if err != nil {
+		if isUniqueViolation(err) {
+			return db.UpdateSubstrate(ctx, id, s, cid) // FIXME: infinite loop?
+		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

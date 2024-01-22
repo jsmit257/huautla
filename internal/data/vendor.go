@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Vendor, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllVendors", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("SelectAllVendors", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -35,7 +35,7 @@ func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Ve
 func (db *Conn) SelectVendor(ctx context.Context, id types.UUID, cid types.CID) (types.Vendor, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectVendor", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("SelectVendor", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Vendor{UUID: id}
@@ -51,14 +51,12 @@ func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID)
 
 	v.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertVendor", db.logger, err, v.UUID, cid)
+	deferred, start, l := initVendorFuncs("InsertVendor", db.logger, v.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["vendor"]["insert"], v.UUID, v.Name)
 	if err != nil {
-		// FIXME: choose what to do based on the tupe of error
-		duplicatePrimaryKeyErr := false
-		if duplicatePrimaryKeyErr {
+		if isUniqueViolation(err) {
 			return db.InsertVendor(ctx, v, cid) // FIXME: infinite loop?
 		}
 		return v, err
@@ -74,11 +72,14 @@ func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID)
 func (db *Conn) UpdateVendor(ctx context.Context, id types.UUID, v types.Vendor, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateVendor", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("UpdateVendor", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["vendor"]["update"], v.Name, id)
 	if err != nil {
+		if isUniqueViolation(err) {
+			return db.UpdateVendor(ctx, id, v, cid) // FIXME: infinite loop?
+		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

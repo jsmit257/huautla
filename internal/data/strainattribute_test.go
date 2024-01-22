@@ -16,8 +16,7 @@ func Test_KnownAttributeNames(t *testing.T) {
 	//ctx context.Context, cid types.CID) ([]string, error)
 	t.Parallel()
 
-	querypat, l := sqls["get-unique-names"],
-		log.WithField("test", "KnownAttributeNames")
+	l := log.WithField("test", "KnownAttributeNames")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -27,7 +26,7 @@ func Test_KnownAttributeNames(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name"}).
 						AddRow("name 0").
@@ -41,7 +40,7 @@ func Test_KnownAttributeNames(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -71,8 +70,7 @@ func Test_KnownAttributeNames(t *testing.T) {
 func Test_GetAllAttributes(t *testing.T) {
 	t.Parallel()
 
-	querypat, l := sqls["all-attributes"],
-		log.WithField("test", "GetAllAttributes")
+	l := log.WithField("test", "GetAllAttributes")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -83,7 +81,7 @@ func Test_GetAllAttributes(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery(querypat).
+				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
 						AddRow("0", "name 0", "value 0").
@@ -101,7 +99,7 @@ func Test_GetAllAttributes(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectQuery(querypat).
+					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -134,8 +132,6 @@ func Test_AddAttribute(t *testing.T) {
 	//ctx context.Context, s *Strain, sa StrainAttribute, cid CID) error
 	t.Parallel()
 
-	var querypat = sqls["insert"]
-
 	l := log.WithField("test", "InsertStrain")
 
 	tcs := map[string]struct {
@@ -149,7 +145,7 @@ func Test_AddAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -162,7 +158,7 @@ func Test_AddAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -173,7 +169,7 @@ func Test_AddAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -184,7 +180,7 @@ func Test_AddAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -222,8 +218,6 @@ func Test_ChangeAttribute(t *testing.T) {
 	//ctx context.Context, s *Strain, n, v string, cid CID) error
 	t.Parallel()
 
-	var querypat = sqls["delete"]
-
 	l := log.WithField("test", "RemoveAttribute")
 
 	tcs := map[string]struct {
@@ -237,7 +231,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -253,7 +247,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -265,7 +259,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -277,7 +271,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -313,10 +307,7 @@ func Test_ChangeAttribute(t *testing.T) {
 }
 
 func Test_RemoveAttribute(t *testing.T) {
-	//ctx context.Context, s *Strain, id UUID, cid CID) error
 	t.Parallel()
-
-	var querypat = sqls["delete"]
 
 	l := log.WithField("test", "RemoveAttribute")
 
@@ -330,7 +321,7 @@ func Test_RemoveAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -344,7 +335,7 @@ func Test_RemoveAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -355,7 +346,7 @@ func Test_RemoveAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -366,7 +357,7 @@ func Test_RemoveAttribute(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec(querypat).
+					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},

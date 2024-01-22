@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllStrains(ctx context.Context, cid types.CID) ([]types.Strain, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllStrains", db.logger, err, "nil", cid)
+	deferred, start, l := initVendorFuncs("SelectAllStrains", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -46,7 +46,7 @@ func (db *Conn) SelectAllStrains(ctx context.Context, cid types.CID) ([]types.St
 func (db *Conn) SelectStrain(ctx context.Context, id types.UUID, cid types.CID) (types.Strain, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectStrain", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("SelectStrain", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Strain{UUID: id}
@@ -70,7 +70,7 @@ func (db *Conn) InsertStrain(ctx context.Context, s types.Strain, cid types.CID)
 
 	s.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertStrain", db.logger, err, s.UUID, cid)
+	deferred, start, l := initVendorFuncs("InsertStrain", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["strain"]["insert"], s.UUID, s.Name, s.Vendor.UUID)
@@ -91,7 +91,7 @@ func (db *Conn) InsertStrain(ctx context.Context, s types.Strain, cid types.CID)
 func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateStrain", db.logger, err, id, cid)
+	deferred, start, l := initVendorFuncs("UpdateStrain", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], s.Name, id)
