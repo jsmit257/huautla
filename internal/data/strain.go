@@ -23,13 +23,20 @@ func (db *Conn) SelectAllStrains(ctx context.Context, cid types.CID) ([]types.St
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 		row := types.Strain{}
-		rows.Scan(
+		err = rows.Scan(
 			&row.UUID,
 			&row.Name,
 			&row.Vendor.UUID,
 			&row.Vendor.Name)
+
+		if err != nil {
+			break
+		}
+
 		result = append(result, row)
 	}
 
@@ -43,12 +50,17 @@ func (db *Conn) SelectStrain(ctx context.Context, id types.UUID, cid types.CID) 
 	defer deferred(start, err, l)
 
 	result := types.Strain{UUID: id}
+
 	err = db.
 		QueryRowContext(ctx, db.sql["strain"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Vendor.UUID,
 			&result.Vendor.Name)
+
+	if err == nil {
+		err = db.GetAllAttributes(ctx, &result, cid)
+	}
 
 	return result, err
 }
@@ -84,6 +96,9 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 
 	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], s.Name, id)
 	if err != nil {
+		if isUniqueViolation(err) {
+			return db.UpdateStrain(ctx, id, s, cid) // FIXME: infinite loop?
+		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err
@@ -94,5 +109,6 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 }
 
 func (db *Conn) DeleteStrain(ctx context.Context, id types.UUID, cid types.CID) error {
+	// TODO: delete all attributes first
 	return db.deleteByUUID(ctx, id, cid, "DeleteStrain", "strain", db.logger)
 }

@@ -44,7 +44,13 @@ type (
 		DeleteStage(ctx context.Context, id UUID, cid CID) error
 	}
 
-	StrainAttributer interface{}
+	StrainAttributer interface {
+		KnownAttributeNames(ctx context.Context, cid CID) ([]string, error)
+		GetAllAttributes(ctx context.Context, s *Strain, cid CID) error
+		AddAttribute(ctx context.Context, s *Strain, n, v string, cid CID) error
+		ChangeAttribute(ctx context.Context, s *Strain, id UUID, n, v string, cid CID) error
+		RemoveAttribute(ctx context.Context, s *Strain, id UUID, cid CID) error
+	}
 
 	Strainer interface {
 		SelectAllStrains(ctx context.Context, cid CID) ([]Strain, error)
@@ -52,7 +58,6 @@ type (
 		InsertStrain(ctx context.Context, s Strain, cid CID) (Strain, error)
 		UpdateStrain(ctx context.Context, id UUID, s Strain, cid CID) error
 		DeleteStrain(ctx context.Context, id UUID, cid CID) error
-		GetAllAttributes(ctx context.Context, s *Strain, cid CID) error
 	}
 
 	SubstrateIngredienter interface {

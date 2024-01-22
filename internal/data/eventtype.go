@@ -25,11 +25,14 @@ func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types
 
 	for rows.Next() {
 		row := types.EventType{}
-		rows.Scan(
+		err = rows.Scan(
 			&row.UUID,
 			&row.Name,
 			&row.Stage.UUID,
 			&row.Stage.Name)
+		if err != nil {
+			break
+		}
 		result = append(result, row)
 	}
 

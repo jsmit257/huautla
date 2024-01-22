@@ -29,24 +29,18 @@ type (
 		Name string `json:"name"`
 	}
 
-	SubstrateIngredient struct {
-		UUID       `json:"-"`
-		Substrate  `json:"substrate"`
-		Ingredient `json:"ingredient"`
-	}
-
 	Strain struct {
 		UUID       `json:"-"`
 		Name       string `json:"name"`
 		Vendor     `json:"vendor"`
-		Attributes []StrainAttribute `json:"attributes"`
+		Attributes []StrainAttribute `json:"attributes,omitempty"`
 	}
 
 	StrainAttribute struct {
-		UUID   `json:"-"`
-		Name   string `json:"name"`
-		Value  string `json:"value"`
-		Strain `json:"strain"`
+		UUID  `json:"-"`
+		Name  string `json:"name"`
+		Value string `json:"value"`
+		// Strain `json:"-"`
 	}
 
 	Stage struct {
@@ -64,7 +58,7 @@ type (
 		UUID           `json:"-"`
 		GrainCost      int16     `json:"grain_cost"`
 		BulkCost       int16     `json:"bulk_cost"`
-		Yield          int16     `json:"Yield"`
+		Yield          int16     `json:"yield"`
 		Count          int16     `json:"count"`
 		Name           string    `json:"name"`
 		Gross          int16     `json:"gross"`

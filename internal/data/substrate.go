@@ -23,6 +23,8 @@ func (db *Conn) SelectAllSubstrates(ctx context.Context, cid types.CID) ([]types
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 		row := types.Substrate{}
 		rows.Scan(
@@ -52,6 +54,8 @@ func (db *Conn) SelectSubstrate(ctx context.Context, id types.UUID, cid types.CI
 			&result.Vendor.UUID,
 			&result.Vendor.Name)
 
+	// err = db.GetAllIngredients(ctx, &result, "SelectSubstrate")
+
 	return result, err
 }
 
@@ -64,6 +68,7 @@ func (db *Conn) InsertSubstrate(ctx context.Context, s types.Substrate, cid type
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["substrate"]["insert"], s.UUID, s.Name, s.Type, s.Vendor.UUID)
+
 	if err != nil {
 		if isUniqueViolation(err) {
 			return db.InsertSubstrate(ctx, s, cid) // FIXME: infinite loop?
@@ -96,5 +101,6 @@ func (db *Conn) UpdateSubstrate(ctx context.Context, id types.UUID, s types.Subs
 }
 
 func (db *Conn) DeleteSubstrate(ctx context.Context, id types.UUID, cid types.CID) error {
+	// FIXME: delete all substrateingredients first
 	return db.deleteByUUID(ctx, id, cid, "DeleteSubstrate", "substrate", db.logger)
 }
