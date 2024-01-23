@@ -3,10 +3,10 @@
 event:
   all-by-lifecycle: >
     select e.uuid,
-           e.temperature, 
-           e.humidity, 
-           e.mtime, 
-           e.ctime, 
+           e.temperature,
+           e.humidity,
+           e.mtime,
+           e.ctime,
            et.uuid as eventtype_uuid,
            et.name as eventtype_name,
            s.uuid as stage_uuid,
@@ -21,10 +21,10 @@ event:
         by mtime
   all-by-eventtype:
     select e.uuid,
-           e.temperature, 
-           e.humidity, 
-           e.mtime, 
-           e.ctime, 
+           e.temperature,
+           e.humidity,
+           e.mtime,
+           e.ctime,
            et.uuid as eventtype_uuid,
            et.name as eventtype_name,
            s.uuid as stage_uuid,
@@ -36,10 +36,10 @@ event:
         on et.stage_uuid = s.uuid
      where e.uuid = ?
   select: >
-    select e.temperature, 
-           e.humidity, 
-           e.mtime, 
-           e.ctime, 
+    select e.temperature,
+           e.humidity,
+           e.mtime,
+           e.ctime,
            et.uuid as eventtype_uuid,
            et.name as eventtype_name,
            s.uuid as stage_uuid,
@@ -58,11 +58,11 @@ event:
            eventtype et
      where l.uuid = ?
        and et.uuid = ?
-  change: > 
+  change: >
     update event
        set temperature = ?,
-           humidity = ?, 
-           mtime = ?, 
+           humidity = ?,
+           mtime = ?,
            eventtype_uuid = et.uuid
       from eventtype et
      where event.uuid = ?
@@ -71,15 +71,15 @@ event:
 
 eventtype:
   select-all: >
-    select uuid, 
-            name, 
+    select uuid,
+            name,
             s.uuid as stage_uuid,
             s.name as stage_name
       from eventtypes e
       join stages s
-        on e.stage_uuid = s.uuid      
+        on e.stage_uuid = s.uuid
   select:
-    select name, 
+    select name,
            s.uuid as stage_uuid,
            s.name as stage_name
       from eventtypes e
@@ -87,7 +87,7 @@ eventtype:
         on e.stage_uuid = s.uuid
      where e.uuid = ?
   insert: >
-    insert 
+    insert
       into eventtype(uuid, name, stage_uuid)
     select ?,
            ?,
@@ -105,10 +105,100 @@ ingredient:
   delete: delete from ingredients where uuid = ?
 
 lifecycle:
-  select:
-  insert:
-  update:
-  delete:
+  # it's an ugly, bad precedent, except that it saves a lot of hits to the db
+  select: >
+    select lc.name,
+           lc.location,
+           lc.graincost,
+           lc.bulkcost,
+           lc.yield,
+           lc.count,
+           lc.gross,
+           lc.mtime,
+           lc.ctime,
+           s.uuid as strain_uuid,
+           s.name as strain_name,
+           sv.uuid as strain_vendor_uuid,
+           sv.name as strain_vendor_name,
+           gs.uuid as grain_substrate_uuid,
+           gs.name as grain_substrate_name,
+           gs.type as grain_substrate_type,
+           gv.uuid as grain_vendor_uuid,
+           gv.name as grain_vendor_name,
+           bs.uuid as bulk_substrate_uuid,
+           bs.name as bulk_substrate_name,
+           bs.type as bulk_substrate_type,
+           bv.uuid as bulk_vendor_uuid,
+           bv.name as bulk_vendor_name,
+      from lifecycle lc
+      join strain s
+        on lc.strain_uuid = s.uuid
+      join vendor sv
+        on s.vendor_uuid = sv.uuid
+      join substrate gs
+        on lc.grainsubstrate_uuid = gs.uuid
+      join vendor gv
+        on gs.vendor_uuid = gv.uuid
+      join substrate bs
+        on lc.bulksubstrate_uuid = bs.uuid
+      join vendor bv
+        on bs.vendor_uuid = bv.uuid
+     where uuid = ?
+  insert: >
+    insert
+      into lifecycle(
+            uuid,
+            name,
+            location,
+            graincost,
+            bulkcost,
+            yield,
+            count,
+            gross,
+            mtime,
+            ctime,
+            strain_uuid,
+            grainsubstrate_uuid,
+            bulksubstrate_uuid)
+    select ?,
+           ?,
+           ?,
+           ?,
+           ?,
+           ?,
+           ?,
+           ?,
+           ?,
+           s.uuid,
+           gs.uuid,
+           bs.uuid
+      from strain s,
+           substrate gs,
+           substrate bs
+     where s.uuid = ?
+       and gs.uuid = ?
+       and bs.uuid = ?
+  update: >
+    update lifecycle
+       set name = ?,
+           location = ?,
+           graincost = ?,
+           bulkcost = ?,
+           yield = ?,
+           count = ?,
+           gross = ?,
+           mtime = ?,
+           ctime = ?,
+           strain_uuid = s.uuid,
+           grain_uuid = gs.uuid,
+           bulk_uuid = bs.uuid,
+      from strain s,
+           substrate gs,
+           substrate bs
+     where s.uuid = ?
+       and gs.uuid = ?
+       and bs.uuid = ?
+  delete: delete from lifecycle where uuid = ?
 
 stage:
   select-all: select uuid, name from stages order by name
@@ -119,7 +209,7 @@ stage:
 
 strain:
   select-all: >
-    select s.name, 
+    select s.name,
            v.uuid as vendor_uuid,
            v.name as vendor_name
       from strains s
@@ -128,7 +218,7 @@ strain:
      order
         by s.name
   select: >
-    select s.name, 
+    select s.name,
            v.uuid as vendor_uuid,
            v.name as vendor_name
       from strains s
@@ -136,9 +226,9 @@ strain:
         on s.vendor_uuid = v.uuid
      where s.uuid = ?
   insert: >
-    insert 
+    insert
       into strains(uuid, name, vendor_uuid)
-    select ?, ?, v.uuid 
+    select ?, ?, v.uuid
       from vendors v
      where vendor_uuid = ?
   update: update strains set name = ? where uuid = ?
@@ -151,7 +241,7 @@ strainattribute:
       from strain_attributes sa
      where strain_uuid = ?
   add: >
-    insert 
+    insert
       into strainattributes (uuid, name, value, strain_uuid)
     select ?, ?, ?, s.uuid
       from strain s
@@ -168,33 +258,33 @@ strainattribute:
 substrate-ingredient:
   all: >
     select i.uuid,
-           i.name 
+           i.name
       from ingredients i
       join substrate_ingredients si
         on i.uuid = si.ingredient_uuid
      where si.substrate_id = ?
   add: >
-      insert 
-      into substrate_ingredients (uuid, substrate_uuid, ingredient_uuid) 
-    select ?, s.uuid, i.uuid 
+      insert
+      into substrate_ingredients (uuid, substrate_uuid, ingredient_uuid)
+    select ?, s.uuid, i.uuid
       from substrates s,
-           ingredient i 
-     where s.uuid = ? 
+           ingredient i
+     where s.uuid = ?
        and i.uuid = ?
   change: >
-    update substrate_ingredients 
-       set ingredient_uuid = ? 
-     where substrate_uuid = ? 
+    update substrate_ingredients
+       set ingredient_uuid = ?
+     where substrate_uuid = ?
        and ingredient_uuid = ?
   remove: >
-    delete 
-      from substrate_ingredients 
-     where substrate_uuid = ? 
+    delete
+      from substrate_ingredients
+     where substrate_uuid = ?
        and ingredient_uuid = ?
 
 substrate:
   select-all: >
-    select s.name, 
+    select s.name,
            v.uuid as vendor_uuid,
            v.name as vendor_name
       from substrates s
@@ -203,7 +293,7 @@ substrate:
      order
         by s.name
   select: >
-    select s.name, 
+    select s.name,
            v.uuid as vendor_uuid,
            v.name as vendor_name
       from substrates s
@@ -211,9 +301,9 @@ substrate:
         on s.vendor_uuid = v.uuid
      where s.uuid = ?
   insert: >
-    insert 
+    insert
       into substrates(uuid, name, vendor_uuid)
-    select ?, ?, v.uuid 
+    select ?, ?, v.uuid
       from vendors v
      where vendor_uuid = ?
   update: update substrates set name = ? where uuid = ?

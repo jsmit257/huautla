@@ -41,7 +41,12 @@ type (
 		DeleteIngredient(ctx context.Context, id UUID, cid CID) error
 	}
 
-	Lifecycler interface{}
+	Lifecycler interface {
+		SelectLifecycle(ctx context.Context, id UUID, cid CID) (Lifecycle, error)
+		InsertLifecycle(ctx context.Context, lc Lifecycle, cid CID) (Lifecycle, error)
+		UpdateLifecycle(ctx context.Context, lc Lifecycle, cid CID) error
+		DeleteLifecycle(ctx context.Context, id UUID, cid CID) error
+	}
 
 	Stager interface {
 		SelectAllStages(ctx context.Context, cid CID) ([]Stage, error)

@@ -48,22 +48,24 @@ func (db *Conn) SelectVendor(ctx context.Context, id types.UUID, cid types.CID) 
 
 func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID) (types.Vendor, error) {
 	var err error
+	var result sql.Result
+	var rows int64
 
 	v.UUID = types.UUID(db.generateUUID().String())
 
 	deferred, start, l := initVendorFuncs("InsertVendor", db.logger, v.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["vendor"]["insert"], v.UUID, v.Name)
+	result, err = db.ExecContext(ctx, db.sql["vendor"]["insert"], v.UUID, v.Name)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return db.InsertVendor(ctx, v, cid) // FIXME: infinite loop?
 		}
 		return v, err
-	} else if rows, err := result.RowsAffected(); err != nil {
+	} else if rows, err = result.RowsAffected(); err != nil {
 		return v, err
 	} else if rows != 1 {
-		return v, fmt.Errorf("vendor was not added")
+		err = fmt.Errorf("vendor was not added")
 	}
 
 	return v, err

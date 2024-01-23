@@ -37,6 +37,7 @@ func (db *Conn) GetAllIngredients(ctx context.Context, s *types.Substrate, cid t
 func (db *Conn) AddIngredient(ctx context.Context, s *types.Substrate, i types.Ingredient, cid types.CID) error {
 	var err error
 	var result sql.Result
+	var rows int64
 
 	deferred, start, l := initVendorFuncs("AddIngredient", db.logger, "nil", cid)
 	defer deferred(start, err, l)
@@ -47,13 +48,13 @@ func (db *Conn) AddIngredient(ctx context.Context, s *types.Substrate, i types.I
 			return db.AddIngredient(ctx, s, i, cid) // FIXME: infinite loop?
 		}
 		return err
-	} else if rows, err := result.RowsAffected(); err != nil {
+	} else if rows, err = result.RowsAffected(); err != nil {
 		return err
-	} else if rows != 1 { // most likely cause is a bad vendor.uuid
-		return fmt.Errorf("substrateingredient was not added")
+	} else if rows != 1 {
+		err = fmt.Errorf("substrateingredient was not added")
+	} else {
+		s.Ingredients = append(s.Ingredients, i)
 	}
-
-	s.Ingredients = append(s.Ingredients, i)
 
 	return err
 }

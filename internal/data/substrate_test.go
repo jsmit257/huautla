@@ -88,10 +88,25 @@ func Test_SelectSubstrate(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "type", "vendor_uuid", "vendor_name"}).
 						AddRow("substrate 0", types.GrainType, "0", "vendor 0"))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name"}).
+						AddRow("0", "ingredient 0").
+						AddRow("1", "ingredient 1").
+						AddRow("2", "ingredient 2"))
 				return db
 			},
-			id:     "0",
-			result: types.Substrate{"0", "substrate 0", types.GrainType, types.Vendor{"0", "vendor 0"}, nil},
+			id: "0",
+			result: types.Substrate{
+				UUID:   "0",
+				Name:   "substrate 0",
+				Type:   types.GrainType,
+				Vendor: types.Vendor{UUID: "0", Name: "vendor 0"},
+				Ingredients: []types.Ingredient{
+					{UUID: "0", Name: "ingredient 0"},
+					{UUID: "1", Name: "ingredient 1"},
+					{UUID: "2", Name: "ingredient 2"},
+				}},
 		},
 		"query_fails": {
 			db: func() *sql.DB {

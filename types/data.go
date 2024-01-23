@@ -50,19 +50,20 @@ type (
 	}
 
 	EventType struct {
-		UUID  `json:"-"`
-		Name  string `json:"name"`
+		UUID `json:"-"`
+		Name string `json:"name"`
+		// Severity string `json:"severity"` // XXX: add this to select/insert/update and the test cases
 		Stage `json:"stage"`
 	}
 
 	Lifecycle struct {
 		UUID           `json:"id"`
+		Name           string    `json:"name"`
 		Location       string    `json:"location"`
 		GrainCost      int16     `json:"grain_cost"`
 		BulkCost       int16     `json:"bulk_cost"`
 		Yield          int16     `json:"yield"`
 		Count          int16     `json:"count"`
-		Name           string    `json:"name"`
 		Gross          int16     `json:"gross"`
 		MTime          time.Time `json:"modified_date"`
 		CTime          time.Time `json:"create_date"`

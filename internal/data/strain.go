@@ -51,14 +51,13 @@ func (db *Conn) SelectStrain(ctx context.Context, id types.UUID, cid types.CID) 
 
 	result := types.Strain{UUID: id}
 
-	err = db.
+	if err = db.
 		QueryRowContext(ctx, db.sql["strain"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Vendor.UUID,
-			&result.Vendor.Name)
+			&result.Vendor.Name); err == nil {
 
-	if err == nil {
 		err = db.GetAllAttributes(ctx, &result, cid)
 	}
 

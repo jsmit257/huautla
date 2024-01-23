@@ -136,7 +136,6 @@ func Test_InsertVendor(t *testing.T) {
 
 	tcs := map[string]struct {
 		db     getMockDB
-		id     types.UUID
 		result types.Vendor
 		err    error
 	}{
@@ -148,7 +147,6 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			id:     "0",
 			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
 		},
 		"no_rows_affected": {
@@ -159,7 +157,6 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			id:     "0",
 			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
 			err:    fmt.Errorf("vendor was not added"),
 		},
@@ -171,7 +168,6 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			id:     "0",
 			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
 			err:    fmt.Errorf("some error"),
 		},
@@ -183,7 +179,6 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
-			id:     "0",
 			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
 			err:    fmt.Errorf("some error"),
 		},
@@ -201,7 +196,7 @@ func Test_InsertVendor(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertVendor(
 				context.Background(),
-				types.Vendor{tc.id, "vendor " + string(tc.id)},
+				types.Vendor{"0", "vendor 0"},
 				"Test_InsertVendors")
 
 			require.Equal(t, tc.err, err)
@@ -289,7 +284,7 @@ func Test_UpdateVendor(t *testing.T) {
 func Test_DeleteVendor(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "deleteVendor")
+	l := log.WithField("test", "DeleteVendor")
 
 	tcs := map[string]struct {
 		db  getMockDB

@@ -48,11 +48,13 @@ create table stages (
 create table event_types (
   uuid       varchar(40)  not null primary key,
   name       varchar(512) not null unique,
+  severity   varchar(10)  not null check in ('Info', 'Warn', 'Error', 'Fatal'),
   stage_uuid varchar(40)  not null foreign key references stages(uuid)
 );
 
 create table lifecycle (
   uuid                 varchar(40)  not null primary key,
+  name                 varchar(128) not null unique,
   location             varchar(128) not null,
   grain_cost           decimal(8,2) not null,
   bulk_cost            decimal(8,2) not null,
@@ -62,8 +64,8 @@ create table lifecycle (
   mtime                datetime     not null default `now`,
   ctime                datetime     not null default `now`,
   strain_uuid          varchar(40)  not null foreign key references strains(uuid),
-  grain_substrate_uuid varchar(40)  not null foreign key references grain_substrates(uuid),
-  bulk_substrate_uuid  varchar(40)  not null foreign key references bulk_substrates(uuid)
+  grainsubstrate_uuid varchar(40)  not null foreign key references grain_substrates(uuid),
+  bulksubstrate_uuid  varchar(40)  not null foreign key references bulk_substrates(uuid)
 );
 
 create table events (

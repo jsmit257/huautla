@@ -46,15 +46,17 @@ func (db *Conn) SelectSubstrate(ctx context.Context, id types.UUID, cid types.CI
 	defer deferred(start, err, l)
 
 	result := types.Substrate{UUID: id}
-	err = db.
+
+	if err = db.
 		QueryRowContext(ctx, db.sql["substrate"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Type,
 			&result.Vendor.UUID,
-			&result.Vendor.Name)
+			&result.Vendor.Name); err == nil {
 
-	// err = db.GetAllIngredients(ctx, &result, "SelectSubstrate")
+		err = db.GetAllIngredients(ctx, &result, "SelectSubstrate")
+	}
 
 	return result, err
 }

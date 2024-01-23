@@ -52,10 +52,13 @@ func (db *Conn) GetAllAttributes(ctx context.Context, s *types.Strain, cid types
 
 	for rows.Next() {
 		row := types.StrainAttribute{}
-		rows.Scan(
+		if err = rows.Scan(
 			&row.UUID,
 			&row.Name,
-			&row.Value)
+			&row.Value); err != nil {
+
+			return err
+		}
 		s.Attributes = append(s.Attributes, row)
 	}
 
