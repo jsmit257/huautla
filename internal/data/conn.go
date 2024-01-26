@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"gopkg.in/yaml.v3"
 
 	"github.com/jsmit257/huautla/internal/metrics"
 	"github.com/jsmit257/huautla/types"
@@ -45,10 +47,15 @@ func New(cfg *types.Config, logger *log.Entry) (types.DB, error) {
 
 	var err error
 
+	sqls, err := readSQL("./pgsql.yaml")
+	if err != nil {
+		return nil, err
+	}
+
 	result := &Conn{
 		generateUUID: uuid.New,
 		logger:       logger,
-		sql:          readSQL("pgsql.yaml"),
+		sql:          sqls,
 	}
 
 	result.query, err = sql.Open(
@@ -61,7 +68,7 @@ func New(cfg *types.Config, logger *log.Entry) (types.DB, error) {
 func (db *Conn) deleteByUUID(ctx context.Context, id types.UUID, cid types.CID, method, table string, l *log.Entry) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs(method, l, id, cid)
+	deferred, start, l := initAccessFuncs(method, l, id, cid)
 	defer deferred(start, err, l)
 
 	var result sql.Result
@@ -79,21 +86,21 @@ func (db *Conn) deleteByUUID(ctx context.Context, id types.UUID, cid types.CID, 
 	return err
 }
 
-func readSQL(filename string) map[string]map[string]string {
-	var err error
-
+func readSQL(filename string) (map[string]map[string]string, error) {
 	result := make(map[string]map[string]string)
 
-	// open the file,
-	// parse as yaml or panic
-	if err != nil {
-		panic(err)
+	if yamlFile, err := os.ReadFile(filename); err != nil {
+		wd, _ := os.Getwd()
+		err = fmt.Errorf("pwd: '%s', err: %v", wd, err)
+		return result, err
+	} else if err = yaml.Unmarshal(yamlFile, &result); err != nil {
+		return result, err
 	}
 
-	return result
+	return result, nil
 }
 
-func initVendorFuncs(method string, l *log.Entry, id types.UUID, cid types.CID) (deferred, time.Time, *log.Entry) {
+func initAccessFuncs(method string, l *log.Entry, id types.UUID, cid types.CID) (deferred, time.Time, *log.Entry) {
 	start := time.Now()
 	l = l.WithFields(log.Fields{
 		"method": method,

@@ -12,7 +12,7 @@ import (
 func (db *Conn) GetLifecycleEvents(ctx context.Context, lc *types.Lifecycle, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("GetLifecycleEvents", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("GetLifecycleEvents", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	lc.Events, err = db.selectEventsList(ctx, db.sql["event"]["all-by-lifecycle"], lc.UUID)
@@ -23,7 +23,7 @@ func (db *Conn) GetLifecycleEvents(ctx context.Context, lc *types.Lifecycle, cid
 func (db *Conn) SelectByEventType(ctx context.Context, et types.EventType, cid types.CID) ([]types.Event, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectByEventType", db.logger, et.UUID, cid)
+	deferred, start, l := initAccessFuncs("SelectByEventType", db.logger, et.UUID, cid)
 	defer deferred(start, err, l)
 
 	return db.selectEventsList(ctx, db.sql["event"]["all-by-eventtype"], et.UUID)
@@ -67,7 +67,7 @@ func (db *Conn) selectEventsList(ctx context.Context, query string, id types.UUI
 func (db *Conn) SelectEvent(ctx context.Context, id types.UUID, cid types.CID) (types.Event, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectEvent", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("SelectEvent", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Event{UUID: id}
@@ -94,7 +94,7 @@ func (db *Conn) AddEvent(ctx context.Context, lc *types.Lifecycle, e types.Event
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initVendorFuncs("InsertEvent", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("InsertEvent", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	e.UUID = types.UUID(db.generateUUID().String())
@@ -129,7 +129,7 @@ func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Ev
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initVendorFuncs("UpdateEvent", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("UpdateEvent", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	e.MTime = time.Now().UTC()
@@ -164,7 +164,7 @@ func (db *Conn) RemoveEvent(ctx context.Context, lc *types.Lifecycle, id types.U
 
 	var err error
 
-	deferred, start, l := initVendorFuncs("RemoveEvent", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("RemoveEvent", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["event"]["remove"], id)

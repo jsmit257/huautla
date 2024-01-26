@@ -396,7 +396,7 @@ func Test_InsertLifecycle(t *testing.T) {
 				"Test_InsertLifecycle")
 
 			require.Equal(t, tc.err, err)
-			require.NotEmpty(t, lc.UUID)
+			require.Equal(t, lc.UUID, types.UUID(mockUUIDGen().String()))
 		})
 	}
 }

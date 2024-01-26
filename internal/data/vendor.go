@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Vendor, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllVendors", db.logger, "nil", cid)
+	deferred, start, l := initAccessFuncs("SelectAllVendors", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -35,7 +35,7 @@ func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Ve
 func (db *Conn) SelectVendor(ctx context.Context, id types.UUID, cid types.CID) (types.Vendor, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectVendor", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("SelectVendor", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Vendor{UUID: id}
@@ -53,7 +53,7 @@ func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID)
 
 	v.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertVendor", db.logger, v.UUID, cid)
+	deferred, start, l := initAccessFuncs("InsertVendor", db.logger, v.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err = db.ExecContext(ctx, db.sql["vendor"]["insert"], v.UUID, v.Name)
@@ -74,7 +74,7 @@ func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID)
 func (db *Conn) UpdateVendor(ctx context.Context, id types.UUID, v types.Vendor, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateVendor", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("UpdateVendor", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["vendor"]["update"], v.Name, id)

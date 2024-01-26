@@ -12,7 +12,7 @@ event:
            s.uuid as stage_uuid,
            s.name as stage_name
       from events e
-      join eventtypes et
+      join event_types et
         on e.eventtype_uuid = et.uuid
       join stages s
         on et.stage_uuid = s.uuid
@@ -30,7 +30,7 @@ event:
            s.uuid as stage_uuid,
            s.name as stage_name
       from events e
-      join eventtypes et
+      join event_types et
         on e.eventtype_uuid = et.uuid
       join stages s
         on et.stage_uuid = s.uuid
@@ -45,7 +45,7 @@ event:
            s.uuid as stage_uuid,
            s.name as stage_name
       from events e
-      join eventtypes et
+      join event_types et
         on e.eventtype_uuid = et.uuid
       join stages s
         on et.stage_uuid = s.uuid
@@ -71,18 +71,18 @@ event:
 
 eventtype:
   select-all: >
-    select uuid,
-            name,
-            s.uuid as stage_uuid,
-            s.name as stage_name
-      from eventtypes e
+    select e.uuid,
+           e.name,
+           s.uuid as stage_uuid,
+           s.name as stage_name
+      from event_types e
       join stages s
         on e.stage_uuid = s.uuid
   select:
-    select name,
+    select e.name,
            s.uuid as stage_uuid,
            s.name as stage_name
-      from eventtypes e
+      from event_types e
       join stages s
         on e.stage_uuid = s.uuid
      where e.uuid = ?
@@ -109,10 +109,10 @@ lifecycle:
   select: >
     select lc.name,
            lc.location,
-           lc.graincost,
-           lc.bulkcost,
+           lc.grain_cost,
+           lc.bulk_cost,
            lc.yield,
-           lc.count,
+           lc.headcount,
            lc.gross,
            lc.mtime,
            lc.ctime,
@@ -129,19 +129,19 @@ lifecycle:
            bs.name as bulk_substrate_name,
            bs.type as bulk_substrate_type,
            bv.uuid as bulk_vendor_uuid,
-           bv.name as bulk_vendor_name,
-      from lifecycle lc
-      join strain s
+           bv.name as bulk_vendor_name
+      from lifecycles lc
+      join strains s
         on lc.strain_uuid = s.uuid
-      join vendor sv
+      join vendors sv
         on s.vendor_uuid = sv.uuid
-      join substrate gs
+      join substrates gs
         on lc.grainsubstrate_uuid = gs.uuid
-      join vendor gv
+      join vendors gv
         on gs.vendor_uuid = gv.uuid
-      join substrate bs
+      join substrates bs
         on lc.bulksubstrate_uuid = bs.uuid
-      join vendor bv
+      join vendors bv
         on bs.vendor_uuid = bv.uuid
      where uuid = ?
   insert: >
@@ -235,7 +235,7 @@ strain:
   delete: delete from strains where uuid = ?
 
 strainattribute:
-  get-unique-names: select distinct name from strainattributes order by name
+  get-unique-names: select distinct name from strain_attributes order by name
   all: >
     select uuid, name, value
       from strain_attributes sa
@@ -246,7 +246,7 @@ strainattribute:
     select ?, ?, ?, s.uuid
       from strain s
      where s.uuid = ?
-  change:
+  change: >
     update strainattributes
        set value = ?
       from strain s
@@ -262,10 +262,10 @@ substrate-ingredient:
       from ingredients i
       join substrate_ingredients si
         on i.uuid = si.ingredient_uuid
-     where si.substrate_id = ?
+     where si.substrate_uuid = ?
   add: >
-      insert
-      into substrate_ingredients (uuid, substrate_uuid, ingredient_uuid)
+    insert
+    into substrate_ingredients (uuid, substrate_uuid, ingredient_uuid)
     select ?, s.uuid, i.uuid
       from substrates s,
            ingredient i

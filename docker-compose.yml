@@ -1,86 +1,73 @@
 ---
 version: "3.1"
 
-x-mysql-host: &mysql-host percona
-x-mysql-port: &mysql-port 3306
-x-mysql-pwd: &mysql-pwd root
-x-mysql-user: &mysql-user root
+x-pg-host: &pg-host huautla
+x-pg-port: &pg-port 5432
+x-pg-pwd: &pg-pwd root
+x-pg-user: &pg-user postgres
 
 services:
 
-  mysql:
-    image: percona:ps-8.0.29-21
+  postgres:
+    image: postgres:bookworm
     restart: always
-    hostname: percona
+    hostname: huautla
     volumes: [ .:/go/src/build ]
     ports:
-      - 6033:3306
+      - 5433:5432
     environment:
-      MYSQL_ROOT_PASSWORD: *mysql-pwd
+      POSTGRES_PASSWORD: *pg-pwd
 
   schema:
-    depends_on: [ mysql ]
-    # it's the same image as mysql, so get the mysql-client basically for free
-    image: percona:ps-8.0.29-21
-    # apply a userservice schema to the percona container
-    volumes: [ ./sql:/sql ]
+    depends_on: [ postgres ]
+    image: postgres:bookworm
+    volumes: [ .:. ]
     environment:
-      US_MYSQL_HOST: *mysql-host
-      US_MYSQL_PASSWORD: *mysql-pwd
-      US_MYSQL_PORT: *mysql-port
-      US_MYSQL_USER: *mysql-user
+      POSTGRES_HOST: *pg-host
+      POSTGRES_PASSWORD: *pg-pwd
+      POSTGRES_PORT: *pg-port
+      POSTGRES_USER: *pg-user
     working_dir: /sql/bin
     command: ./driver
+  # build-serve-mysql:
+  #   # build a specific cmd app, stash the artifact on the local filesystem
+  #   build:
+  #     context: .
+  #     target: build
+  #   volumes: [ .:/go/src/build ]
+  #   working_dir: /go/src/build
 
-  build-serve-mysql:
-    # build a specific cmd app, stash the artifact on the local filesystem
-    build:
-      context: .
-      target: build
-    volumes: [ .:/go/src/build ]
-    working_dir: /go/src/build
+  # package-serve-mysql:
+  #   image: userservice-deploy-serve-mysql
+  #   # deploy the app to a slim container for deploy
+  #   build: .
+  #   volumes: [ .:/go/src/build ]
+  #   working_dir: /go/src/build
 
-  package-serve-mysql:
-    image: userservice-deploy-serve-mysql
-    # deploy the app to a slim container for deploy
-    build: .
-    volumes: [ .:/go/src/build ]
-    working_dir: /go/src/build
+  # serve-mysql:
+  #   depends_on:
+  #     - schema
+  #     - package-serve-mysql
+  #   image: userservice-deploy-serve-mysql
+  #   hostname: servicetester
+  #   ports: [ 3000:3000 ]
+  #   environment:
+  #     US_MYSQL_HOST: *mysql-host
+  #     US_MYSQL_PASSWORD: *mysql-pwd
+  #     US_MYSQL_PORT: *mysql-port
+  #     US_MYSQL_USER: *mysql-user
+  #   command: /user-service
 
-  serve-mysql:
-    depends_on:
-      - schema
-      - package-serve-mysql
-    image: userservice-deploy-serve-mysql
-    hostname: servicetester
-    ports: [ 3000:3000 ]
-    environment:
-      US_MYSQL_HOST: *mysql-host
-      US_MYSQL_PASSWORD: *mysql-pwd
-      US_MYSQL_PORT: *mysql-port
-      US_MYSQL_USER: *mysql-user
-    command: /user-service
-
-  foo:
-    depends_on: [ serve-mysql ]
-    image: golang:latest
-    volumes: [ ./tests:/go/src/build ]
-    environment:
-      US_SERVER_HOST: servicetester
-      US_SERVER_PORT: 3000
-    working_dir: /go/src/build/system
-    command: go test -v -cover ./user/...
-
-  test-serve-mysql:
-    depends_on: [ schema ]
-    image: golang:latest
-    volumes: [ .:/go/src/build ]
-    environment:
-      US_MYSQL_HOST: *mysql-host
-      US_MYSQL_PASSWORD: *mysql-pwd
-      US_MYSQL_PORT: *mysql-port
-      US_MYSQL_USER: *mysql-user
-      US_SERVER_HOST: localhost
-      US_SERVER_PORT: 3000
-    working_dir: /go/src/build
-    command: ./bin/test-integration
+  # test-serve-mysql:
+  #   depends_on: [ schema ]
+  #   image: golang:latest
+  #   volumes: [ .:/go/src/build ]
+  #   environment:
+  #     US_MYSQL_HOST: *mysql-host
+  #     US_MYSQL_PASSWORD: *mysql-pwd
+  #     US_MYSQL_PORT: *mysql-port
+  #     US_MYSQL_USER: *mysql-user
+  #     US_SERVER_HOST: localhost
+  #     US_SERVER_PORT: 3000
+  #   working_dir: /go/src/build
+  #   command: ./bin/test-integration

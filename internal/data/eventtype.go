@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types.EventType, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllEventTypes", db.logger, "nil", cid)
+	deferred, start, l := initAccessFuncs("SelectAllEventTypes", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -44,7 +44,7 @@ func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types
 func (db *Conn) SelectEventType(ctx context.Context, id types.UUID, cid types.CID) (types.EventType, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectEventType", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("SelectEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.EventType{UUID: id}
@@ -64,7 +64,7 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 
 	e.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertEventType", db.logger, e.UUID, cid)
+	deferred, start, l := initAccessFuncs("InsertEventType", db.logger, e.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["eventtype"]["insert"], e.UUID, e.Name, e.Stage.UUID)
@@ -85,7 +85,7 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, s types.EventType, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateEventType", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("UpdateEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], s.Name, id)

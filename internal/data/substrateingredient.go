@@ -11,7 +11,7 @@ import (
 func (db *Conn) GetAllIngredients(ctx context.Context, s *types.Substrate, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("GetAllIngredients", db.logger, "nil", cid)
+	deferred, start, l := initAccessFuncs("GetAllIngredients", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -39,7 +39,7 @@ func (db *Conn) AddIngredient(ctx context.Context, s *types.Substrate, i types.I
 	var result sql.Result
 	var rows int64
 
-	deferred, start, l := initVendorFuncs("AddIngredient", db.logger, "nil", cid)
+	deferred, start, l := initAccessFuncs("AddIngredient", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["add"], db.generateUUID(), s.UUID, i.UUID)
@@ -63,7 +63,7 @@ func (db *Conn) ChangeIngredient(ctx context.Context, s *types.Substrate, oldI, 
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initVendorFuncs("ChangeIngredient", db.logger, "nil", cid)
+	deferred, start, l := initAccessFuncs("ChangeIngredient", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["change"], newI.UUID, s.UUID, oldI.UUID)
@@ -91,7 +91,7 @@ func (db *Conn) RemoveIngredient(ctx context.Context, s *types.Substrate, i type
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initVendorFuncs("RemoveIngredient", db.logger, s.UUID, cid)
+	deferred, start, l := initAccessFuncs("RemoveIngredient", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["remove"], s.UUID, i.UUID)

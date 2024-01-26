@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllStages(ctx context.Context, cid types.CID) ([]types.Stage, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllStages", db.logger, types.UUID("nil"), cid)
+	deferred, start, l := initAccessFuncs("SelectAllStages", db.logger, types.UUID("nil"), cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -35,7 +35,7 @@ func (db *Conn) SelectAllStages(ctx context.Context, cid types.CID) ([]types.Sta
 func (db *Conn) SelectStage(ctx context.Context, id types.UUID, cid types.CID) (types.Stage, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectStage", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("SelectStage", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Stage{UUID: id}
@@ -51,7 +51,7 @@ func (db *Conn) InsertStage(ctx context.Context, s types.Stage, cid types.CID) (
 
 	s.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertStage", db.logger, s.UUID, cid)
+	deferred, start, l := initAccessFuncs("InsertStage", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["stage"]["insert"], s.UUID, s.Name)
@@ -74,7 +74,7 @@ func (db *Conn) InsertStage(ctx context.Context, s types.Stage, cid types.CID) (
 func (db *Conn) UpdateStage(ctx context.Context, id types.UUID, s types.Stage, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateStage", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("UpdateStage", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], s.Name, id)

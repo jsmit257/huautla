@@ -11,7 +11,7 @@ import (
 func (db *Conn) SelectAllIngredients(ctx context.Context, cid types.CID) ([]types.Ingredient, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectAllIngredients", db.logger, "nil", cid)
+	deferred, start, l := initAccessFuncs("SelectAllIngredients", db.logger, "nil", cid)
 	defer deferred(start, err, l)
 
 	var rows *sql.Rows
@@ -35,7 +35,7 @@ func (db *Conn) SelectAllIngredients(ctx context.Context, cid types.CID) ([]type
 func (db *Conn) SelectIngredient(ctx context.Context, id types.UUID, cid types.CID) (types.Ingredient, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectIngredient", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("SelectIngredient", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Ingredient{UUID: id}
@@ -51,7 +51,7 @@ func (db *Conn) InsertIngredient(ctx context.Context, i types.Ingredient, cid ty
 
 	i.UUID = types.UUID(db.generateUUID().String())
 
-	deferred, start, l := initVendorFuncs("InsertIngredient", db.logger, i.UUID, cid)
+	deferred, start, l := initAccessFuncs("InsertIngredient", db.logger, i.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["ingredient"]["insert"], i.UUID, i.Name)
@@ -74,7 +74,7 @@ func (db *Conn) InsertIngredient(ctx context.Context, i types.Ingredient, cid ty
 func (db *Conn) UpdateIngredient(ctx context.Context, id types.UUID, i types.Ingredient, cid types.CID) error {
 	var err error
 
-	deferred, start, l := initVendorFuncs("UpdateIngredient", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("UpdateIngredient", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result, err := db.ExecContext(ctx, db.sql["ingredient"]["update"], i.Name, id)

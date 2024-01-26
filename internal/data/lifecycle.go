@@ -12,7 +12,7 @@ import (
 func (db *Conn) SelectLifecycle(ctx context.Context, id types.UUID, cid types.CID) (types.Lifecycle, error) {
 	var err error
 
-	deferred, start, l := initVendorFuncs("SelectEventType", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("SelectEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Lifecycle{UUID: id}
@@ -69,7 +69,7 @@ func (db *Conn) InsertLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 	lc.MTime = time.Now().UTC()
 	lc.CTime = lc.MTime
 
-	deferred, start, l := initVendorFuncs("InsertLifecycle", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("InsertLifecycle", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	result, err = db.ExecContext(ctx, db.sql["lifecycle"]["insert"],
@@ -108,7 +108,7 @@ func (db *Conn) UpdateLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 
 	lc.MTime = time.Now().UTC()
 
-	deferred, start, l := initVendorFuncs("UpdateLifecycle", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("UpdateLifecycle", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	if result, err = db.ExecContext(ctx, db.sql["lifecycle"]["update"],
