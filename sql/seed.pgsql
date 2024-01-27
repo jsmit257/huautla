@@ -3,7 +3,13 @@
 -- vendors
 insert into vendors(uuid, name)
 values('0', 'bass-o-matic'),
-      ('1', 'juanita');
+      ('1', 'juanita'),
+      ('2', 'bogus');
+
+update vendors set name = teez-head where uuid = 0;
+select * from vendors;
+delete from vendors where uuid = 2;
+select * from vendors;
 
 -- substrates
 insert into substrates(uuid, name, type, vendor_uuid)
