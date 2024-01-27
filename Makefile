@@ -6,9 +6,10 @@ build:
 unit:
 	go test -cover ./...
 
-.PHONY: compile-serve-mysql
-compile-serve-mysql: build
-	docker-compose up --build --force-recreate build-serve-mysql
+.PHONY: initdb
+initdb:
+	docker-compose down postgres
+	docker-compose up --build --force-recreate schema
 
 .PHONY: package-serve-mysql
 package-serve-mysql: compile-serve-mysql

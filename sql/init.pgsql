@@ -1,5 +1,3 @@
-drop database if exists huautla;
-
 create database huautla;
 
 \c huautla;
@@ -68,8 +66,8 @@ create table lifecycles (
   mtime               timestamp    not null default current_timestamp,
   ctime               timestamp    not null default current_timestamp,
   strain_uuid         varchar(40)  not null references strains(uuid),
-  grainsubstrate_uuid varchar(40)   not null references substrates(uuid),
-  bulksubstrate_uuid  varchar(40)   not null references substrates(uuid)
+  grainsubstrate_uuid varchar(40)  not null references substrates(uuid),
+  bulksubstrate_uuid  varchar(40)  not null references substrates(uuid)
 );
 
 create table events (

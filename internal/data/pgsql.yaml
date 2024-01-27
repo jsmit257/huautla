@@ -19,7 +19,7 @@ event:
      where lifecycle_uuid = ?
      order
         by mtime
-  all-by-eventtype:
+  all-by-eventtype: >
     select e.uuid,
            e.temperature,
            e.humidity,

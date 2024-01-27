@@ -1,0 +1,3 @@
+CREATE USER huautla;
+CREATE DATABASE huautla;
+GRANT ALL PRIVILEGES ON DATABASE huautla TO huautla;

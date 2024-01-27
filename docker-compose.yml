@@ -1,10 +1,10 @@
 ---
 version: "3.1"
 
-x-pg-host: &pg-host huautla
-x-pg-port: &pg-port 5432
-x-pg-pwd: &pg-pwd root
-x-pg-user: &pg-user postgres
+x-pg-host: &pghost huautla
+x-pg-port: &pgport 5432
+x-pg-user: &pguser postgres
+x-pg-pass: &pgpass root
 
 services:
 
@@ -16,19 +16,19 @@ services:
     ports:
       - 5433:5432
     environment:
-      POSTGRES_PASSWORD: *pg-pwd
+      POSTGRES_PASSWORD: *pgpass
 
   schema:
     depends_on: [ postgres ]
-    image: postgres:bookworm
-    volumes: [ .:. ]
+    image: debian:bookworm
+    volumes: [ .:/root/huautla ]
     environment:
-      POSTGRES_HOST: *pg-host
-      POSTGRES_PASSWORD: *pg-pwd
-      POSTGRES_PORT: *pg-port
-      POSTGRES_USER: *pg-user
-    working_dir: /sql/bin
-    command: ./driver
+      POSTGRES_HOST: *pghost
+      POSTGRES_PORT: *pgport
+      POSTGRES_USER: *pguser
+      POSTGRES_PASSWORD: *pgpass
+    working_dir: /root/huautla
+    command: ./bin/schema.sh
   # build-serve-mysql:
   #   # build a specific cmd app, stash the artifact on the local filesystem
   #   build:
