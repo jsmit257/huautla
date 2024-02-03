@@ -1,5 +1,3 @@
-create database huautla;
-
 \c huautla;
 
 create table vendors (
@@ -60,8 +58,11 @@ create table lifecycles (
   location            varchar(128) not null,
   grain_cost          decimal(8,2) not null,
   bulk_cost           decimal(8,2) not null,
-  yield               decimal(4,2) not null default 0,
-  headcount           decimal(4,2) not null default 0,
+  yield               decimal(84,2) not null default 0,
+  headcount           decimal(5) not null default 0,
+  -- TODO: implement market_price field; there's no API call to update this field, so
+  --       you'll have to delete and recreate; i see havoc if we try to pivot mid-cycle,
+  --       although you might say the same about all the *_cost fields
   gross               decimal(5,2) not null default 0,
   mtime               timestamp    not null default current_timestamp,
   ctime               timestamp    not null default current_timestamp,

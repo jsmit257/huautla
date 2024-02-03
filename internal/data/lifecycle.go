@@ -120,7 +120,6 @@ func (db *Conn) UpdateLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 		lc.Count,
 		lc.Gross,
 		lc.MTime,
-		lc.CTime,
 		lc.Strain.UUID,
 		lc.GrainSubstrate.UUID,
 		lc.BulkSubstrate.UUID); err != nil {

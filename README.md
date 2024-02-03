@@ -16,19 +16,6 @@ These are just the high-level topics you can read in more detail in more appropr
 * Templates
 * Strains
 * Events
-```sql
-create table event_types (
-  id varchar(40) not null primary key,
-  label varchar(255) not null
-)
-create table events (
-  id varchar(40) not null primary key,
-  ctime timestamp not null,
-  temperature decimal(3,0) not null,
-  type varchar(40) not null references event_types(id),
-  ...
-)
-```
 
 ### Downloading
 

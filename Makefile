@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-	go build ./...
+	go build -o system-test -v ./...
 
 .PHONY: unit
 unit:
@@ -8,8 +8,13 @@ unit:
 
 .PHONY: initdb
 initdb:
+	docker-compose up --build --force-recreate initdb &
 	docker-compose down postgres
-	docker-compose up --build --force-recreate schema
+
+.PHONY: system-test
+system-test: initdb
+	docker-compose up --force-recreate system-test
+	docker-compost down schema
 
 .PHONY: package-serve-mysql
 package-serve-mysql: compile-serve-mysql

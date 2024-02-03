@@ -28,16 +28,16 @@ type (
 	EventTyper interface {
 		SelectAllEventTypes(ctx context.Context, cid CID) ([]EventType, error)
 		SelectEventType(ctx context.Context, id UUID, cid CID) (EventType, error)
-		InsertEventType(ctx context.Context, s EventType, cid CID) (EventType, error)
-		UpdateEventType(ctx context.Context, id UUID, s EventType, cid CID) error
+		InsertEventType(ctx context.Context, e EventType, cid CID) (EventType, error)
+		UpdateEventType(ctx context.Context, id UUID, e EventType, cid CID) error
 		DeleteEventType(ctx context.Context, id UUID, cid CID) error
 	}
 
 	Ingredienter interface {
 		SelectAllIngredients(ctx context.Context, cid CID) ([]Ingredient, error)
 		SelectIngredient(ctx context.Context, id UUID, cid CID) (Ingredient, error)
-		InsertIngredient(ctx context.Context, s Ingredient, cid CID) (Ingredient, error)
-		UpdateIngredient(ctx context.Context, id UUID, s Ingredient, cid CID) error
+		InsertIngredient(ctx context.Context, i Ingredient, cid CID) (Ingredient, error)
+		UpdateIngredient(ctx context.Context, id UUID, i Ingredient, cid CID) error
 		DeleteIngredient(ctx context.Context, id UUID, cid CID) error
 	}
 

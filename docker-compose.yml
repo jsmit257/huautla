@@ -12,62 +12,29 @@ services:
     image: postgres:bookworm
     restart: always
     hostname: huautla
-    volumes: [ .:/go/src/build ]
+    # volumes: [ .:/go/src/build ]
     ports:
       - 5433:5432
     environment:
       POSTGRES_PASSWORD: *pgpass
 
-  schema:
+  initdb:
     depends_on: [ postgres ]
-    image: debian:bookworm
-    volumes: [ .:/root/huautla ]
+    image: initdb # debian:bookworm
+    # volumes: [ .:/root/huautla ]
     environment:
       POSTGRES_HOST: *pghost
       POSTGRES_PORT: *pgport
       POSTGRES_USER: *pguser
       POSTGRES_PASSWORD: *pgpass
-    working_dir: /root/huautla
-    command: ./bin/schema.sh
-  # build-serve-mysql:
-  #   # build a specific cmd app, stash the artifact on the local filesystem
-  #   build:
-  #     context: .
-  #     target: build
-  #   volumes: [ .:/go/src/build ]
-  #   working_dir: /go/src/build
+    # working_dir: /root/huautla
+    # command: ./bin/schema.sh
 
-  # package-serve-mysql:
-  #   image: userservice-deploy-serve-mysql
-  #   # deploy the app to a slim container for deploy
-  #   build: .
-  #   volumes: [ .:/go/src/build ]
-  #   working_dir: /go/src/build
-
-  # serve-mysql:
-  #   depends_on:
-  #     - schema
-  #     - package-serve-mysql
-  #   image: userservice-deploy-serve-mysql
-  #   hostname: servicetester
-  #   ports: [ 3000:3000 ]
-  #   environment:
-  #     US_MYSQL_HOST: *mysql-host
-  #     US_MYSQL_PASSWORD: *mysql-pwd
-  #     US_MYSQL_PORT: *mysql-port
-  #     US_MYSQL_USER: *mysql-user
-  #   command: /user-service
-
-  # test-serve-mysql:
-  #   depends_on: [ schema ]
-  #   image: golang:latest
-  #   volumes: [ .:/go/src/build ]
-  #   environment:
-  #     US_MYSQL_HOST: *mysql-host
-  #     US_MYSQL_PASSWORD: *mysql-pwd
-  #     US_MYSQL_PORT: *mysql-port
-  #     US_MYSQL_USER: *mysql-user
-  #     US_SERVER_HOST: localhost
-  #     US_SERVER_PORT: 3000
-  #   working_dir: /go/src/build
-  #   command: ./bin/test-integration
+  system-test:
+    depends_on: [ initdb ]
+    image: system-test
+    environment:
+      POSTGRES_HOST: *pghost
+      POSTGRES_PORT: *pgport
+      POSTGRES_USER: *pguser
+      POSTGRES_PASSWORD: *pgpass

@@ -82,16 +82,16 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 	return e, err
 }
 
-func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, s types.EventType, cid types.CID) error {
+func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, e types.EventType, cid types.CID) error {
 	var err error
 
 	deferred, start, l := initAccessFuncs("UpdateEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], s.Name, id)
+	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, id)
 	if err != nil {
 		if isUniqueViolation(err) {
-			return db.UpdateEventType(ctx, id, s, cid) // FIXME: infinite loop?
+			return db.UpdateEventType(ctx, id, e, cid) // FIXME: infinite loop?
 		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
