@@ -1,4 +1,4 @@
-package main
+package tests
 
 //package tests ??
 
@@ -15,6 +15,7 @@ import (
 func main() {}
 
 var db types.DB
+var noRows error = fmt.Errorf("sql: no rows in result set")
 
 func init() {
 	var err error
@@ -251,6 +252,7 @@ func Test_EventTyper(t *testing.T) {
 }
 
 func Test_Ingredienter(t *testing.T) {
+	t.Parallel()
 	tcs := map[string]func(t *testing.T){
 		"SelectAllIngredients": func(t *testing.T) {
 			set := map[string]struct {
@@ -279,7 +281,9 @@ func Test_Ingredienter(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.SelectAllIngredients(context.Background(), types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -303,7 +307,9 @@ func Test_Ingredienter(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.SelectIngredient(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -327,7 +333,9 @@ func Test_Ingredienter(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.InsertIngredient(context.Background(), v.i, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -354,7 +362,9 @@ func Test_Ingredienter(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					err := db.UpdateIngredient(context.Background(), v.id, v.i, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
@@ -366,7 +376,7 @@ func Test_Ingredienter(t *testing.T) {
 				err error
 			}{
 				"happy_path": {
-					id: "0",
+					id: "-1",
 				},
 				"no_rows_affected": {
 					id:  "foobar",
@@ -376,9 +386,15 @@ func Test_Ingredienter(t *testing.T) {
 					id:  "01234567890123456789012345678901234567891",
 					err: fmt.Errorf("ingredient was not deleted: '0'"),
 				},
+				"referential_violation": {
+					id:  "2",
+					err: fmt.Errorf("referential constraint"),
+				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					err := db.DeleteIngredient(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
@@ -471,6 +487,7 @@ func Test_Lifecycler(t *testing.T) {
 }
 
 func Test_Stager(t *testing.T) {
+	t.Parallel()
 	tcs := map[string]func(t *testing.T){
 		"SelectAllStages": func(t *testing.T) {
 			set := map[string]struct {
@@ -488,7 +505,9 @@ func Test_Stager(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.SelectAllStages(context.Background(), types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -517,7 +536,9 @@ func Test_Stager(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.SelectStage(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -543,7 +564,9 @@ func Test_Stager(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.InsertStage(context.Background(), v.s, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.NotEmpty(t, result.UUID)
@@ -573,7 +596,9 @@ func Test_Stager(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					err := db.UpdateStage(context.Background(), v.id, v.s, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
@@ -597,7 +622,9 @@ func Test_Stager(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					err := db.DeleteStage(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
@@ -810,18 +837,21 @@ func Test_SubstrateIngredienter(t *testing.T) {
 	tcs := map[string]func(t *testing.T){
 		"GetAllIngredients": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, s *types.Substrate, cid types.CID) error
 				s      types.Substrate
 				result []types.Ingredient
 				err    error
 			}{
 				"happy_path": {
-					fn: db.GetAllIngredients,
+					s: types.Substrate{UUID: "1"},
+					result: []types.Ingredient{
+						{UUID: "3", Name: "White Millet"},
+						{UUID: "12", Name: "Red Millet"},
+					},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), &v.s, types.CID(k))
+					err := db.GetAllIngredients(context.Background(), &v.s, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, v.s.Ingredients)
 				})
@@ -829,19 +859,35 @@ func Test_SubstrateIngredienter(t *testing.T) {
 		},
 		"AddIngredient": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, s *types.Substrate, i types.Ingredient, cid types.CID) error
 				s      types.Substrate
 				i      types.Ingredient
 				result []types.Ingredient
 				err    error
 			}{
 				"happy_path": {
-					fn: db.AddIngredient,
+					s:      types.Substrate{UUID: "0"},
+					i:      types.Ingredient{UUID: "9"},
+					result: []types.Ingredient{{UUID: "9"}},
+				},
+				"duplicate_key_violation": {
+					s:   types.Substrate{UUID: "0"},
+					i:   types.Ingredient{UUID: "2"},
+					err: fmt.Errorf("duplicate key violation"),
+				},
+				"no_rows_affected_ingredient": {
+					s:   types.Substrate{UUID: "0"},
+					i:   types.Ingredient{UUID: "-2"},
+					err: fmt.Errorf("substrateingredient was not added"),
+				},
+				"no_rows_affected_substrate": {
+					s:   types.Substrate{UUID: "-0"},
+					i:   types.Ingredient{UUID: "2"},
+					err: fmt.Errorf("substrateingredient was not added"),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), &v.s, v.i, types.CID(k))
+					err := db.AddIngredient(context.Background(), &v.s, v.i, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, v.s.Ingredients)
 				})
@@ -849,19 +895,53 @@ func Test_SubstrateIngredienter(t *testing.T) {
 		},
 		"ChangeIngredient": func(t *testing.T) {
 			set := map[string]struct {
-				fn         func(ctx context.Context, s *types.Substrate, oldI, newI types.Ingredient, cid types.CID) error
 				s          types.Substrate
 				oldI, newI types.Ingredient
 				result     []types.Ingredient
 				err        error
 			}{
 				"happy_path": {
-					fn: db.ChangeIngredient,
+					s: types.Substrate{UUID: "1", Ingredients: []types.Ingredient{
+						{UUID: "3"},
+						{UUID: "12"},
+					}},
+					oldI: types.Ingredient{UUID: "3"},
+					newI: types.Ingredient{UUID: "4"},
+					result: []types.Ingredient{
+						{UUID: "4"},
+						{UUID: "12"},
+					},
+				},
+				"no_rows_affected": {
+					s: types.Substrate{UUID: "1", Ingredients: []types.Ingredient{
+						{UUID: "3"},
+						{UUID: "12"},
+					}},
+					oldI: types.Ingredient{UUID: "4"},
+					newI: types.Ingredient{UUID: "4"},
+					result: []types.Ingredient{
+						{UUID: "3"},
+						{UUID: "12"},
+					},
+					err: fmt.Errorf("substrateingredient was not changed"),
+				},
+				"unique_key_violation": {
+					s: types.Substrate{UUID: "1", Ingredients: []types.Ingredient{
+						{UUID: "3"},
+						{UUID: "12"},
+					}},
+					oldI: types.Ingredient{UUID: "3"},
+					newI: types.Ingredient{UUID: "12"},
+					result: []types.Ingredient{
+						{UUID: "3"},
+						{UUID: "12"},
+					},
+					err: fmt.Errorf("unique key violation"),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), &v.s, v.oldI, v.newI, types.CID(k))
+					err := db.ChangeIngredient(context.Background(), &v.s, v.oldI, v.newI, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, v.s.Ingredients)
 				})
@@ -869,19 +949,32 @@ func Test_SubstrateIngredienter(t *testing.T) {
 		},
 		"RemoveIngredient": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, s *types.Substrate, i types.Ingredient, cid types.CID) error
 				s      types.Substrate
 				i      types.Ingredient
 				result []types.Ingredient
 				err    error
 			}{
 				"happy_path": {
-					fn: db.RemoveIngredient,
+					s: types.Substrate{UUID: "0", Ingredients: []types.Ingredient{
+						{UUID: "1"},
+						{UUID: "2"},
+						{UUID: "3"},
+					}},
+					i: types.Ingredient{UUID: "2"},
+					result: []types.Ingredient{
+						{UUID: "1"},
+						{UUID: "3"},
+					},
+				},
+				"no_rows_affected": {
+					s:   types.Substrate{UUID: "0"},
+					i:   types.Ingredient{UUID: "12"},
+					err: fmt.Errorf("substrateingredient was not removed"),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), &v.s, v.i, types.CID(k))
+					err := db.RemoveIngredient(context.Background(), &v.s, v.i, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, v.s.Ingredients)
 				})
@@ -897,17 +990,19 @@ func Test_Substrater(t *testing.T) {
 	tcs := map[string]func(t *testing.T){
 		"SelectAllSubstrates": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, cid types.CID) ([]types.Substrate, error)
 				result []types.Substrate
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectAllSubstrates,
+					result: []types.Substrate{
+						{UUID: "0", Name: "Rye", Type: "Grain", Vendor: types.Vendor{}},
+						{UUID: "1", Name: "Millet", Type: "Grain", Vendor: types.Vendor{}},
+					},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), types.CID(k))
+					result, err := db.SelectAllSubstrates(context.Background(), types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -915,18 +1010,26 @@ func Test_Substrater(t *testing.T) {
 		},
 		"SelectSubstrate": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, id types.UUID, cid types.CID) (types.Substrate, error)
 				id     types.UUID
 				result types.Substrate
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectSubstrate,
+					id:     "0",
+					result: types.Substrate{UUID: "0", Name: "Rye", Type: "Grain", Vendor: types.Vendor{}},
+				},
+				"no_rows_returned": {
+					id:  "5",
+					err: noRows,
+				},
+				"query_fails": {
+					id:  "01234567890123456789012345678901234567891",
+					err: noRows,
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.id, types.CID(k))
+					result, err := db.SelectSubstrate(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -934,18 +1037,28 @@ func Test_Substrater(t *testing.T) {
 		},
 		"InsertSubstrate": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, s types.Substrate, cid types.CID) (types.Substrate, error)
 				s      types.Substrate
 				result types.Substrate
 				err    error
 			}{
 				"happy_path": {
-					fn: db.InsertSubstrate,
+					s:      types.Substrate{Name: "Honey Solution", Type: "Bulk", Vendor: types.Vendor{UUID: "0"}},
+					result: types.Substrate{},
+				},
+				"unique_key_violation": {
+					s:      types.Substrate{Name: "Rye", Type: "Bulk", Vendor: types.Vendor{UUID: "0"}},
+					result: types.Substrate{},
+					err:    fmt.Errorf("duplicate key violation"),
+				},
+				"check_constraint_violation": {
+					s:      types.Substrate{Name: "Maltodexterin", Type: "Stardust", Vendor: types.Vendor{UUID: "0"}},
+					result: types.Substrate{},
+					err:    fmt.Errorf("check constraint"),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.s, types.CID(k))
+					result, err := db.InsertSubstrate(context.Background(), v.s, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -953,55 +1066,59 @@ func Test_Substrater(t *testing.T) {
 		},
 		"UpdateSubstrate": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, s types.Substrate, cid types.CID) error
 				id  types.UUID
 				s   types.Substrate
 				err error
 			}{
 				"happy_path": {
-					fn: db.UpdateSubstrate,
+					s: types.Substrate{},
+				},
+				"unique_key_violation": {
+					id:  "0",
+					s:   types.Substrate{Name: "Millet", Type: "Bulk", Vendor: types.Vendor{UUID: "0"}},
+					err: fmt.Errorf("duplicate key violation"),
+				},
+				"check_constraint_violation": {
+					id:  "0",
+					s:   types.Substrate{Name: "Maltodexterin", Type: "Stardust", Vendor: types.Vendor{UUID: "0"}},
+					err: fmt.Errorf("check constraint"),
+				},
+				"query_fails": {
+					id: "12121212121212121212121212121212121212121",
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, v.s, types.CID(k))
+					err := db.UpdateSubstrate(context.Background(), v.id, v.s, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
 			}
 		},
 		"DeleteSubstrate": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, cid types.CID) error
 				id  types.UUID
 				err error
 			}{
 				"happy_path": {
-					fn: db.DeleteSubstrate,
+					id: "-1",
+				},
+				"no_rows_affected": {
+					id:  "12",
+					err: fmt.Errorf("vendor table was not deleted '12'"),
+				},
+				"query_fails": {
+					id:  "01234567890123456789012345678901234567891",
+					err: fmt.Errorf("some error"),
+				},
+				"referential_violation": {
+					id:  "0",
+					err: fmt.Errorf("referential constraint"),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, types.CID(k))
+					err := db.DeleteSubstrate(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
-				})
-			}
-		},
-		"GetAllIngredients": func(t *testing.T) {
-			set := map[string]struct {
-				fn     func(ctx context.Context, s *types.Substrate, cid types.CID) error
-				s      types.Substrate
-				result []types.Ingredient
-				err    error
-			}{
-				"happy_path": {
-					fn: db.GetAllIngredients,
-				},
-			}
-			for k, v := range set {
-				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), &v.s, types.CID(k))
-					require.Equal(t, v.err, err)
-					require.Equal(t, v.result, v.s.Ingredients)
 				})
 			}
 		},
@@ -1012,6 +1129,7 @@ func Test_Substrater(t *testing.T) {
 }
 
 func Test_Vendorer(t *testing.T) {
+	t.Parallel()
 	tcs := map[string]func(t *testing.T){
 		"SelectAllVendors": func(t *testing.T) {
 			set := map[string]struct {
@@ -1023,7 +1141,9 @@ func Test_Vendorer(t *testing.T) {
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.SelectAllVendors(context.Background(), types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -1040,9 +1160,21 @@ func Test_Vendorer(t *testing.T) {
 					id:     "0",
 					result: types.Vendor{UUID: "0", Name: "127.0.0.1"},
 				},
+				"no_row_returned": {
+					id:     "8",
+					result: types.Vendor{UUID: "8", Name: ""},
+					err:    fmt.Errorf("sql: no rows in result set"),
+				},
+				"query_fails": {
+					id:     "8888888888888888888888888888888888888888888888888888888888888888",
+					result: types.Vendor{UUID: "0", Name: ""},
+					err:    noRows, // XXX
+				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.SelectVendor(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -1058,9 +1190,14 @@ func Test_Vendorer(t *testing.T) {
 				"happy_path": {
 					v: types.Vendor{},
 				},
+				"duplicate_name_violation": {
+					v: types.Vendor{Name: "127.0.0.1"},
+				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					result, err := db.InsertVendor(context.Background(), v.v, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
@@ -1075,10 +1212,24 @@ func Test_Vendorer(t *testing.T) {
 			}{
 				"happy_path": {
 					id: "0",
+					v:  types.Vendor{Name: "localhost"},
+				},
+				"duplicate_name_violation": {
+					id: "1",
+					v:  types.Vendor{Name: "127.0.0.1"},
+				},
+				"no_rows_affected": {
+					id:  "12",
+					err: fmt.Errorf("vendor table was not updated '12'"),
+				},
+				"query_fails": {
+					id: "12121212121212121212121212121212121212121",
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					err := db.UpdateVendor(context.Background(), v.id, v.v, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
@@ -1090,11 +1241,25 @@ func Test_Vendorer(t *testing.T) {
 				err error
 			}{
 				"happy_path": {
-					id: "0",
+					id: "-1",
+				},
+				"no_rows_affected": {
+					id:  "12",
+					err: fmt.Errorf("vendor table was not deleted '12'"),
+				},
+				"query_fails": {
+					id:  "01234567890123456789012345678901234567891",
+					err: fmt.Errorf("some error"),
+				},
+				"referential_violation": {
+					id:  "0",
+					err: fmt.Errorf("referential constraint"),
 				},
 			}
 			for k, v := range set {
+				k, v := k, v
 				t.Run(k, func(t *testing.T) {
+					t.Parallel()
 					err := db.DeleteVendor(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 				})

@@ -40,9 +40,9 @@ func Test_SelectAllVendors(t *testing.T) {
 				return db
 			},
 			result: []types.Vendor{
-				types.Vendor{"0", "vendor 0"},
-				types.Vendor{"1", "vendor 1"},
-				types.Vendor{"2", "vendor 2"},
+				{UUID: "0", Name: "vendor 0"},
+				{UUID: "1", Name: "vendor 1"},
+				{UUID: "2", Name: "vendor 2"},
 			},
 		},
 		"query_fails": {
@@ -98,7 +98,7 @@ func Test_SelectVendor(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Vendor{"0", "vendor 0"},
+			result: types.Vendor{UUID: "0", Name: "vendor 0"},
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -147,7 +147,7 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
+			result: types.Vendor{UUID: "30313233-3435-3637-3839-616263646566", Name: "vendor 0"},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -157,7 +157,7 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
+			result: types.Vendor{UUID: "30313233-3435-3637-3839-616263646566", Name: "vendor 0"},
 			err:    fmt.Errorf("vendor was not added"),
 		},
 		"query_fails": {
@@ -168,7 +168,7 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
+			result: types.Vendor{UUID: "30313233-3435-3637-3839-616263646566", Name: "vendor 0"},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -179,7 +179,7 @@ func Test_InsertVendor(t *testing.T) {
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
-			result: types.Vendor{"30313233-3435-3637-3839-616263646566", "vendor 0"},
+			result: types.Vendor{UUID: "30313233-3435-3637-3839-616263646566", Name: "vendor 0"},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -196,7 +196,7 @@ func Test_InsertVendor(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertVendor(
 				context.Background(),
-				types.Vendor{"0", "vendor 0"},
+				types.Vendor{UUID: "0", Name: "vendor 0"},
 				"Test_InsertVendors")
 
 			require.Equal(t, tc.err, err)

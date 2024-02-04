@@ -1,6 +1,6 @@
--- this script is slightly inflated so we could test the syntax of the queries 
--- in internal/data/pgsql.yaml; things like ref integrity will be handled in 
--- system tests where it's easier to stage data
+-- seed the db with a few standard values that probably anyone will need; 
+-- if not, you can just delete them later; used by system-test so be 
+-- careful what you change
 
 \c huautla
 
@@ -26,19 +26,6 @@ values('0', 'Vermiculite'),
       ('13', 'Gypsum'),
       ('14', 'Calcium phosphate'),
       ('15', 'Diammonium phosphate');
-
--- strains
-insert into strains(uuid, name, vendor_uuid)
-values('0', 'Huautla', '0'),
-      ('1', 'Morel', '0'),
-      ('2', 'Shitake', '0'),
-      ('3', 'Liberty caps', '0');
-
--- strain_attributes
-insert into strain_attributes(uuid, name, value, strain_uuid)
-values('0', 'contamination resistance', 'high', '0'),
-      ('1', 'potency', 'low', '0'),
-      ('2', 'color', 'purple', '3');
 
 -- stages
 insert into stages(uuid, name)

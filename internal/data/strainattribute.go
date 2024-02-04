@@ -86,7 +86,7 @@ func (db *Conn) AddAttribute(ctx context.Context, s *types.Strain, n, v string, 
 		return fmt.Errorf("attribute was not added")
 	}
 
-	s.Attributes = append(s.Attributes, types.StrainAttribute{id, n, v})
+	s.Attributes = append(s.Attributes, types.StrainAttribute{UUID: id, Name: n, Value: v})
 
 	return err
 }

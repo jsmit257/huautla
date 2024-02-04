@@ -35,9 +35,9 @@ func Test_SelectAllSubstrates(t *testing.T) {
 				return db
 			},
 			result: []types.Substrate{
-				types.Substrate{"0", "substrate 0", types.GrainType, types.Vendor{"0", "vendor 0"}, nil},
-				types.Substrate{"1", "substrate 1", types.GrainType, types.Vendor{"1", "vendor 1"}, nil},
-				types.Substrate{"2", "substrate 2", types.GrainType, types.Vendor{"1", "vendor 1"}, nil},
+				{UUID: "0", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Ingredients: nil},
+				{UUID: "1", Name: "substrate 1", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: nil},
+				{UUID: "2", Name: "substrate 2", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: nil},
 			},
 		},
 		"query_fails": {
@@ -159,7 +159,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
+			result: types.Substrate{UUID: "30313233-3435-3637-3839-616263646566", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{}, Ingredients: nil},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -171,7 +171,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
+			result: types.Substrate{UUID: "30313233-3435-3637-3839-616263646566", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{}, Ingredients: nil},
 			err:    fmt.Errorf("substrate was not added"),
 		},
 		"query_fails": {
@@ -184,7 +184,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
+			result: types.Substrate{UUID: "30313233-3435-3637-3839-616263646566", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{}, Ingredients: nil},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -197,7 +197,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			},
 			id:     "0",
 			tp:     types.GrainType,
-			result: types.Substrate{"30313233-3435-3637-3839-616263646566", "substrate 0", types.GrainType, types.Vendor{}, nil},
+			result: types.Substrate{UUID: "30313233-3435-3637-3839-616263646566", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{}, Ingredients: nil},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -214,7 +214,7 @@ func Test_InsertSubstrate(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertSubstrate(
 				context.Background(),
-				types.Substrate{tc.id, "substrate " + string(tc.id), tc.tp, types.Vendor{}, nil},
+				types.Substrate{UUID: tc.id, Name: "substrate " + string(tc.id), Type: tc.tp, Vendor: types.Vendor{}, Ingredients: nil},
 				"Test_InsertSubstrate")
 
 			require.Equal(t, tc.err, err)
@@ -296,10 +296,6 @@ func Test_UpdateSubstrate(t *testing.T) {
 			require.Equal(t, tc.err, err)
 		})
 	}
-}
-
-func foo(t *testing.T, quux string) {
-
 }
 
 func Test_DeleteSubstrate(t *testing.T) {

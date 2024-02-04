@@ -22,7 +22,7 @@ services:
     image: install
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile.Install
     volumes: [ .:/huautla ]
     environment:
       POSTGRES_HOST: *pghost
@@ -33,11 +33,11 @@ services:
     command: ./bin/install-prod.sh
 
   install-system-test:
-    depends_on: [ install ]
+    depends_on: [ postgres ]
     image: install
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile.Install
     volumes: [ .:/huautla ]
     environment:
       POSTGRES_HOST: *pghost
@@ -53,8 +53,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    volumes: [ .:/huautla ]
     environment:
       POSTGRES_HOST: *pghost
       POSTGRES_PORT: *pgport
       POSTGRES_USER: *pguser
       POSTGRES_PASSWORD: *pgpass
+    working_dir: /huautla
+    command: ./bin/system-test.sh

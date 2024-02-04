@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 .PHONY: build
 build:
 	go build -o system-test -v ./...
@@ -8,14 +10,18 @@ unit:
 
 .PHONY: install
 install:
+	docker-compose up -d postgres
+	sleep 5s
 	docker-compose up --build --force-recreate install
-	docker-compose down postgres
+	make docker-down
 
 .PHONY: system-test
-system-test: install
+system-test:
+	docker-compose up -d postgres
+	sleep 5s
 	docker-compose up --build --force-recreate install-system-test
-	docker-compose up --build --force-recreate system-test
-	docker-compost down schema
+	# docker-compose up --build --force-recreate system-test
+	make docker-down
 
 # .PHONY: package-serve-mysql
 # package-serve-mysql: compile-serve-mysql
@@ -34,12 +40,11 @@ system-test: install
 # 	-curl localhost:3000/metrics
 
 vet:
+	go vet ./...
 
 fmt:
 	go fmt ./...
 
-docker:
-
 .PHONY: docker-down
 docker-down:
-	docker-compose down
+	docker-compose down --remove-orphans

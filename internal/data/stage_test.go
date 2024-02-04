@@ -165,7 +165,7 @@ func Test_InsertStage(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Stage{"30313233-3435-3637-3839-616263646566", "stage 0"},
+			result: types.Stage{UUID: "30313233-3435-3637-3839-616263646566", Name: "stage 0"},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -176,7 +176,7 @@ func Test_InsertStage(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Stage{"30313233-3435-3637-3839-616263646566", "stage 0"},
+			result: types.Stage{UUID: "30313233-3435-3637-3839-616263646566", Name: "stage 0"},
 			err:    fmt.Errorf("stage was not added"),
 		},
 		"query_fails": {
@@ -188,7 +188,7 @@ func Test_InsertStage(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Stage{"30313233-3435-3637-3839-616263646566", "stage 0"},
+			result: types.Stage{UUID: "30313233-3435-3637-3839-616263646566", Name: "stage 0"},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -200,7 +200,7 @@ func Test_InsertStage(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Stage{"30313233-3435-3637-3839-616263646566", "stage 0"},
+			result: types.Stage{UUID: "30313233-3435-3637-3839-616263646566", Name: "stage 0"},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -217,7 +217,7 @@ func Test_InsertStage(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertStage(
 				context.Background(),
-				types.Stage{tc.id, "stage " + string(tc.id)},
+				types.Stage{UUID: tc.id, Name: "stage " + string(tc.id)},
 				"Test_InsertStages")
 
 			require.Equal(t, tc.err, err)

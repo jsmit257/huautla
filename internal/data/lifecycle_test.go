@@ -133,9 +133,9 @@ func Test_SelectLifecycle(t *testing.T) {
 						Name: "vendor x",
 					},
 					Attributes: []types.StrainAttribute{
-						{"0", "name 0", "value 0"},
-						{"1", "name 1", "value 1"},
-						{"2", "name 2", "value 2"},
+						{UUID: "0", Name: "name 0", Value: "value 0"},
+						{UUID: "1", Name: "name 1", Value: "value 1"},
+						{UUID: "2", Name: "name 2", Value: "value 2"},
 					},
 				},
 				GrainSubstrate: types.Substrate{
@@ -147,9 +147,9 @@ func Test_SelectLifecycle(t *testing.T) {
 						Name: "vendor 1",
 					},
 					Ingredients: []types.Ingredient{
-						types.Ingredient{"0", "ingredient 0"},
-						types.Ingredient{"1", "ingredient 1"},
-						types.Ingredient{"2", "ingredient 2"},
+						{UUID: "0", Name: "ingredient 0"},
+						{UUID: "1", Name: "ingredient 1"},
+						{UUID: "2", Name: "ingredient 2"},
 					},
 				},
 				BulkSubstrate: types.Substrate{
@@ -161,9 +161,9 @@ func Test_SelectLifecycle(t *testing.T) {
 						Name: "vendor 2",
 					},
 					Ingredients: []types.Ingredient{
-						types.Ingredient{"0", "ingredient 0"},
-						types.Ingredient{"1", "ingredient 1"},
-						types.Ingredient{"2", "ingredient 2"},
+						{UUID: "0", Name: "ingredient 0"},
+						{UUID: "1", Name: "ingredient 1"},
+						{UUID: "2", Name: "ingredient 2"},
 					},
 				},
 				Events: []types.Event{e0, e1, e2},

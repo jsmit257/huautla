@@ -35,9 +35,9 @@ func Test_SelectAllEventTypes(t *testing.T) {
 				return db
 			},
 			result: []types.EventType{
-				{"0", "eventtype 0", types.Stage{"0", "stage 0"}},
-				{"1", "eventtype 1", types.Stage{"1", "stage 1"}},
-				{"2", "eventtype 2", types.Stage{"1", "stage 1"}},
+				{UUID: "0", Name: "eventtype 0", Stage: types.Stage{UUID: "0", Name: "stage 0"}},
+				{UUID: "1", Name: "eventtype 1", Stage: types.Stage{UUID: "1", Name: "stage 1"}},
+				{UUID: "2", Name: "eventtype 2", Stage: types.Stage{UUID: "1", Name: "stage 1"}},
 			},
 		},
 		"query_fails": {
@@ -90,7 +90,7 @@ func Test_SelectEventType(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.EventType{"0", "strain 0", types.Stage{"0", "stage 0"}},
+			result: types.EventType{UUID: "0", Name: "strain 0", Stage: types.Stage{UUID: "0", Name: "stage 0"}},
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -141,7 +141,7 @@ func Test_InsertEventType(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.EventType{"30313233-3435-3637-3839-616263646566", "eventtype 0", types.Stage{}},
+			result: types.EventType{UUID: "30313233-3435-3637-3839-616263646566", Name: "eventtype 0", Stage: types.Stage{}},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -152,7 +152,7 @@ func Test_InsertEventType(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.EventType{"30313233-3435-3637-3839-616263646566", "eventtype 0", types.Stage{}},
+			result: types.EventType{UUID: "30313233-3435-3637-3839-616263646566", Name: "eventtype 0", Stage: types.Stage{}},
 			err:    fmt.Errorf("eventtype was not added"),
 		},
 		"query_fails": {
@@ -164,7 +164,7 @@ func Test_InsertEventType(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.EventType{"30313233-3435-3637-3839-616263646566", "eventtype 0", types.Stage{}},
+			result: types.EventType{UUID: "30313233-3435-3637-3839-616263646566", Name: "eventtype 0", Stage: types.Stage{}},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -176,7 +176,7 @@ func Test_InsertEventType(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.EventType{"30313233-3435-3637-3839-616263646566", "eventtype 0", types.Stage{}},
+			result: types.EventType{UUID: "30313233-3435-3637-3839-616263646566", Name: "eventtype 0", Stage: types.Stage{}},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -193,7 +193,7 @@ func Test_InsertEventType(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertEventType(
 				context.Background(),
-				types.EventType{tc.id, "eventtype " + string(tc.id), types.Stage{}},
+				types.EventType{UUID: tc.id, Name: "eventtype " + string(tc.id), Stage: types.Stage{}},
 				"Test_InsertEventType")
 
 			require.Equal(t, tc.err, err)

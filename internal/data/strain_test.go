@@ -35,9 +35,9 @@ func Test_SelectAllStrains(t *testing.T) {
 				return db
 			},
 			result: []types.Strain{
-				types.Strain{"0", "strain 0", types.Vendor{"0", "vendor 0"}, nil},
-				types.Strain{"1", "strain 1", types.Vendor{"1", "vendor 1"}, nil},
-				types.Strain{"2", "strain 2", types.Vendor{"1", "vendor 1"}, nil},
+				{UUID: "0", Name: "strain 0", Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Attributes: nil},
+				{UUID: "1", Name: "strain 1", Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Attributes: nil},
+				{UUID: "2", Name: "strain 2", Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Attributes: nil},
 			},
 		},
 		"query_fails": {
@@ -97,10 +97,10 @@ func Test_SelectStrain(t *testing.T) {
 				return db
 			},
 			id: "0",
-			result: types.Strain{"0", "strain 0", types.Vendor{"0", "vendor 0"}, []types.StrainAttribute{
-				{"0", "name 0", "value 0"},
-				{"1", "name 1", "value 1"},
-				{"2", "name 2", "value 2"},
+			result: types.Strain{UUID: "0", Name: "strain 0", Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Attributes: []types.StrainAttribute{
+				{UUID: "0", Name: "name 0", Value: "value 0"},
+				{UUID: "1", Name: "name 1", Value: "value 1"},
+				{UUID: "2", Name: "name 2", Value: "value 2"},
 			}},
 		},
 		"query_fails": {
@@ -153,7 +153,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
+			result: types.Strain{UUID: "30313233-3435-3637-3839-616263646566", Name: "strain 0", Vendor: types.Vendor{}, Attributes: nil},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -164,7 +164,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
+			result: types.Strain{UUID: "30313233-3435-3637-3839-616263646566", Name: "strain 0", Vendor: types.Vendor{}, Attributes: nil},
 			err:    fmt.Errorf("strain was not added"),
 		},
 		"query_fails": {
@@ -176,7 +176,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
+			result: types.Strain{UUID: "30313233-3435-3637-3839-616263646566", Name: "strain 0", Vendor: types.Vendor{}, Attributes: nil},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -188,7 +188,7 @@ func Test_InsertStrain(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Strain{"30313233-3435-3637-3839-616263646566", "strain 0", types.Vendor{}, nil},
+			result: types.Strain{UUID: "30313233-3435-3637-3839-616263646566", Name: "strain 0", Vendor: types.Vendor{}, Attributes: nil},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -205,7 +205,7 @@ func Test_InsertStrain(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertStrain(
 				context.Background(),
-				types.Strain{tc.id, "strain " + string(tc.id), types.Vendor{}, nil},
+				types.Strain{UUID: tc.id, Name: "strain " + string(tc.id), Vendor: types.Vendor{}, Attributes: nil},
 				"Test_InsertStrains")
 
 			require.Equal(t, tc.err, err)

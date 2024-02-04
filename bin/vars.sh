@@ -8,7 +8,7 @@ pgpass="${POSTGRES_PASSWORD:-root}"
 
 psql_cmd=( "psql" "postgresql://${pguser}:${pgpass}@${pghost}:${pgport}" )
 
-echo "updating apt-get"
-apt-get update
-echo "installing postgres client"
-apt-get -y upgrade postgresql-client
+# echo "updating apt-get"
+# apt-get update
+# echo "installing postgres client"
+# apt-get -y upgrade postgresql-client

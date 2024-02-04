@@ -85,7 +85,6 @@ type (
 		InsertSubstrate(ctx context.Context, s Substrate, cid CID) (Substrate, error)
 		UpdateSubstrate(ctx context.Context, id UUID, s Substrate, cid CID) error
 		DeleteSubstrate(ctx context.Context, id UUID, cid CID) error
-		GetAllIngredients(ctx context.Context, s *Substrate, cid CID) error
 	}
 
 	// vendors aren't meant to be a comprehensive list of attributes, really just

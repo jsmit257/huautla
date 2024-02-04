@@ -35,9 +35,9 @@ func Test_GetAllIngredients(t *testing.T) {
 				return db
 			},
 			result: []types.Ingredient{
-				types.Ingredient{"0", "ingredient 0"},
-				types.Ingredient{"1", "ingredient 1"},
-				types.Ingredient{"2", "ingredient 2"},
+				{UUID: "0", Name: "ingredient 0"},
+				{UUID: "1", Name: "ingredient 1"},
+				{UUID: "2", Name: "ingredient 2"},
 			},
 		},
 		"query_fails": {
@@ -77,7 +77,7 @@ func Test_AddIngredient(t *testing.T) {
 
 	l := log.WithField("test", "AddIngredient")
 
-	vermiculite := types.Ingredient{"0", "Vermiculite"}
+	vermiculite := types.Ingredient{UUID: "0", Name: "Vermiculite"}
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -155,9 +155,9 @@ func Test_ChangeIngredient(t *testing.T) {
 	l := log.WithField("test", "ChangeIngredient")
 
 	vermiculite, millet, popcorn :=
-		types.Ingredient{"0", "Vermiculite"},
-		types.Ingredient{"1", "Millet"},
-		types.Ingredient{"2", "Popcorn"}
+		types.Ingredient{UUID: "0", Name: "Vermiculite"},
+		types.Ingredient{UUID: "1", Name: "Millet"},
+		types.Ingredient{UUID: "2", Name: "Popcorn"}
 
 	tcs := map[string]struct {
 		db getMockDB
@@ -243,9 +243,9 @@ func Test_RemoveIngredient(t *testing.T) {
 	l := log.WithField("test", "RemoveIngredient")
 
 	vermiculite, millet, popcorn :=
-		types.Ingredient{"0", "Vermiculite"},
-		types.Ingredient{"1", "Millet"},
-		types.Ingredient{"2", "Popcorn"}
+		types.Ingredient{UUID: "0", Name: "Vermiculite"},
+		types.Ingredient{UUID: "1", Name: "Millet"},
+		types.Ingredient{UUID: "2", Name: "Popcorn"}
 
 	tcs := map[string]struct {
 		db     getMockDB

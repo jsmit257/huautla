@@ -90,9 +90,9 @@ func Test_GetAllAttributes(t *testing.T) {
 				return db
 			},
 			result: []types.StrainAttribute{
-				{"0", "name 0", "value 0"},
-				{"1", "name 1", "value 1"},
-				{"2", "name 2", "value 2"},
+				{UUID: "0", Name: "name 0", Value: "value 0"},
+				{UUID: "1", Name: "name 1", Value: "value 1"},
+				{UUID: "2", Name: "name 2", Value: "value 2"},
 			},
 		},
 		"query_fails": {
@@ -151,7 +151,7 @@ func Test_AddAttribute(t *testing.T) {
 			},
 			id: "0",
 			result: []types.StrainAttribute{
-				types.StrainAttribute{UUID: "30313233-3435-3637-3839-616263646566"},
+				{UUID: "30313233-3435-3637-3839-616263646566"},
 			},
 		},
 		"no_rows_affected": {
@@ -236,8 +236,8 @@ func Test_ChangeAttribute(t *testing.T) {
 				return db
 			},
 			attrs: []types.StrainAttribute{
-				{"0", "Mojo", "Lost"},
-				{"1", "Yield", "Some"},
+				{UUID: "0", Name: "Mojo", Value: "Lost"},
+				{UUID: "1", Name: "Yield", Value: "Some"},
 			},
 			id: "0",
 			n:  "Yield",
