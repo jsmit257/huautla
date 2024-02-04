@@ -42,9 +42,9 @@ func Test_SelectAllStages(t *testing.T) {
 				return db
 			},
 			result: []types.Stage{
-				types.Stage{"0", "stage 0"},
-				types.Stage{"1", "stage 1"},
-				types.Stage{"2", "stage 2"},
+				{UUID: "0", Name: "stage 0"},
+				{UUID: "1", Name: "stage 1"},
+				{UUID: "2", Name: "stage 2"},
 			},
 		},
 		"query_fails": {
@@ -100,7 +100,21 @@ func Test_SelectStage(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Stage{"0", "stage 0"},
+			result: types.Stage{UUID: "0", Name: "stage 0"},
+		},
+		"no_row_returned": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectQuery("").
+					WillReturnRows(
+						sqlmock.
+							NewRows([]string{"name"}))
+				return db
+			},
+			id:     "0",
+			result: types.Stage{UUID: "0", Name: ""},
+			err:    fmt.Errorf("sql: no rows in result set"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {

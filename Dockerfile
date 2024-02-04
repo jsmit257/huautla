@@ -7,12 +7,13 @@
 #   -o ./internal/cmd/serve-mysql/user-service \
 #   ./internal/cmd/serve-mysql/...
 
-FROM debian:bookworm as initdb
+FROM debian:bookworm as install
+ENTRYPOINT []
+VOLUME /huautla
+WORKDIR /huautla
 RUN apt-get update
 RUN apt-get -y upgrade postgresql-client
-VOLUME /bin
-CMD /bin/schema.sh
-
+CMD ./bin/install-prod.sh
 
 FROM debian:bookworm as system-test
 VOLUME /system-test

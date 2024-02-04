@@ -12,27 +12,47 @@ services:
     image: postgres:bookworm
     restart: always
     hostname: huautla
-    # volumes: [ .:/go/src/build ]
     ports:
       - 5433:5432
     environment:
       POSTGRES_PASSWORD: *pgpass
 
-  initdb:
+  install:
     depends_on: [ postgres ]
-    image: initdb # debian:bookworm
-    # volumes: [ .:/root/huautla ]
+    image: install
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes: [ .:/huautla ]
     environment:
       POSTGRES_HOST: *pghost
       POSTGRES_PORT: *pgport
       POSTGRES_USER: *pguser
       POSTGRES_PASSWORD: *pgpass
-    # working_dir: /root/huautla
-    # command: ./bin/schema.sh
+    working_dir: /huautla
+    command: ./bin/install-prod.sh
+
+  install-system-test:
+    depends_on: [ install ]
+    image: install
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes: [ .:/huautla ]
+    environment:
+      POSTGRES_HOST: *pghost
+      POSTGRES_PORT: *pgport
+      POSTGRES_USER: *pguser
+      POSTGRES_PASSWORD: *pgpass
+    working_dir: /huautla
+    command: ./bin/install-system-test.sh
 
   system-test:
-    depends_on: [ initdb ]
+    depends_on: [ install-system-test ]
     image: system-test
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       POSTGRES_HOST: *pghost
       POSTGRES_PORT: *pgport

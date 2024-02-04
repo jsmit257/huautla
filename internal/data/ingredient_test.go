@@ -40,9 +40,9 @@ func Test_SelectAllIngredients(t *testing.T) {
 				return db
 			},
 			result: []types.Ingredient{
-				types.Ingredient{"0", "ingredient 0"},
-				types.Ingredient{"1", "ingredient 1"},
-				types.Ingredient{"2", "ingredient 2"},
+				{UUID: "0", Name: "ingredient 0"},
+				{UUID: "1", Name: "ingredient 1"},
+				{UUID: "2", Name: "ingredient 2"},
 			},
 		},
 		"query_fails": {
@@ -96,7 +96,17 @@ func Test_SelectIngredient(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Ingredient{"0", "ingredient 0"},
+			result: types.Ingredient{UUID: "0", Name: "ingredient 0"},
+		},
+		"no_rows_returned": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"name"}))
+				return db
+			},
+			err: fmt.Errorf("sql: no rows in result set"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -147,7 +157,7 @@ func Test_InsertIngredients(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
+			result: types.Ingredient{UUID: "30313233-3435-3637-3839-616263646566", Name: "ingredient 0"},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -158,7 +168,7 @@ func Test_InsertIngredients(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
+			result: types.Ingredient{UUID: "30313233-3435-3637-3839-616263646566", Name: "ingredient 0"},
 			err:    fmt.Errorf("ingredient was not added"),
 		},
 		"query_fails": {
@@ -170,7 +180,7 @@ func Test_InsertIngredients(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
+			result: types.Ingredient{UUID: "30313233-3435-3637-3839-616263646566", Name: "ingredient 0"},
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -182,7 +192,7 @@ func Test_InsertIngredients(t *testing.T) {
 				return db
 			},
 			id:     "0",
-			result: types.Ingredient{"30313233-3435-3637-3839-616263646566", "ingredient 0"},
+			result: types.Ingredient{UUID: "30313233-3435-3637-3839-616263646566", Name: "ingredient 0"},
 			err:    fmt.Errorf("some error"),
 		},
 	}
@@ -199,7 +209,7 @@ func Test_InsertIngredients(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).InsertIngredient(
 				context.Background(),
-				types.Ingredient{tc.id, "ingredient " + string(tc.id)},
+				types.Ingredient{UUID: tc.id, Name: "ingredient " + string(tc.id)},
 				"Test_InsertIngredients")
 
 			require.Equal(t, tc.err, err)

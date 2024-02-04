@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/jsmit257/huautla/internal/data"
@@ -253,17 +254,33 @@ func Test_Ingredienter(t *testing.T) {
 	tcs := map[string]func(t *testing.T){
 		"SelectAllIngredients": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, cid types.CID) ([]types.Ingredient, error)
 				result []types.Ingredient
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectAllIngredients,
+					result: []types.Ingredient{
+						{UUID: "0", Name: "Vermiculite"},
+						{UUID: "1", Name: "Maltodexterin"},
+						{UUID: "2", Name: "Rye"},
+						{UUID: "3", Name: "White Millet"},
+						{UUID: "4", Name: "Popcorn"},
+						{UUID: "5", Name: "Manure"},
+						{UUID: "6", Name: "Coir"},
+						{UUID: "7", Name: "Honey"},
+						{UUID: "8", Name: "Agar"},
+						{UUID: "9", Name: "Rice Flour"},
+						{UUID: "10", Name: "White Milo"},
+						{UUID: "11", Name: "Red Milo"},
+						{UUID: "12", Name: "Red Millet"},
+						{UUID: "13", Name: "Gypsum"},
+						{UUID: "14", Name: "Calcium phosphate"},
+						{UUID: "15", Name: "Diammonium phosphate"},
+					},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), types.CID(k))
+					result, err := db.SelectAllIngredients(context.Background(), types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -271,18 +288,23 @@ func Test_Ingredienter(t *testing.T) {
 		},
 		"SelectIngredient": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, id types.UUID, cid types.CID) (types.Ingredient, error)
 				id     types.UUID
 				result types.Ingredient
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectIngredient,
+					id:     "13",
+					result: types.Ingredient{UUID: "13", Name: "Gypsum"},
+				},
+				"no_rows_returned": {
+					id:     "foobar",
+					result: types.Ingredient{UUID: "foobar", Name: ""},
+					err:    fmt.Errorf("sql: no rows in result set"),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.id, types.CID(k))
+					result, err := db.SelectIngredient(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -290,18 +312,23 @@ func Test_Ingredienter(t *testing.T) {
 		},
 		"InsertIngredient": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, i types.Ingredient, cid types.CID) (types.Ingredient, error)
 				i      types.Ingredient
 				result []types.Ingredient
 				err    error
 			}{
 				"happy_path": {
-					fn: db.InsertIngredient,
+					i: types.Ingredient{Name: "bogus!"},
+				},
+				"no_rows_affected": {}, // ???
+				"duplicate_name_violation": {
+					i:      types.Ingredient{Name: "Coir"},
+					result: []types.Ingredient{},
+					err:    fmt.Errorf(""),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.i, types.CID(k))
+					result, err := db.InsertIngredient(context.Background(), v.i, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -309,35 +336,50 @@ func Test_Ingredienter(t *testing.T) {
 		},
 		"UpdateIngredient": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, i types.Ingredient, cid types.CID) error
 				id  types.UUID
 				i   types.Ingredient
 				err error
 			}{
 				"happy_path": {
-					fn: db.UpdateIngredient,
+					id: "0",
+					i:  types.Ingredient{Name: "renamed"},
+				},
+				"no_rows_affected": {
+					id:  "foobar",
+					err: fmt.Errorf("ingredient was not updated: '0'"),
+				},
+				"duplicate_name_violation": {
+					id: "0",
+					i:  types.Ingredient{Name: "Honey"},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, v.i, types.CID(k))
+					err := db.UpdateIngredient(context.Background(), v.id, v.i, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
 			}
 		},
 		"DeleteIngredient": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, cid types.CID) error
 				id  types.UUID
 				err error
 			}{
 				"happy_path": {
-					fn: db.DeleteIngredient,
+					id: "0",
+				},
+				"no_rows_affected": {
+					id:  "foobar",
+					err: fmt.Errorf("ingredient was not deleted: '0'"),
+				},
+				"query_fails": {
+					id:  "01234567890123456789012345678901234567891",
+					err: fmt.Errorf("ingredient was not deleted: '0'"),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, types.CID(k))
+					err := db.DeleteIngredient(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
 			}
@@ -432,17 +474,22 @@ func Test_Stager(t *testing.T) {
 	tcs := map[string]func(t *testing.T){
 		"SelectAllStages": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, cid types.CID) ([]types.Stage, error)
 				result []types.Stage
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectAllStages,
+					result: []types.Stage{
+						{UUID: "0", Name: "Gestation"},
+						{UUID: "1", Name: "Colonization"},
+						{UUID: "2", Name: "Majority"},
+						{UUID: "3", Name: "Vacation"},
+						{UUID: "4", Name: "System Test - Delete Me!!!"},
+					},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), types.CID(k))
+					result, err := db.SelectAllStages(context.Background(), types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -450,18 +497,28 @@ func Test_Stager(t *testing.T) {
 		},
 		"SelectStage": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, id types.UUID, cid types.CID) (types.Stage, error)
 				id     types.UUID
 				result types.Stage
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectStage,
+					id:     "2",
+					result: types.Stage{UUID: "2", Name: "Majority"},
+				},
+				"no_row_returned": {
+					id:     "8",
+					result: types.Stage{UUID: "0", Name: ""},
+					err:    fmt.Errorf("sql: no rows in result set"),
+				},
+				"query_fails": {
+					id:     "8888888888888888888888888888888888888888888888888888888888888888",
+					result: types.Stage{UUID: "0", Name: ""},
+					err:    fmt.Errorf("sql: no rows in result set"), // XXX
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.id, types.CID(k))
+					result, err := db.SelectStage(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -469,54 +526,79 @@ func Test_Stager(t *testing.T) {
 		},
 		"InsertStage": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, s types.Stage, cid types.CID) (types.Stage, error)
-				s      types.Stage
-				result types.Stage
-				err    error
+				s   types.Stage
+				err error
 			}{
 				"happy_path": {
-					fn: db.InsertStage,
+					s: types.Stage{Name: "bogus!"},
+				},
+				"no_rows_affected": {}, // ???
+				"query_fails": {
+					s:   types.Stage{Name: "01234567890123456789012345678901234567891"},
+					err: fmt.Errorf(""),
+				},
+				"duplicate_name_violation": {
+					s:   types.Stage{Name: "Colonization"},
+					err: fmt.Errorf(""),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.s, types.CID(k))
+					result, err := db.InsertStage(context.Background(), v.s, types.CID(k))
 					require.Equal(t, v.err, err)
-					require.Equal(t, v.result, result)
+					require.NotEmpty(t, result.UUID)
 				})
 			}
 		},
 		"UpdateStage": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, s types.Stage, cid types.CID) error
 				id  types.UUID
 				s   types.Stage
 				err error
 			}{
 				"happy_path": {
-					fn: db.UpdateStage,
+					id: "4",
+					s:  types.Stage{Name: "Renamed"},
+				},
+				"no_rows_affected": {
+					id:  "12",
+					err: fmt.Errorf("stage was not updated: '12'"),
+				},
+				"query_fails": {
+					id: "12121212121212121212121212121212121212121",
+				},
+				"duplicate_name_violation": {
+					id: "0",
+					s:  types.Stage{Name: "Vacation"},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, v.s, types.CID(k))
+					err := db.UpdateStage(context.Background(), v.id, v.s, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
 			}
 		},
 		"DeleteStage": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, cid types.CID) error
 				id  types.UUID
 				err error
 			}{
 				"happy_path": {
-					fn: db.DeleteStage,
+					id: "4",
+				},
+				"no_rows_affected": {
+					id:  "9",
+					err: fmt.Errorf("stage could not be deleted: '9'"),
+				},
+				"query_fails": {
+					id:  "00000000000000000000000000000000000000000000",
+					err: fmt.Errorf(""),
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, types.CID(k))
+					err := db.DeleteStage(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
 			}
@@ -933,17 +1015,16 @@ func Test_Vendorer(t *testing.T) {
 	tcs := map[string]func(t *testing.T){
 		"SelectAllVendors": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, cid types.CID) ([]types.Vendor, error)
 				result []types.Vendor
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectAllVendors,
+					result: []types.Vendor{{UUID: "0", Name: "127.0.0.1"}},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), types.CID(k))
+					result, err := db.SelectAllVendors(context.Background(), types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -951,18 +1032,18 @@ func Test_Vendorer(t *testing.T) {
 		},
 		"SelectVendor": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, id types.UUID, cid types.CID) (types.Vendor, error)
 				id     types.UUID
 				result types.Vendor
 				err    error
 			}{
 				"happy_path": {
-					fn: db.SelectVendor,
+					id:     "0",
+					result: types.Vendor{UUID: "0", Name: "127.0.0.1"},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.id, types.CID(k))
+					result, err := db.SelectVendor(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -970,18 +1051,17 @@ func Test_Vendorer(t *testing.T) {
 		},
 		"InsertVendor": func(t *testing.T) {
 			set := map[string]struct {
-				fn     func(ctx context.Context, v types.Vendor, cid types.CID) (types.Vendor, error)
 				v      types.Vendor
 				result types.Vendor
 				err    error
 			}{
 				"happy_path": {
-					fn: db.InsertVendor,
+					v: types.Vendor{},
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					result, err := v.fn(context.Background(), v.v, types.CID(k))
+					result, err := db.InsertVendor(context.Background(), v.v, types.CID(k))
 					require.Equal(t, v.err, err)
 					require.Equal(t, v.result, result)
 				})
@@ -989,35 +1069,33 @@ func Test_Vendorer(t *testing.T) {
 		},
 		"UpdateVendor": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, v types.Vendor, cid types.CID) error
 				id  types.UUID
 				v   types.Vendor
 				err error
 			}{
 				"happy_path": {
-					fn: db.UpdateVendor,
+					id: "0",
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, v.v, types.CID(k))
+					err := db.UpdateVendor(context.Background(), v.id, v.v, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
 			}
 		},
 		"DeleteVendor": func(t *testing.T) {
 			set := map[string]struct {
-				fn  func(ctx context.Context, id types.UUID, cid types.CID) error
 				id  types.UUID
 				err error
 			}{
 				"happy_path": {
-					fn: db.DeleteVendor,
+					id: "0",
 				},
 			}
 			for k, v := range set {
 				t.Run(k, func(t *testing.T) {
-					err := v.fn(context.Background(), v.id, types.CID(k))
+					err := db.DeleteVendor(context.Background(), v.id, types.CID(k))
 					require.Equal(t, v.err, err)
 				})
 			}
