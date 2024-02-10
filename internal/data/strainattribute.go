@@ -91,7 +91,7 @@ func (db *Conn) AddAttribute(ctx context.Context, s *types.Strain, n, v string, 
 	return err
 }
 
-func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, id types.UUID, n, v string, cid types.CID) error {
+func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, n, v string, cid types.CID) error {
 	var err error
 
 	deferred, start, l := initAccessFuncs("ChangeAttribute", db.logger, s.UUID, cid)
@@ -101,7 +101,7 @@ func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, id types.U
 
 	if err != nil {
 		if isUniqueViolation(err) {
-			return db.ChangeAttribute(ctx, s, id, n, v, cid) // FIXME: infinite loop?
+			return db.ChangeAttribute(ctx, s, n, v, cid) // FIXME: infinite loop?
 		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
@@ -111,7 +111,7 @@ func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, id types.U
 	}
 
 	i, j := 0, len(s.Attributes)
-	for i < j && s.Attributes[i].UUID != id {
+	for i < j && s.Attributes[i].Name != n {
 		i++
 	}
 	s.Attributes[i].Value = v

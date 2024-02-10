@@ -95,10 +95,10 @@ func (db *Conn) InsertLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 	} else if rows, err = result.RowsAffected(); err != nil {
 		return lc, err
 	} else if rows != 1 {
-		err = fmt.Errorf("lifecycle was not added")
+		return lc, fmt.Errorf("lifecycle was not added")
 	}
 
-	return lc, err
+	return db.SelectLifecycle(ctx, lc.UUID, cid)
 }
 
 func (db *Conn) UpdateLifecycle(ctx context.Context, lc types.Lifecycle, cid types.CID) error {

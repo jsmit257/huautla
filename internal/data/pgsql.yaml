@@ -9,6 +9,7 @@ event:
            e.ctime,
            et.uuid as eventtype_uuid,
            et.name as eventtype_name,
+           et.severity as eventtype_severity,
            s.uuid as stage_uuid,
            s.name as stage_name
       from events e
@@ -27,6 +28,7 @@ event:
            e.ctime,
            et.uuid as eventtype_uuid,
            et.name as eventtype_name,
+           et.severity as eventtype_severity,
            s.uuid as stage_uuid,
            s.name as stage_name
       from events e
@@ -42,6 +44,7 @@ event:
            e.ctime,
            et.uuid as eventtype_uuid,
            et.name as eventtype_name,
+           et.severity as eventtype_severity,
            s.uuid as stage_uuid,
            s.name as stage_name
       from events e
@@ -73,6 +76,7 @@ eventtype:
   select-all: >
     select e.uuid,
            e.name,
+           e.severity,
            s.uuid as stage_uuid,
            s.name as stage_name
       from event_types e
@@ -80,6 +84,7 @@ eventtype:
         on e.stage_uuid = s.uuid
   select:
     select e.name,
+           e.severity,
            s.uuid as stage_uuid,
            s.name as stage_name
       from event_types e
@@ -179,7 +184,9 @@ lifecycle:
            substrates bs
      where s.uuid = ?
        and gs.uuid = ?
+       and gs.type = 'Grain'
        and bs.uuid = ?
+       and gs.type = 'Bulk'
   update: >
     update lifecycles
        set name = ?,
@@ -198,7 +205,9 @@ lifecycle:
            substrates bs
      where s.uuid = ?
        and gs.uuid = ?
+       and gs.type = 'Grain'
        and bs.uuid = ?
+       and gs.type = 'Bulk'
   delete: delete from lifecycles where uuid = ?
 
 stage:

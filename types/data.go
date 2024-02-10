@@ -11,7 +11,12 @@ type (
 
 	SubstrateType string
 
-	Config struct{}
+	Config struct {
+		PGHost string
+		PGUser string
+		PGPass string
+		PGPort uint
+	}
 
 	Vendor struct {
 		UUID `json:"-"`
@@ -50,10 +55,10 @@ type (
 	}
 
 	EventType struct {
-		UUID `json:"-"`
-		Name string `json:"name"`
-		// Severity string `json:"severity"` // XXX: add this to select/insert/update and the test cases
-		Stage `json:"stage"`
+		UUID     `json:"-"`
+		Name     string `json:"name"`
+		Severity string `json:"severity"`
+		Stage    `json:"stage"`
 	}
 
 	Lifecycle struct {

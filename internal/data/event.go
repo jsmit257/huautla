@@ -52,6 +52,7 @@ func (db *Conn) selectEventsList(ctx context.Context, query string, id types.UUI
 			&row.CTime,
 			&row.EventType.UUID,
 			&row.EventType.Name,
+			&row.EventType.Severity,
 			&row.EventType.Stage.UUID,
 			&row.EventType.Stage.Name); err != nil {
 
@@ -81,6 +82,7 @@ func (db *Conn) SelectEvent(ctx context.Context, id types.UUID, cid types.CID) (
 			&result.CTime,
 			&result.EventType.UUID,
 			&result.EventType.Name,
+			&result.EventType.Severity,
 			&result.EventType.Stage.UUID,
 			&result.EventType.Stage.Name); err != nil {
 

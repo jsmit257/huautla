@@ -7,8 +7,11 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/jsmit257/huautla/types"
+
 	log "github.com/sirupsen/logrus"
+
 	"github.com/stretchr/testify/require"
 )
 

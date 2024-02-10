@@ -28,6 +28,7 @@ create table substrate_ingredients (
 create table strains (
   uuid        varchar(40)  not null primary key,
   name        varchar(512) not null,
+  -- TODO: species     varchar(128) not null,
   vendor_uuid varchar(40)  not null references vendors(uuid),
   unique(name, vendor_uuid)
 );
@@ -47,9 +48,10 @@ create table stages (
 
 create table event_types (
   uuid       varchar(40)  not null primary key,
-  name       varchar(512) not null unique,
-  severity   varchar(10)  not null check (severity in ('Info', 'Warn', 'Error', 'Fatal')),
-  stage_uuid varchar(40)  not null references stages(uuid)
+  name       varchar(512) not null,
+  severity   varchar(10)  not null check (severity in ('Info', 'Warn', 'Error', 'Fatal', 'RIP')),
+  stage_uuid varchar(40)  not null references stages(uuid),
+  unique(name, stage_uuid)
 );
 
 create table lifecycles (
@@ -80,6 +82,4 @@ create table events (
   lifecycle_uuid varchar(40)  not null references lifecycles(uuid),
   eventtype_uuid varchar(40)  not null references event_types(uuid)
 );
-
-\d
 

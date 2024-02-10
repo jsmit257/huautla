@@ -43,26 +43,24 @@ const connformat = ""
 
 var mtrcs = metrics.DataMetrics.MustCurryWith(prometheus.Labels{"pkg": "data"})
 
-func New(cfg *types.Config, logger *log.Entry) (types.DB, error) {
+func New(cnxInfo string, log *log.Entry) (types.DB, error) {
 
 	var err error
+	var sqls map[string]map[string]string
+	var query *sql.DB
 
-	sqls, err := readSQL("./pgsql.yaml")
-	if err != nil {
+	if sqls, err = readSQL("./pgsql.yaml"); err != nil {
+		return nil, err
+	} else if query, err = sql.Open("postgres", cnxInfo); err != nil {
 		return nil, err
 	}
 
-	result := &Conn{
+	return &Conn{
+		query:        query,
 		generateUUID: uuid.New,
-		logger:       logger,
+		logger:       log,
 		sql:          sqls,
-	}
-
-	result.query, err = sql.Open(
-		"postgres",
-		fmt.Sprintf(connformat))
-
-	return result, err
+	}, nil
 }
 
 func (db *Conn) deleteByUUID(ctx context.Context, id types.UUID, cid types.CID, method, table string, l *log.Entry) error {

@@ -6,19 +6,20 @@ build:
 
 .PHONY: unit
 unit:
-	go test -cover ./...
+	go test -cover ./. ./internal/...
+
+.PHONY: postgres
+postgres:
+	docker-compose up -d postgres
+	sleep 2s
 
 .PHONY: install
-install:
-	docker-compose up -d postgres
-	sleep 5s
+install: postgres
 	docker-compose up --build --force-recreate install
 	make docker-down
 
 .PHONY: system-test
-system-test:
-	docker-compose up -d postgres
-	sleep 5s
+system-test: postgres
 	docker-compose up --build --force-recreate install-system-test
 	# docker-compose up --build --force-recreate system-test
 	make docker-down

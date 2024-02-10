@@ -30,6 +30,7 @@ func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types
 		if err = rows.Scan(
 			&row.UUID,
 			&row.Name,
+			&row.Severity,
 			&row.Stage.UUID,
 			&row.Stage.Name); err != nil {
 
@@ -53,6 +54,7 @@ func (db *Conn) SelectEventType(ctx context.Context, id types.UUID, cid types.CI
 		QueryRowContext(ctx, db.sql["eventtype"]["select"], id).
 		Scan(
 			&result.Name,
+			&result.Severity,
 			&result.Stage.UUID,
 			&result.Stage.Name)
 
@@ -67,7 +69,7 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 	deferred, start, l := initAccessFuncs("InsertEventType", db.logger, e.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["eventtype"]["insert"], e.UUID, e.Name, e.Stage.UUID)
+	result, err := db.ExecContext(ctx, db.sql["eventtype"]["insert"], e.UUID, e.Name, e.Severity, e.Stage.UUID)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return db.InsertEventType(ctx, e, cid) // FIXME: infinite loop?
@@ -88,7 +90,7 @@ func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, e types.Even
 	deferred, start, l := initAccessFuncs("UpdateEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, id)
+	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, e.Severity, id)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return db.UpdateEventType(ctx, id, e, cid) // FIXME: infinite loop?

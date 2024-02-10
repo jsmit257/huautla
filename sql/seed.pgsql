@@ -36,6 +36,7 @@ values('0', 'Gestation'),
 
 -- event_types 
 insert into event_types(uuid, name, severity, stage_uuid)
-values('0', 'Humidity', 'Info', '1'),
-      ('1', 'Thermal', 'Warn', '1'),
-      ('2', 'Crash', 'Error', '1');
+values('0', 'Condensation', 'Warn', '3'),
+      ('1', 'Fruiting', 'Info', '1'),
+      ('2', 'Crash', 'Error', '1'),
+      ('3', 'Sunset', 'RIP', '2');

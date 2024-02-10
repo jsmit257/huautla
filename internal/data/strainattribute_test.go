@@ -223,7 +223,6 @@ func Test_ChangeAttribute(t *testing.T) {
 	tcs := map[string]struct {
 		db    getMockDB
 		attrs []types.StrainAttribute
-		id    types.UUID
 		n, v  string
 		err   error
 	}{
@@ -239,9 +238,8 @@ func Test_ChangeAttribute(t *testing.T) {
 				{UUID: "0", Name: "Mojo", Value: "Lost"},
 				{UUID: "1", Name: "Yield", Value: "Some"},
 			},
-			id: "0",
-			n:  "Yield",
-			v:  "Lots!!",
+			n: "Yield",
+			v: "Lots!!",
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -286,7 +284,7 @@ func Test_ChangeAttribute(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			s := &types.Strain{UUID: tc.id, Attributes: tc.attrs}
+			s := &types.Strain{UUID: "0", Attributes: tc.attrs}
 
 			err := (&Conn{
 				query:        tc.db(),
@@ -295,7 +293,6 @@ func Test_ChangeAttribute(t *testing.T) {
 			}).ChangeAttribute(
 				context.Background(),
 				s,
-				tc.id,
 				tc.n,
 				tc.v,
 				"Test_RemoveAttribute")

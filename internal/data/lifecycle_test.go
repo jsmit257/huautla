@@ -106,10 +106,10 @@ func Test_SelectLifecycle(t *testing.T) {
 						AddRow("2", "ingredient 2"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "eventtype_name", "stage_uuid", "stage_name"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "eventtype_name", "eventtype_severity", "stage_uuid", "stage_name"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
 
 				return db
 			},
@@ -333,6 +333,38 @@ func Test_SelectLifecycle(t *testing.T) {
 func Test_InsertLifecycle(t *testing.T) {
 	t.Parallel()
 
+	fieldnames := []string{
+		"name",
+		"location",
+		"graincost",
+		"bulkcost",
+		"yield",
+		"count",
+		"gross",
+		"mtime",
+		"ctime",
+		"strain_uuid",
+		"strain_name",
+		"strain_vendor_uuid",
+		"strain_vendor_name",
+		"grain_substrate_uuid",
+		"grain_substrate_name",
+		"grain_substrate_type",
+		"grain_vendor_uuid",
+		"grain_vendor_name",
+		"bulk_substrate_uuid",
+		"bulk_substrate_name",
+		"bulk_substrate_type",
+		"bulk_vendor_uuid",
+		"bulk_vendor_name",
+	}
+
+	e0, e1, e2 := types.Event{UUID: "0"},
+		types.Event{UUID: "1"},
+		types.Event{UUID: "2"}
+
+	whenwillthenbenow := time.Now() // time.Soon()
+
 	l := log.WithField("test", "InsertLifecycle")
 
 	tcs := map[string]struct {
@@ -345,6 +377,58 @@ func Test_InsertLifecycle(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows(fieldnames).
+						AddRow(
+							"name",
+							"location",
+							0,
+							0,
+							0,
+							0,
+							0,
+							whenwillthenbenow,
+							whenwillthenbenow,
+							"0",
+							"strain 0",
+							"x",
+							"vendor x",
+							"gs",
+							"gs",
+							types.GrainType,
+							"1",
+							"vendor 1",
+							"bs",
+							"bs",
+							types.BulkType,
+							"2",
+							"vendor 2"))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name", "value"}).
+						AddRow("0", "name 0", "value 0").
+						AddRow("1", "name 1", "value 1").
+						AddRow("2", "name 2", "value 2"))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name"}).
+						AddRow("0", "ingredient 0").
+						AddRow("1", "ingredient 1").
+						AddRow("2", "ingredient 2"))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name"}).
+						AddRow("0", "ingredient 0").
+						AddRow("1", "ingredient 1").
+						AddRow("2", "ingredient 2"))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "eventtype_name", "eventtype_severity", "stage_uuid", "stage_name"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
+
 				return db
 			},
 		},

@@ -103,6 +103,18 @@ func Test_SelectStrain(t *testing.T) {
 				{UUID: "2", Name: "name 2", Value: "value 2"},
 			}},
 		},
+		"no_results_found": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"name", "vendor_uuid", "vendor_name"}))
+				return db
+			},
+			id:     "0",
+			result: types.Strain{UUID: "0"},
+			err:    fmt.Errorf("sql: no rows in result set"),
+		},
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
