@@ -17,6 +17,8 @@ var stages = []types.Stage{
 }
 
 func Test_SelectAllStages(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		result []types.Stage
 		err    error
@@ -36,18 +38,20 @@ func Test_SelectAllStages(t *testing.T) {
 	}
 }
 func Test_SelectStage(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id     types.UUID
 		result types.Stage
 		err    error
 	}{
 		"happy_path": {
-			id:     "2",
+			id:     stages[2].UUID,
 			result: stages[2],
 		},
 		"no_row_returned": {
 			id:     "8",
-			result: types.Stage{UUID: "0", Name: ""},
+			result: types.Stage{UUID: "8", Name: ""},
 			err:    fmt.Errorf("sql: no rows in result set"),
 		},
 		"query_fails": {
@@ -67,6 +71,8 @@ func Test_SelectStage(t *testing.T) {
 	}
 }
 func Test_InsertStage(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		s   types.Stage
 		err error
@@ -100,11 +106,11 @@ func Test_UpdateStage(t *testing.T) {
 			s:  types.Stage{Name: "Renamed"},
 		},
 		"no_rows_affected": {
-			id:  "foobar",
-			err: fmt.Errorf("stage was not updated: '12'"),
+			id:  "missing",
+			err: fmt.Errorf("stage was not updated: 'missing'"),
 		},
 		"duplicate_name_violation": {
-			id: "0",
+			id: "update me!",
 			s:  stages[0],
 		},
 		"query_fails": {
@@ -129,8 +135,8 @@ func Test_DeleteStage(t *testing.T) {
 			id: "delete me!",
 		},
 		"no_rows_affected": {
-			id:  "foobar",
-			err: fmt.Errorf("stage could not be deleted: '9'"),
+			id:  "missing",
+			err: fmt.Errorf("stage could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
 			id:  stages[0].UUID,

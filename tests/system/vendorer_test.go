@@ -46,7 +46,7 @@ func Test_SelectVendor(t *testing.T) {
 			err:    fmt.Errorf("sql: no rows in result set"),
 		},
 		"query_fails": {
-			id:     "8888888888888888888888888888888888888888888888888888888888888888",
+			id:     invalidUUID,
 			result: types.Vendor{UUID: "0", Name: ""},
 			err:    noRows, // XXX
 		},
@@ -91,19 +91,19 @@ func Test_UpdateVendor(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			id: "0",
+			id: "update me!",
 			v:  types.Vendor{Name: "localhost"},
 		},
 		"duplicate_name_violation": {
-			id: "1",
+			id: "update me!",
 			v:  vendor0,
 		},
 		"no_rows_affected": {
-			id:  "foobar",
-			err: fmt.Errorf("vendor table was not updated 'foobar'"),
+			id:  "missing",
+			err: fmt.Errorf("vendor table was not updated 'missing'"),
 		},
 		"query_fails": {
-			id: "12121212121212121212121212121212121212121",
+			id: invalidUUID,
 		},
 	}
 	for k, v := range set {
@@ -121,14 +121,14 @@ func Test_DeleteVendor(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			id: "-1",
+			id: "delete me!",
 		},
 		"no_rows_affected": {
-			id:  "foobar",
-			err: fmt.Errorf("vendor table was not deleted 'foobar'"),
+			id:  "missing",
+			err: fmt.Errorf("vendor table was not deleted 'missing'"),
 		},
 		"query_fails": {
-			id:  "01234567890123456789012345678901234567891",
+			id:  invalidUUID,
 			err: fmt.Errorf("some error"),
 		},
 		"referential_violation": {

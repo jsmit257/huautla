@@ -88,7 +88,7 @@ func (db *Conn) InsertLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 		lc.BulkSubstrate.UUID)
 
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.InsertLifecycle(ctx, lc, cid) // FIXME: infinite loop?
 		}
 		return lc, err
@@ -124,9 +124,6 @@ func (db *Conn) UpdateLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 		lc.GrainSubstrate.UUID,
 		lc.BulkSubstrate.UUID); err != nil {
 
-		if isUniqueViolation(err) {
-			return db.UpdateLifecycle(ctx, lc, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err = result.RowsAffected(); err != nil {
 		return err

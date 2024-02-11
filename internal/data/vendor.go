@@ -58,7 +58,7 @@ func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID)
 
 	result, err = db.ExecContext(ctx, db.sql["vendor"]["insert"], v.UUID, v.Name)
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.InsertVendor(ctx, v, cid) // FIXME: infinite loop?
 		}
 		return v, err
@@ -79,9 +79,6 @@ func (db *Conn) UpdateVendor(ctx context.Context, id types.UUID, v types.Vendor,
 
 	result, err := db.ExecContext(ctx, db.sql["vendor"]["update"], v.Name, id)
 	if err != nil {
-		if isUniqueViolation(err) {
-			return db.UpdateVendor(ctx, id, v, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

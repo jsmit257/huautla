@@ -76,7 +76,7 @@ func (db *Conn) AddAttribute(ctx context.Context, s *types.Strain, n, v string, 
 	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["add"], id, n, v, s.UUID)
 
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.AddAttribute(ctx, s, n, v, cid) // FIXME: infinite loop?
 		}
 		return err
@@ -100,9 +100,6 @@ func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, n, v strin
 	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["change"], v, n, s.UUID)
 
 	if err != nil {
-		if isUniqueViolation(err) {
-			return db.ChangeAttribute(ctx, s, n, v, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

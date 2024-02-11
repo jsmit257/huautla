@@ -74,7 +74,7 @@ func (db *Conn) InsertStrain(ctx context.Context, s types.Strain, cid types.CID)
 
 	result, err := db.ExecContext(ctx, db.sql["strain"]["insert"], s.UUID, s.Name, s.Vendor.UUID)
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.InsertStrain(ctx, s, cid) // FIXME: infinite loop?
 		}
 		return s, err
@@ -95,9 +95,6 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 
 	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], s.Name, id)
 	if err != nil {
-		if isUniqueViolation(err) {
-			return db.UpdateStrain(ctx, id, s, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

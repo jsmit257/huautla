@@ -44,7 +44,7 @@ func (db *Conn) AddIngredient(ctx context.Context, s *types.Substrate, i types.I
 
 	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["add"], db.generateUUID(), s.UUID, i.UUID)
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.AddIngredient(ctx, s, i, cid) // FIXME: infinite loop?
 		}
 		return err
@@ -68,9 +68,6 @@ func (db *Conn) ChangeIngredient(ctx context.Context, s *types.Substrate, oldI, 
 
 	result, err = db.query.ExecContext(ctx, db.sql["substrate-ingredient"]["change"], newI.UUID, s.UUID, oldI.UUID)
 	if err != nil {
-		if isUniqueViolation(err) {
-			return db.ChangeIngredient(ctx, s, oldI, newI, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

@@ -72,7 +72,7 @@ func (db *Conn) InsertSubstrate(ctx context.Context, s types.Substrate, cid type
 	result, err := db.ExecContext(ctx, db.sql["substrate"]["insert"], s.UUID, s.Name, s.Type, s.Vendor.UUID)
 
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.InsertSubstrate(ctx, s, cid) // FIXME: infinite loop?
 		}
 		return s, err
@@ -93,9 +93,6 @@ func (db *Conn) UpdateSubstrate(ctx context.Context, id types.UUID, s types.Subs
 
 	result, err := db.ExecContext(ctx, db.sql["substrate"]["update"], s.Name, s.Type, s.Vendor.UUID, id)
 	if err != nil {
-		if isUniqueViolation(err) {
-			return db.UpdateSubstrate(ctx, id, s, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

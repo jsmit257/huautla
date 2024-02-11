@@ -9,39 +9,45 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var strains = []types.Strain{
+	{UUID: "0", Name: "Morel", Vendor: vendor0},
+	{UUID: "1", Name: "Hens o'' the Wood", Vendor: vendor0},
+}
+
 func Test_SelectAllStrains(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		result []types.Strain
 		err    error
 	}{
 		"happy_path": {
-			result: []types.Strain{
-				{UUID: "0", Name: "Morel", Vendor: types.Vendor{}},
-				{UUID: "1", Name: "Hens o'' the Wood", Vendor: types.Vendor{}},
-			},
+			result: strains,
 		},
 	}
 	for k, v := range set {
 		t.Run(k, func(t *testing.T) {
 			result, err := db.SelectAllStrains(context.Background(), types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, result)
+			require.Equal(t, v.result, result[0:len(v.result)])
 		})
 	}
 }
 
 func Test_SelectStrain(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id     types.UUID
 		result types.Strain
 		err    error
 	}{
 		"happy_path": {
-			id:     "0",
-			result: types.Strain{UUID: "0", Name: "Morel", Vendor: types.Vendor{}},
+			id:     strains[0].UUID,
+			result: strains[0],
 		},
 		"no_results_found": {
-			id:  "foobar",
+			id:  "missing",
 			err: noRows,
 		},
 	}
@@ -60,45 +66,49 @@ func Test_InsertStrain(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			s: types.Strain{Name: "ubermyc", Vendor: types.Vendor{UUID: "0"}},
+			s: types.Strain{Name: "ubermyc", Vendor: vendor0},
 		},
 		"no_rows_affected": {
 			s: types.Strain{Name: "ubermyc", Vendor: types.Vendor{UUID: "foobar"}},
 		},
 		"unique_key_violation": {
-			s: types.Strain{Name: "Morel", Vendor: types.Vendor{UUID: "0"}},
+			s: types.Strain{Name: "Morel", Vendor: vendor0},
 		},
 	}
 	for k, v := range set {
 		t.Run(k, func(t *testing.T) {
 			result, err := db.InsertStrain(context.Background(), v.s, types.CID(k))
 			require.Equal(t, v.err, err)
-			require.NotEmpty(t, result)
+			require.NotEmpty(t, result.UUID)
 		})
 	}
 }
 
 func Test_UpdateStrain(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id  types.UUID
 		s   types.Strain
 		err error
 	}{
 		"happy_path": {
-			id: "1",
-			s:  types.Strain{Name: "Chicken o' the Wood", Vendor: types.Vendor{UUID: "0"}},
+			id: "update me!",
+			s:  types.Strain{Name: "Chicken o' the Wood", Vendor: vendor0},
 		},
 		"no_rows_affected_strain": {
-			id: "foobar",
-			s:  types.Strain{Name: "Chicken o' the Wood", Vendor: types.Vendor{UUID: "0"}},
+			id:  "missing",
+			s:   types.Strain{Name: "Chicken o' the Wood", Vendor: vendor0},
+			err: fmt.Errorf("strain could not be updated 'missing'"),
 		},
 		"no_rows_affected_vendor": {
-			id: "0",
-			s:  types.Strain{Name: "Chicken o' the Wood", Vendor: types.Vendor{UUID: "foobar"}},
+			id:  "update me!",
+			s:   types.Strain{Name: "Chicken o' the Wood", Vendor: types.Vendor{UUID: "missing"}},
+			err: fmt.Errorf("strain could not be updated 'update me!'"),
 		},
 		"unique_key_violation": {
-			id: "1",
-			s:  types.Strain{Name: "Morel", Vendor: types.Vendor{UUID: "0"}},
+			id: "update me!",
+			s:  types.Strain{Name: "Morel", Vendor: vendor0},
 		},
 	}
 	for k, v := range set {
@@ -115,11 +125,11 @@ func Test_DeleteStrain(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			id: "-1",
+			id: "delete me!",
 		},
 		"no_rows_affected": {
-			id:  "foobar",
-			err: fmt.Errorf("strain could not be deleted 'foobar'"),
+			id:  "missing",
+			err: fmt.Errorf("strain could not be deleted 'missing'"),
 		},
 		"referential_violation": {
 			id:  "0",

@@ -122,6 +122,6 @@ func initAccessFuncs(method string, l *log.Entry, id types.UUID, cid types.CID) 
 		l
 }
 
-func isUniqueViolation(err error) bool {
+func isPrimaryKeyViolation(err error) bool {
 	return false
 }

@@ -71,7 +71,7 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 
 	result, err := db.ExecContext(ctx, db.sql["eventtype"]["insert"], e.UUID, e.Name, e.Severity, e.Stage.UUID)
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.InsertEventType(ctx, e, cid) // FIXME: infinite loop?
 		}
 		return e, err
@@ -92,9 +92,6 @@ func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, e types.Even
 
 	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, e.Severity, id)
 	if err != nil {
-		if isUniqueViolation(err) {
-			return db.UpdateEventType(ctx, id, e, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

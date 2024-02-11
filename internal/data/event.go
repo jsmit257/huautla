@@ -112,7 +112,7 @@ func (db *Conn) AddEvent(ctx context.Context, lc *types.Lifecycle, e types.Event
 		lc.UUID,
 		e.EventType.UUID)
 	if err != nil {
-		if isUniqueViolation(err) {
+		if isPrimaryKeyViolation(err) {
 			return db.AddEvent(ctx, lc, e, cid) // FIXME: infinite loop?
 		}
 		return err
@@ -143,9 +143,6 @@ func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Ev
 		e.UUID,
 		e.EventType.UUID)
 	if err != nil {
-		if isUniqueViolation(err) {
-			return db.ChangeEvent(ctx, lc, e, cid) // FIXME: infinite loop?
-		}
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err

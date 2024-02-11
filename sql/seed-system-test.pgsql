@@ -3,12 +3,13 @@
 \c huautla
 
 insert into vendors(uuid, name)
-values('delete me!', 'delete me!'),
-      ('update me!', 'update me!');
+values('updating substrate', 'updating substrate'),
+      ('update me!', 'update me!'),
+      ('delete me!', 'delete me!');
 
 insert into ingredients(uuid, name)
-values('delete me!', 'delete me!'),
-      ('update me!', 'update me!');
+values('update me!', 'update me!'),
+      ('delete me!', 'delete me!');
 
 insert into stages(uuid, name)
 values('update me!', 'update me!'),
@@ -18,30 +19,48 @@ insert into substrates(uuid, name, type, vendor_uuid)
 values('0', 'Rye', 'Grain', '0'),
       ('1', 'Millet', 'Grain', '0'),
       ('2', 'Cedar chips', 'Bulk', '0'),
-      ('update me!', 'update me!', 'Grain', '0')
+      ('add ingredient', 'add ingredient', 'Bulk', '0'),
+      ('change ingredient', 'change ingredient', 'Grain', '0'),
+      ('remove ingredient', 'remove ingredient', 'Bulk', '0'),
+      ('update me!', 'update me!', 'Grain', '0'),
       ('delete me!', 'delete me!', 'Grain', '0');
 
 insert into substrate_ingredients(uuid, substrate_uuid, ingredient_uuid)
 values('0', '0', '2'),
       ('1', '1', '12'),
-      ('2', '1', '3');
+      ('2', '1', '3'),
+      ('add ingredient', 'add ingredient', '2'),
+      ('change ingredient', 'change ingredient', '3'),
+      ('change ingredient 2', 'change ingredient', '12'),
+      ('change remove', 'remove ingredient', '12'),
+      ('change remove 2', 'remove ingredient', '13'),
+      ('change remove 3', 'remove ingredient', '14');
 
 insert into strains(uuid, name, vendor_uuid)
 values('0', 'Morel', '0'),
       ('1', 'Hens o'' the Wood', '0'),
-      ('-1', 'delete me!', '0');
+      ('add attribute', 'add attribute', 0),
+      ('change attribute', 'change attribute', 0),
+      ('remove attribute', 'remove attribute', 0),
+      ('update me!', 'update me!', '0'),
+      ('delete me!', 'delete me!', '0');
 
 insert into strain_attributes(uuid, name, value, strain_uuid)
 values('0', 'contamination resistance', 'high', '0'),
       ('1', 'headroom (cm)', '25', '0'),
-      ('2', 'color', 'purple', '1');
+      ('2', 'color', 'purple', '1'),
+      ('change attribute', 'color', 'albino', 'change attribute'),
+      ('remove attribute 1', 'color', 'red', 'remove attribute'),
+      ('remove attribute 2', 'energy', 'pure', 'remove attribute'),
+      ('remove attribute 3', 'preferred substrate', 'cats', 'remove attribute');
 
 insert into event_types(uuid, name, severity, stage_uuid)
 values('update me!', 'update me!', 'Info', '1'),
       ('delete me!', 'delete me!', 'Info', '1');
 
 insert into lifecycles(uuid, name, location, grain_cost, bulk_cost, yield, headcount, gross, mtime, ctime, strain_uuid, grainsubstrate_uuid, bulksubstrate_uuid)
-values('0', 'reference implementation', 'testing', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
+values('0', 'reference implementation', 'testing', 1, 2, 3, 4, 5, '1970-01-01', '1970-01-01', '0', '0', '2'),
+      ('1', 'reference implementation 2', 'testing', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
       ('add event', 'add event', 'testing', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
       ('change event', 'change event', 'testing', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0'),
       ('remove event', 'remove event', 'testing', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0'),
@@ -50,7 +69,7 @@ values('0', 'reference implementation', 'testing', 0, 0, 0, 0, 0, '1970-01-01', 
 
 insert into events(uuid, temperature, humidity, mtime, ctime, lifecycle_uuid, eventtype_uuid)
 values('0', 2, 1, '1970-01-01', '1970-01-01', '0', '1'),
-      ('1', 0, 1, '1970-01-01', '1970-01-01', '0', '0'),
+      ('1', 0, 1, '1970-01-01', '1970-01-01', '1', '0'),
       ('2', 0, 8, '1970-01-01', '1970-01-01', '0', '0'),
       ('add event', 0, 1, '1970-01-01', '1970-01-01', 'add event', '0'),
       ('change event', 0, 8, '1970-01-01', '1970-01-01', 'change event', '0'),
