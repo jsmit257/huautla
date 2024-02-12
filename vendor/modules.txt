@@ -15,6 +15,9 @@ github.com/davecgh/go-spew/spew
 github.com/google/uuid
 # github.com/lib/pq v1.10.9
 ## explicit; go 1.13
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0
 ## explicit; go 1.19
 github.com/matttproud/golang_protobuf_extensions/v2/pbutil

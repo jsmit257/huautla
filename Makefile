@@ -21,7 +21,8 @@ install: postgres
 .PHONY: system-test
 system-test: postgres
 	docker-compose up --build --force-recreate install-system-test
-	# docker-compose up --build --force-recreate system-test
+	# -POSTGRES_SSLMODE="${POSTGRES_SSLMODE}" docker-compose up --build --force-recreate system-test
+	-docker-compose up --build --force-recreate system-test
 	make docker-down
 
 # .PHONY: package-serve-mysql

@@ -16,6 +16,7 @@ type (
 		PGUser string
 		PGPass string
 		PGPort uint
+		PGSSL  string
 	}
 
 	Vendor struct {

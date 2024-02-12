@@ -46,6 +46,14 @@ func Test_New(t *testing.T) {
 			},
 			err: fmt.Errorf("postgres connection needs port attribute"),
 		},
+		"missing_ssl": {
+			cfg: types.Config{
+				PGHost: "huautla",
+				PGUser: "postgres",
+				PGPass: "root",
+				PGPort: 5432,
+			},
+		},
 	}
 
 	for n, v := range tcs {

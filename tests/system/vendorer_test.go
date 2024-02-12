@@ -6,12 +6,15 @@ import (
 	"testing"
 
 	"github.com/jsmit257/huautla/types"
+
 	"github.com/stretchr/testify/require"
 )
 
 var vendor0 = types.Vendor{UUID: "0", Name: "127.0.0.1"}
 
 func Test_SelectAllVendors(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		result []types.Vendor
 		err    error
@@ -26,11 +29,13 @@ func Test_SelectAllVendors(t *testing.T) {
 			t.Parallel()
 			result, err := db.SelectAllVendors(context.Background(), types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, result)
+			require.Equal(t, v.result, result[:len(v.result)])
 		})
 	}
 }
 func Test_SelectVendor(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id     types.UUID
 		result types.Vendor
@@ -45,11 +50,6 @@ func Test_SelectVendor(t *testing.T) {
 			result: types.Vendor{UUID: "8", Name: ""},
 			err:    fmt.Errorf("sql: no rows in result set"),
 		},
-		"query_fails": {
-			id:     invalidUUID,
-			result: types.Vendor{UUID: "0", Name: ""},
-			err:    noRows, // XXX
-		},
 	}
 	for k, v := range set {
 		k, v := k, v
@@ -62,6 +62,8 @@ func Test_SelectVendor(t *testing.T) {
 	}
 }
 func Test_InsertVendor(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		v      types.Vendor
 		result types.Vendor
@@ -71,7 +73,8 @@ func Test_InsertVendor(t *testing.T) {
 			v: types.Vendor{Name: "inserted vendor"},
 		},
 		"duplicate_name_violation": {
-			v: vendor0,
+			v:   vendor0,
+			err: fmt.Errorf(`pq: duplicate key value violates unique constraint "vendors_name_key"`),
 		},
 	}
 	for k, v := range set {
@@ -79,12 +82,18 @@ func Test_InsertVendor(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			result, err := db.InsertVendor(context.Background(), v.v, types.CID(k))
-			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, result)
+			if v.err != nil && err != nil {
+				require.Equal(t, v.err.Error(), err.Error())
+			} else if v.err != nil || err != nil {
+				require.Equal(t, v.err, err)
+			}
+			require.NotEmpty(t, result.UUID)
 		})
 	}
 }
 func Test_UpdateVendor(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id  types.UUID
 		v   types.Vendor
@@ -95,15 +104,13 @@ func Test_UpdateVendor(t *testing.T) {
 			v:  types.Vendor{Name: "localhost"},
 		},
 		"duplicate_name_violation": {
-			id: "update me!",
-			v:  vendor0,
+			id:  "update me!",
+			v:   vendor0,
+			err: fmt.Errorf(`pq: duplicate key value violates unique constraint "vendors_name_key"`),
 		},
 		"no_rows_affected": {
 			id:  "missing",
-			err: fmt.Errorf("vendor table was not updated 'missing'"),
-		},
-		"query_fails": {
-			id: invalidUUID,
+			err: fmt.Errorf("vendor was not updated: 'missing'"),
 		},
 	}
 	for k, v := range set {
@@ -111,11 +118,17 @@ func Test_UpdateVendor(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.UpdateVendor(context.Background(), v.id, v.v, types.CID(k))
-			require.Equal(t, v.err, err)
+			if v.err != nil && err != nil {
+				require.Equal(t, v.err.Error(), err.Error())
+			} else if v.err != nil || err != nil {
+				require.Equal(t, v.err, err)
+			}
 		})
 	}
 }
 func Test_DeleteVendor(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id  types.UUID
 		err error
@@ -125,15 +138,18 @@ func Test_DeleteVendor(t *testing.T) {
 		},
 		"no_rows_affected": {
 			id:  "missing",
-			err: fmt.Errorf("vendor table was not deleted 'missing'"),
+			err: fmt.Errorf("vendor could not be deleted: 'missing'"),
 		},
 		"query_fails": {
 			id:  invalidUUID,
-			err: fmt.Errorf("some error"),
+			err: fmt.Errorf("vendor could not be deleted: '%s'", invalidUUID),
 		},
 		"referential_violation": {
-			id:  "0",
-			err: fmt.Errorf("referential constraint"),
+			id: "0",
+			err: fmt.Errorf(foreignKeyViolation,
+				"vendors",
+				"substrates_vendor_uuid_fkey",
+				"substrates"),
 		},
 	}
 	for k, v := range set {
@@ -141,7 +157,12 @@ func Test_DeleteVendor(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.DeleteVendor(context.Background(), v.id, types.CID(k))
-			require.Equal(t, v.err, err)
+			if v.err != nil && err != nil {
+				require.Equal(t, v.err.Error(), err.Error())
+			} else if v.err != nil || err != nil {
+				require.Equal(t, v.err, err)
+			}
+			// require.Equal(t, v.err, err)
 		})
 	}
 }

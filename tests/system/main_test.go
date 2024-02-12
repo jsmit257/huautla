@@ -16,16 +16,20 @@ var db types.DB
 var noRows error = fmt.Errorf("sql: no rows in result set")
 var epoch time.Time = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 
-const invalidUUID types.UUID = "01234567890123456789012345678901234567890"
+const (
+	invalidUUID types.UUID = "01234567890123456789012345678901234567890"
+
+	foreignKeyViolation string = `pq: update or delete on table "%s" violates foreign key constraint "%s" on table "%s"`
+)
 
 func init() {
 	var err error
 
-	db, err = huautla.New(
+	if db, err = huautla.New(
 		&types.Config{
-			PGHost: os.Getenv("pghost"),
-			PGUser: os.Getenv("pguser"),
-			PGPass: os.Getenv("pgpass"),
+			PGHost: os.Getenv("POSTGRES_HOST"),
+			PGUser: os.Getenv("POSTGRES_USER"),
+			PGPass: os.Getenv("POSTGRES_PASSWORD"),
 			PGPort: func(s string) uint {
 				i, err := strconv.Atoi(s)
 				if err != nil {
@@ -34,9 +38,11 @@ func init() {
 					panic(fmt.Errorf("pgport(%d) cannot be less than 1", i))
 				}
 				return uint(i)
-			}(os.Getenv("pgport")),
+			}(os.Getenv("POSTGRES_PORT")),
+			PGSSL: os.Getenv("POSTGRES_SSLMODE"),
 		},
-		log.WithField("test-suite", "system"))
+		log.WithField("test-suite", "system")); err != nil {
 
-	panic(err)
+		panic(err)
+	}
 }

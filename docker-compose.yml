@@ -5,6 +5,7 @@ x-pg-host: &pghost huautla
 x-pg-port: &pgport 5432
 x-pg-user: &pguser postgres
 x-pg-pass: &pgpass root
+x-pg-ssl: &pgssl disable
 
 services:
 
@@ -29,6 +30,7 @@ services:
       POSTGRES_PORT: *pgport
       POSTGRES_USER: *pguser
       POSTGRES_PASSWORD: *pgpass
+      POSTGRES_SSLMODE: *pgssl
     working_dir: /huautla
     command: ./bin/install-prod.sh
 
@@ -44,20 +46,19 @@ services:
       POSTGRES_PORT: *pgport
       POSTGRES_USER: *pguser
       POSTGRES_PASSWORD: *pgpass
+      POSTGRES_SSLMODE: *pgssl
     working_dir: /huautla
     command: ./bin/install-system-test.sh
 
   system-test:
     depends_on: [ install-system-test ]
-    image: system-test
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: golang:bookworm
     volumes: [ .:/huautla ]
     environment:
       POSTGRES_HOST: *pghost
       POSTGRES_PORT: *pgport
       POSTGRES_USER: *pguser
       POSTGRES_PASSWORD: *pgpass
+      POSTGRES_SSLMODE: *pgssl
     working_dir: /huautla
     command: ./bin/system-test.sh

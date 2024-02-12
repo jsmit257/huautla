@@ -51,6 +51,8 @@ func Test_SelectLifecycle(t *testing.T) {
 	}
 }
 func Test_InsertLifecycle(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		lc     types.Lifecycle
 		result types.Lifecycle
@@ -145,6 +147,7 @@ func Test_InsertLifecycle(t *testing.T) {
 	}
 	for k, v := range set {
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			result, err := db.InsertLifecycle(context.Background(), v.lc, types.CID(k))
 			require.Equal(t, v.err, err)
 			require.NotEmpty(t, result.UUID)
@@ -223,7 +226,9 @@ func Test_UpdateLifecycle(t *testing.T) {
 		},
 	}
 	for k, v := range set {
+		k, v := k, v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			lc := v.xform(updated)
 			err := db.UpdateLifecycle(context.Background(), lc, types.CID(k))
 			require.Equal(t, v.err, err)
@@ -231,6 +236,8 @@ func Test_UpdateLifecycle(t *testing.T) {
 	}
 }
 func Test_DeleteLifecycle(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id  types.UUID
 		err error
@@ -248,7 +255,9 @@ func Test_DeleteLifecycle(t *testing.T) {
 		},
 	}
 	for k, v := range set {
+		k, v := k, v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			err := db.DeleteLifecycle(context.Background(), v.id, types.CID(k))
 			require.Equal(t, v.err, err)
 		})

@@ -321,7 +321,7 @@ substrate:
 
 vendor:
   select-all: select uuid, name from vendors order by name
-  select: select name from vendors where uuid = ?
-  insert: insert into vendors(uuid, name) values(?, ?)
-  update: update vendors set name = ? where uuid = ?
-  delete: delete from vendors where uuid = ?
+  select: select name from vendors where uuid = $1
+  insert: insert into vendors(uuid, name) values($1, $2)
+  update: update vendors set name = $1 where uuid = $2
+  delete: delete from vendors where uuid = $1

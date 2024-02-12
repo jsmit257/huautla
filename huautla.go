@@ -15,7 +15,7 @@ import (
 
 func New(cfg *types.Config, log *log.Entry) (types.DB, error) {
 
-	var cnxFmt = "host=%s port=%d user=%s password=%s dbname=huautla"
+	var cnxFmt = "host=%s port=%d user=%s password=%s dbname=huautla sslmode=%s"
 	// var cnxFmt = "host=%s port=%d user=%s password=%s dbname=huautla sslmode=disable"
 	var cnxInfo string
 
@@ -28,7 +28,7 @@ func New(cfg *types.Config, log *log.Entry) (types.DB, error) {
 	} else if port := cfg.PGPort; port == 0 {
 		return nil, fmt.Errorf("postgres connection needs port attribute")
 	} else {
-		cnxInfo = fmt.Sprintf(cnxFmt, host, port, user, pass)
+		cnxInfo = fmt.Sprintf(cnxFmt, host, port, user, pass, cfg.PGSSL)
 	}
 
 	return data.New(cnxInfo, log)

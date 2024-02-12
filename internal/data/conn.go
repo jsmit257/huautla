@@ -7,15 +7,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
-
 	"github.com/jsmit257/huautla/internal/metrics"
 	"github.com/jsmit257/huautla/types"
+
+	"github.com/google/uuid"
+	"gopkg.in/yaml.v3"
 
 	"github.com/prometheus/client_golang/prometheus"
 
 	log "github.com/sirupsen/logrus"
+
+	_ "github.com/lib/pq"
 )
 
 type (
