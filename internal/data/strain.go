@@ -93,7 +93,7 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 	deferred, start, l := initAccessFuncs("UpdateStrain", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], s.Name, id)
+	result, err := db.ExecContext(ctx, db.sql["strain"]["update"], s.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
@@ -101,6 +101,7 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 	} else if rows != 1 {
 		return fmt.Errorf("strain was not updated: '%s'", id)
 	}
+
 	return nil
 }
 

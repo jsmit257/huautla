@@ -35,12 +35,23 @@ func Test_SelectAllSubstrates(t *testing.T) {
 						AddRow("0", "substrate 0", types.GrainType, "0", "vendor 0").
 						AddRow("1", "substrate 1", types.GrainType, "1", "vendor 1").
 						AddRow("2", "substrate 2", types.GrainType, "1", "vendor 1"))
+				for i := 0; i < 3; i++ {
+					mock.ExpectQuery("").
+						WillReturnRows(sqlmock.
+							NewRows([]string{"id", "name"}))
+					mock.ExpectQuery("").
+						WillReturnRows(sqlmock.
+							NewRows([]string{"id", "name"}))
+					mock.ExpectQuery("").
+						WillReturnRows(sqlmock.
+							NewRows([]string{"id", "name"}))
+				}
 				return db
 			},
 			result: []types.Substrate{
-				{UUID: "0", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Ingredients: nil},
-				{UUID: "1", Name: "substrate 1", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: nil},
-				{UUID: "2", Name: "substrate 2", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: nil},
+				{UUID: "0", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Ingredients: []types.Ingredient{}},
+				{UUID: "1", Name: "substrate 1", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: []types.Ingredient{}},
+				{UUID: "2", Name: "substrate 2", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: []types.Ingredient{}},
 			},
 		},
 		"query_fails": {

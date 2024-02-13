@@ -14,9 +14,7 @@ import (
 // })
 
 func New(cfg *types.Config, log *log.Entry) (types.DB, error) {
-
 	var cnxFmt = "host=%s port=%d user=%s password=%s dbname=huautla sslmode=%s"
-	// var cnxFmt = "host=%s port=%d user=%s password=%s dbname=huautla sslmode=disable"
 	var cnxInfo string
 
 	if host := cfg.PGHost; host == "" {

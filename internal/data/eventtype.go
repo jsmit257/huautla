@@ -90,7 +90,8 @@ func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, e types.Even
 	deferred, start, l := initAccessFuncs("UpdateEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, e.Severity, id)
+	// result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, e.Severity, id)
+	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

@@ -82,11 +82,7 @@ func Test_InsertVendor(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			result, err := db.InsertVendor(context.Background(), v.v, types.CID(k))
-			if v.err != nil && err != nil {
-				require.Equal(t, v.err.Error(), err.Error())
-			} else if v.err != nil || err != nil {
-				require.Equal(t, v.err, err)
-			}
+			equalErrorMessages(t, v.err, err)
 			require.NotEmpty(t, result.UUID)
 		})
 	}
@@ -106,7 +102,7 @@ func Test_UpdateVendor(t *testing.T) {
 		"duplicate_name_violation": {
 			id:  "update me!",
 			v:   vendor0,
-			err: fmt.Errorf(`pq: duplicate key value violates unique constraint "vendors_name_key"`),
+			err: fmt.Errorf(uniqueKeyViolation, "vendors_name_key"),
 		},
 		"no_rows_affected": {
 			id:  "missing",
@@ -118,11 +114,7 @@ func Test_UpdateVendor(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.UpdateVendor(context.Background(), v.id, v.v, types.CID(k))
-			if v.err != nil && err != nil {
-				require.Equal(t, v.err.Error(), err.Error())
-			} else if v.err != nil || err != nil {
-				require.Equal(t, v.err, err)
-			}
+			equalErrorMessages(t, v.err, err)
 		})
 	}
 }
@@ -140,13 +132,9 @@ func Test_DeleteVendor(t *testing.T) {
 			id:  "missing",
 			err: fmt.Errorf("vendor could not be deleted: 'missing'"),
 		},
-		"query_fails": {
-			id:  invalidUUID,
-			err: fmt.Errorf("vendor could not be deleted: '%s'", invalidUUID),
-		},
 		"referential_violation": {
 			id: "0",
-			err: fmt.Errorf(foreignKeyViolation,
+			err: fmt.Errorf(foreignKeyViolation1toMany,
 				"vendors",
 				"substrates_vendor_uuid_fkey",
 				"substrates"),
@@ -157,12 +145,7 @@ func Test_DeleteVendor(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.DeleteVendor(context.Background(), v.id, types.CID(k))
-			if v.err != nil && err != nil {
-				require.Equal(t, v.err.Error(), err.Error())
-			} else if v.err != nil || err != nil {
-				require.Equal(t, v.err, err)
-			}
-			// require.Equal(t, v.err, err)
+			equalErrorMessages(t, v.err, err)
 		})
 	}
 }

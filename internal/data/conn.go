@@ -55,6 +55,8 @@ func New(cnxInfo string, log *log.Entry) (types.DB, error) {
 		return nil, err
 	} else if query, err = sql.Open("postgres", cnxInfo); err != nil {
 		return nil, err
+	} else if err = query.Ping(); err != nil {
+		return nil, err
 	}
 
 	return &Conn{

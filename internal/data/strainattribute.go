@@ -18,7 +18,7 @@ func (db *Conn) KnownAttributeNames(ctx context.Context, cid types.CID) ([]strin
 
 	var rows *sql.Rows
 
-	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["all-attributes"])
+	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["get-unique-names"])
 	if err != nil {
 		return result, err
 	}
@@ -26,7 +26,9 @@ func (db *Conn) KnownAttributeNames(ctx context.Context, cid types.CID) ([]strin
 	defer rows.Close()
 
 	for rows.Next() {
-		rows.Scan(&s)
+		if err = rows.Scan(&s); err != nil {
+			return []string{}, err
+		}
 		result = append(result, s)
 	}
 
@@ -43,7 +45,7 @@ func (db *Conn) GetAllAttributes(ctx context.Context, s *types.Strain, cid types
 
 	s.Attributes = make([]types.StrainAttribute, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["all"])
+	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["all"], s.UUID)
 	if err != nil {
 		return err
 	}
@@ -94,6 +96,8 @@ func (db *Conn) AddAttribute(ctx context.Context, s *types.Strain, n, v string, 
 func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, n, v string, cid types.CID) error {
 	var err error
 
+	db.logger.Errorf("fuck u bitch: '%s', '%s'", n, v)
+
 	deferred, start, l := initAccessFuncs("ChangeAttribute", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
@@ -109,8 +113,10 @@ func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, n, v strin
 
 	i, j := 0, len(s.Attributes)
 	for i < j && s.Attributes[i].Name != n {
+		db.logger.Errorf("fuck u bitch %d: '%s', '%s'", i, s.Attributes[i].Name, n)
 		i++
 	}
+	db.logger.Errorf("fuck u bitch %d: '%s', '%s'", i, s.Attributes[i].Name, n)
 	s.Attributes[i].Value = v
 
 	return nil

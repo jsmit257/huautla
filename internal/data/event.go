@@ -74,7 +74,7 @@ func (db *Conn) SelectEvent(ctx context.Context, id types.UUID, cid types.CID) (
 	result := types.Event{UUID: id}
 
 	if err = db.
-		QueryRowContext(ctx, db.sql["eventtype"]["select"], id).
+		QueryRowContext(ctx, db.sql["event"]["select"], id).
 		Scan(
 			&result.Temperature,
 			&result.Humidity,
@@ -96,14 +96,14 @@ func (db *Conn) AddEvent(ctx context.Context, lc *types.Lifecycle, e types.Event
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initAccessFuncs("InsertEvent", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("AddEvent", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	e.UUID = types.UUID(db.generateUUID().String())
 	e.MTime = time.Now().UTC()
 	e.CTime = e.MTime
 
-	result, err = db.ExecContext(ctx, db.sql["event"]["insert"],
+	result, err = db.ExecContext(ctx, db.sql["event"]["add"],
 		e.UUID,
 		e.Temperature,
 		e.Humidity,
@@ -131,12 +131,12 @@ func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Ev
 	var err error
 	var result sql.Result
 
-	deferred, start, l := initAccessFuncs("UpdateEvent", db.logger, lc.UUID, cid)
+	deferred, start, l := initAccessFuncs("ChangeEvent", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
 	e.MTime = time.Now().UTC()
 
-	result, err = db.ExecContext(ctx, db.sql["event"]["update"],
+	result, err = db.ExecContext(ctx, db.sql["event"]["change"],
 		e.Temperature,
 		e.Humidity,
 		e.MTime,

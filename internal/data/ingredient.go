@@ -25,7 +25,10 @@ func (db *Conn) SelectAllIngredients(ctx context.Context, cid types.CID) ([]type
 
 	for rows.Next() {
 		row := types.Ingredient{}
-		rows.Scan(&row.UUID, &row.Name)
+		err = rows.Scan(&row.UUID, &row.Name)
+		if err != nil {
+			return nil, err
+		}
 		result = append(result, row)
 	}
 

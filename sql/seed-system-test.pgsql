@@ -32,9 +32,9 @@ values('0', '0', '2'),
       ('add ingredient', 'add ingredient', '2'),
       ('change ingredient', 'change ingredient', '3'),
       ('change ingredient 2', 'change ingredient', '12'),
-      ('change remove', 'remove ingredient', '12'),
-      ('change remove 2', 'remove ingredient', '13'),
-      ('change remove 3', 'remove ingredient', '14');
+      ('remove ingredient', 'remove ingredient', '12'),
+      ('remove ingredient 2', 'remove ingredient', '13'),
+      ('remove ingredient 3', 'remove ingredient', '14');
 
 insert into strains(uuid, name, vendor_uuid)
 values('0', 'Morel', '0'),
@@ -49,6 +49,7 @@ insert into strain_attributes(uuid, name, value, strain_uuid)
 values('0', 'contamination resistance', 'high', '0'),
       ('1', 'headroom (cm)', '25', '0'),
       ('2', 'color', 'purple', '1'),
+      ('add attribute', 'existing', 'existing', 'add attribute'),
       ('change attribute', 'color', 'albino', 'change attribute'),
       ('remove attribute 1', 'color', 'red', 'remove attribute'),
       ('remove attribute 2', 'energy', 'pure', 'remove attribute'),
@@ -68,13 +69,12 @@ values('0', 'reference implementation', 'testing', 1, 2, 3, 4, 5, '1970-01-01', 
       ('delete me!', 'delete me!', '', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0');
 
 insert into events(uuid, temperature, humidity, mtime, ctime, lifecycle_uuid, eventtype_uuid)
-values('0', 2, 1, '1970-01-01', '1970-01-01', '0', '1'),
-      ('1', 0, 1, '1970-01-01', '1970-01-01', '1', '0'),
-      ('2', 0, 8, '1970-01-01', '1970-01-01', '0', '0'),
-      ('add event', 0, 1, '1970-01-01', '1970-01-01', 'add event', '0'),
-      ('change event', 0, 8, '1970-01-01', '1970-01-01', 'change event', '0'),
-      ('remove event 1', 0, 8, '1970-01-01', '1970-01-01', 'remove event', '0'),
-      ('remove event 2', 0, 8, '1970-01-01', '1970-01-01', 'remove event', '0'),
-      ('remove event 3', 0, 8, '1970-01-01', '1970-01-01', 'remove event', '0'),
-      ('update me!', 0, 8, '1970-01-01', '1970-01-01', 'update me!', '0'),
-      ('delete me!', 0, 8, '1970-01-01', '1970-01-01', 'delete me!', '0');
+values('0', 2, 1, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', '0', '1'),
+      ('1', 0, 1, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', '1', '0'),
+      ('2', 0, 8, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', '0', '0'),
+      ('add event', 0, 1, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', 'add event', '0'),
+      ('change event', 0, 8, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', 'change event', '0'),
+      ('remove event 1', 0, 8, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', 'remove event', '0'),
+      ('remove event 2', 0, 8, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', 'remove event', '0'),
+      ('remove event 3', 0, 8, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', 'remove event', '0'),
+      ('update me!', 0, 8, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', 'update me!', '0');

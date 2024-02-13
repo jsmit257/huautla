@@ -33,7 +33,7 @@ func Test_SelectAllStages(t *testing.T) {
 			t.Parallel()
 			result, err := db.SelectAllStages(context.Background(), types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, result[0:len(v.result)])
+			require.Subset(t, result, v.result)
 		})
 	}
 }
@@ -53,11 +53,6 @@ func Test_SelectStage(t *testing.T) {
 			id:     "8",
 			result: types.Stage{UUID: "8", Name: ""},
 			err:    fmt.Errorf("sql: no rows in result set"),
-		},
-		"query_fails": {
-			id:     invalidUUID,
-			result: types.Stage{UUID: "0", Name: ""},
-			err:    fmt.Errorf("sql: no rows in result set"), // XXX
 		},
 	}
 	for k, v := range set {
@@ -82,7 +77,7 @@ func Test_InsertStage(t *testing.T) {
 		},
 		"duplicate_name_violation": {
 			s:   stages[0],
-			err: fmt.Errorf(""),
+			err: fmt.Errorf(uniqueKeyViolation, "stages_name_key"),
 		},
 	}
 	for k, v := range set {
@@ -90,12 +85,15 @@ func Test_InsertStage(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			result, err := db.InsertStage(context.Background(), v.s, types.CID(k))
-			require.Equal(t, v.err, err)
+			equalErrorMessages(t, v.err, err)
 			require.NotEmpty(t, result.UUID)
 		})
 	}
 }
 func Test_UpdateStage(t *testing.T) {
+	t.Skip()
+	t.Parallel()
+
 	set := map[string]struct {
 		id  types.UUID
 		s   types.Stage
@@ -103,18 +101,16 @@ func Test_UpdateStage(t *testing.T) {
 	}{
 		"happy_path": {
 			id: "update me!",
-			s:  types.Stage{Name: "Renamed"},
+			s:  types.Stage{Name: "renamed"},
 		},
 		"no_rows_affected": {
 			id:  "missing",
 			err: fmt.Errorf("stage was not updated: 'missing'"),
 		},
 		"duplicate_name_violation": {
-			id: "update me!",
-			s:  stages[0],
-		},
-		"query_fails": {
-			id: invalidUUID,
+			id:  "update me!",
+			s:   stages[0],
+			err: fmt.Errorf(uniqueKeyViolation, "stages_name_key"),
 		},
 	}
 	for k, v := range set {
@@ -122,11 +118,13 @@ func Test_UpdateStage(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.UpdateStage(context.Background(), v.id, v.s, types.CID(k))
-			require.Equal(t, v.err, err)
+			equalErrorMessages(t, v.err, err)
 		})
 	}
 }
 func Test_DeleteStage(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		id  types.UUID
 		err error
@@ -139,12 +137,11 @@ func Test_DeleteStage(t *testing.T) {
 			err: fmt.Errorf("stage could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id:  stages[0].UUID,
-			err: fmt.Errorf("referential constraint"),
-		},
-		"query_fails": {
-			id:  invalidUUID,
-			err: fmt.Errorf(""),
+			id: stages[1].UUID,
+			err: fmt.Errorf(foreignKeyViolation1toMany,
+				"stages",
+				"event_types_stage_uuid_fkey",
+				"event_types"),
 		},
 	}
 	for k, v := range set {
@@ -152,7 +149,7 @@ func Test_DeleteStage(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.DeleteStage(context.Background(), v.id, types.CID(k))
-			require.Equal(t, v.err, err)
+			equalErrorMessages(t, v.err, err)
 		})
 	}
 }

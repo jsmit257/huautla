@@ -22,15 +22,14 @@ func Test_GetAllIngredients(t *testing.T) {
 			result: []types.Ingredient{ingredients[3], ingredients[12]},
 		},
 		"no_rows_found": {
-			s:   types.Substrate{UUID: "missing"},
-			err: fmt.Errorf("sql: no rows in result set"),
+			s: types.Substrate{UUID: "missing"},
 		},
 	}
 	for k, v := range set {
 		t.Run(k, func(t *testing.T) {
 			err := db.GetAllIngredients(context.Background(), &v.s, types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, v.s.Ingredients)
+			require.ElementsMatch(t, v.s.Ingredients, v.result)
 		})
 	}
 }
@@ -41,78 +40,86 @@ func Test_AddIngredient(t *testing.T) {
 	require.Nil(t, err)
 
 	set := map[string]struct {
-		s      types.Substrate
 		i      types.Ingredient
 		result []types.Ingredient
 		err    error
 	}{
 		"happy_path": {
-			s:      substrate,
 			i:      ingredients[9],
-			result: []types.Ingredient{ingredients[2], ingredients[9]},
+			result: append(substrate.Ingredients, ingredients[9]),
 		},
 		"duplicate_key_violation": {
-			s:   substrate,
-			i:   ingredients[2],
-			err: fmt.Errorf("duplicate key violation"),
+			i:      ingredients[2],
+			result: substrate.Ingredients[:],
+			err:    fmt.Errorf(uniqueKeyViolation, "substrate_ingredients_substrate_uuid_ingredient_uuid_key"),
 		},
 		"no_rows_affected_ingredient": {
-			s:   substrate,
-			i:   types.Ingredient{UUID: "missing"},
-			err: fmt.Errorf("substrateingredient was not added"),
-		},
-		"no_rows_affected_substrate": {
-			s:   types.Substrate{UUID: "missing"},
-			i:   types.Ingredient{UUID: "3"},
-			err: fmt.Errorf("substrateingredient was not added"),
+			i:      types.Ingredient{UUID: "missing"},
+			result: substrate.Ingredients[:],
+			err:    fmt.Errorf("substrateingredient was not added"),
 		},
 	}
 	for k, v := range set {
-		k, v := k, v
+		k, v, substrate := k, v, substrate
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			err := db.AddIngredient(context.Background(), &v.s, v.i, types.CID(k))
-			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, v.s.Ingredients)
+			err := db.AddIngredient(context.Background(), &substrate, v.i, types.CID(k))
+			equalErrorMessages(t, v.err, err)
+			require.ElementsMatch(t, v.result, substrate.Ingredients)
 		})
 	}
 }
 func Test_ChangeIngredient(t *testing.T) {
 	t.Parallel()
 
-	substrate, err := db.SelectSubstrate(context.Background(), "add ingredient", "Test_ChangeIngredient")
+	substrate, err := db.SelectSubstrate(context.Background(), "change ingredient", "Test_ChangeIngredient")
 	require.Nil(t, err)
-
-	finalstate := []types.Ingredient{ingredients[4], ingredients[12]}
 
 	set := map[string]struct {
 		oldI, newI types.Ingredient
+		result     []types.Ingredient
 		err        error
 	}{
-		"happy_path": { // order matters, so does synchronous execution
-			oldI: ingredients[3],
-			newI: ingredients[4],
-		},
 		"no_rows_affected_old_ingredient": {
-			oldI: types.Ingredient{UUID: "missing"},
-			newI: ingredients[4],
-			err:  fmt.Errorf("substrateingredient was not changed"),
+			oldI:   types.Ingredient{UUID: "missing"},
+			newI:   ingredients[4],
+			result: substrate.Ingredients,
+			err:    fmt.Errorf("substrateingredient was not changed"),
 		},
 		"unique_key_violation_ingredient": {
-			oldI: ingredients[4],
-			newI: ingredients[12],
-			err:  fmt.Errorf("unique key violation"),
+			oldI:   ingredients[3],
+			newI:   ingredients[12],
+			result: substrate.Ingredients,
+			err:    fmt.Errorf(uniqueKeyViolation, "substrate_ingredients_substrate_uuid_ingredient_uuid_key"),
 		},
+		"no_rows_affected_new_ingredient": {
+			oldI:   ingredients[3],
+			newI:   types.Ingredient{UUID: "missing"},
+			result: substrate.Ingredients,
+			err: fmt.Errorf(
+				foreignKeyViolation1to1,
+				"substrate_ingredients",
+				"substrate_ingredients_ingredient_uuid_fkey"),
+		},
+		// "happy_path": { // this case borks everything, but only sometimes, and only sometimes in the same way
+		// 	oldI:   ingredients[3],
+		// 	newI:   ingredients[4],
+		// 	result: []types.Ingredient{ingredients[4], ingredients[12]},
+		// },
 	}
 	for k, v := range set {
-		k, v := k, v
+		k, v, substrate := k, v, substrate
 		t.Run(k, func(t *testing.T) {
-			// t.Parallel()
+			// t.Parallel() // don't get the shenanigans here but whatever, for now
 			err := db.ChangeIngredient(context.Background(), &substrate, v.oldI, v.newI, types.CID(k))
-			require.Equal(t, v.err, err)
-			require.Equal(t, finalstate, substrate.Ingredients)
+			equalErrorMessages(t, v.err, err)
+			require.ElementsMatch(t, v.result, substrate.Ingredients)
 		})
 	}
+	// moved the happy path here for now, something is really wonky here, and why does changing strains affect this branch?
+	err = db.ChangeIngredient(context.Background(), &substrate, ingredients[3], ingredients[4], "Test_ChangeIngredient")
+	require.Nil(t, err)
+	require.ElementsMatch(t, []types.Ingredient{ingredients[4], ingredients[12]}, substrate.Ingredients)
 }
 func Test_RemoveIngredient(t *testing.T) {
 	t.Parallel()
@@ -120,25 +127,28 @@ func Test_RemoveIngredient(t *testing.T) {
 	substrate, err := db.SelectSubstrate(context.Background(), "remove ingredient", "Test_RemoveIngredient")
 	require.Nil(t, err)
 
-	result := []types.Ingredient{ingredients[0], ingredients[2]}
-
 	set := map[string]struct {
-		i   types.Ingredient
-		err error
+		i      types.Ingredient
+		result []types.Ingredient
+		err    error
 	}{
 		"happy_path": { // happy path has to run first
-			i: substrate.Ingredients[1],
+			i:      substrate.Ingredients[1],
+			result: []types.Ingredient{ingredients[12], ingredients[14]},
 		},
 		"no_rows_affected_ingredient": {
-			i:   types.Ingredient{UUID: "missing"},
-			err: fmt.Errorf("substrateingredient was not removed"),
+			i:      types.Ingredient{UUID: "missing"},
+			result: substrate.Ingredients,
+			err:    fmt.Errorf("substrateingredient was not removed"),
 		},
 	}
 	for k, v := range set {
+		k, v, substrate := k, v, substrate
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			err := db.RemoveIngredient(context.Background(), &substrate, v.i, types.CID(k))
-			require.Equal(t, v.err, err)
-			require.Equal(t, result, substrate.Ingredients)
+			equalErrorMessages(t, v.err, err)
+			require.ElementsMatch(t, v.result, substrate.Ingredients)
 		})
 	}
 }

@@ -66,11 +66,11 @@ type (
 		UUID           `json:"id"`
 		Name           string    `json:"name"`
 		Location       string    `json:"location"`
-		GrainCost      int16     `json:"grain_cost"`
-		BulkCost       int16     `json:"bulk_cost"`
-		Yield          int16     `json:"yield"`
+		GrainCost      float32   `json:"grain_cost"`
+		BulkCost       float32   `json:"bulk_cost"`
+		Yield          float32   `json:"yield"`
 		Count          int16     `json:"count"`
-		Gross          int16     `json:"gross"`
+		Gross          float32   `json:"gross"`
 		MTime          time.Time `json:"modified_date"`
 		CTime          time.Time `json:"create_date"`
 		Strain         `json:"strain"`

@@ -16,24 +16,30 @@ var strainattributes = []types.StrainAttribute{
 }
 
 func Test_KnownAttributeNames(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		result []string
 		err    error
 	}{
 		"happy_path": {
-			result: []string{"color", "contamination resistance", "headroom"}, // XXX: needs work
+			result: []string{"color", "contamination resistance", "headroom (cm)"},
 		},
 	}
 	for k, v := range set {
+		k, v := k, v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			result, err := db.KnownAttributeNames(context.Background(), types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, result)
+			require.Subset(t, result, v.result, "result: '%q', expected: '%q'", result, v.result)
 		})
 	}
 }
 
 func Test_GetAllAttributes(t *testing.T) {
+	t.Parallel()
+
 	set := map[string]struct {
 		s      types.Strain
 		result []types.StrainAttribute
@@ -44,20 +50,27 @@ func Test_GetAllAttributes(t *testing.T) {
 			result: []types.StrainAttribute{strainattributes[0], strainattributes[1]},
 		},
 		"no_rows_returned": {
-			s:   types.Strain{UUID: "missing"},
-			err: fmt.Errorf("sql: no rows in result set"),
+			s:      types.Strain{UUID: "missing"},
+			result: []types.StrainAttribute{},
 		},
 	}
 	for k, v := range set {
+		k, v := k, v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			err := db.GetAllAttributes(context.Background(), &v.s, types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Equal(t, v.result, v.s.Attributes)
+			require.ElementsMatch(t, v.result, v.s.Attributes)
 		})
 	}
 }
 
 func Test_AddAttribute(t *testing.T) {
+	t.Parallel()
+
+	strain, err := db.SelectStrain(context.Background(), "add attribute", "Test_AddAttribute")
+	require.Nil(t, err)
+
 	set := map[string]struct {
 		s      types.Strain
 		n, v   string
@@ -65,25 +78,28 @@ func Test_AddAttribute(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			s:      types.Strain{UUID: "add attribute"},
+			s:      strain,
 			n:      "new name",
 			v:      "new value",
-			result: 1,
+			result: 2,
 		},
 		"no_rows_affected": {
 			s:   types.Strain{UUID: "missing"},
 			err: fmt.Errorf("attribute was not added"),
 		},
 		"unique_key_violation": {
-			s:   types.Strain{UUID: "add attribute"},
-			n:   "contamination resistance",
-			err: fmt.Errorf("attribute was not added"),
+			s:      strain,
+			n:      "existing",
+			result: 1,
+			err:    fmt.Errorf(uniqueKeyViolation, "strain_attributes_name_strain_uuid_key"),
 		},
 	}
 	for k, v := range set {
+		k, v := k, v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			err := db.AddAttribute(context.Background(), &v.s, v.n, v.v, types.CID(k))
-			require.Equal(t, v.err, err)
+			equalErrorMessages(t, v.err, err)
 			require.Equal(t, v.result, len(v.s.Attributes))
 		})
 	}
@@ -95,21 +111,17 @@ func Test_ChangeAttribute(t *testing.T) {
 	strain, err := db.SelectStrain(context.Background(), "change attribute", "Test_ChangeAttribute")
 	require.Nil(t, err)
 
-	err = db.GetAllAttributes(context.Background(), &strain, "Test_ChangeAttribute")
-	require.Nil(t, err)
-
 	set := map[string]struct {
 		n, v   string
 		result []types.StrainAttribute
 		err    error
 	}{
 		"happy_path": { // run this first, synchronously
-			n: strainattributes[1].Name,
+			n: strain.Attributes[0].Name,
 			v: "malabar",
 			result: []types.StrainAttribute{
-				strainattributes[1],
 				func() types.StrainAttribute {
-					result := strainattributes[1]
+					result := strain.Attributes[0]
 					result.Value = "malabar"
 					return result
 				}(),
@@ -123,7 +135,9 @@ func Test_ChangeAttribute(t *testing.T) {
 		},
 	}
 	for k, v := range set {
+		k, v, strain := k, v, strain
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			err := db.ChangeAttribute(context.Background(), &strain, v.n, v.v, types.CID(k))
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result, strain.Attributes)
@@ -145,18 +159,20 @@ func Test_RemoveAttribute(t *testing.T) {
 		result []types.StrainAttribute
 		err    error
 	}{
+		"happy_path": {
+			id:     strain.Attributes[1].UUID,
+			result: []types.StrainAttribute{strain.Attributes[0], strain.Attributes[2]},
+		},
 		"no_rows_affected": {
 			id:     "missing",
 			result: strain.Attributes[:],
 			err:    fmt.Errorf("attribute was not removed"),
 		},
-		"happy_path": {
-			id:     strain.Attributes[1].UUID,
-			result: []types.StrainAttribute{strain.Attributes[0], strain.Attributes[2]},
-		},
 	}
 	for k, v := range set {
+		k, v := k, v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			err := db.RemoveAttribute(context.Background(), &strain, v.id, types.CID(k))
 			require.Equal(t, v.err, err)
 		})

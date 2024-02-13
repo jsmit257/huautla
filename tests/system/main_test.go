@@ -4,26 +4,34 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"testing"
 	"time"
 
 	"github.com/jsmit257/huautla"
 	"github.com/jsmit257/huautla/types"
+	"github.com/stretchr/testify/require"
 
 	log "github.com/sirupsen/logrus"
 )
 
-var db types.DB
-var noRows error = fmt.Errorf("sql: no rows in result set")
-var epoch time.Time = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+var (
+	db     types.DB
+	epoch  time.Time
+	noRows error = fmt.Errorf("sql: no rows in result set")
+)
 
 const (
-	invalidUUID types.UUID = "01234567890123456789012345678901234567890"
-
-	foreignKeyViolation string = `pq: update or delete on table "%s" violates foreign key constraint "%s" on table "%s"`
+	foreignKeyViolation1to1    = `pq: insert or update on table "%s" violates foreign key constraint "%s"`
+	foreignKeyViolation1toMany = `pq: update or delete on table "%s" violates foreign key constraint "%s" on table "%s"`
+	uniqueKeyViolation         = `pq: duplicate key value violates unique constraint "%s"`
+	checkConstraintViolation   = `pq: new row for relation "%s" violates check constraint "%s"`
 )
 
 func init() {
 	var err error
+	var location *time.Location
+	location, _ = time.LoadLocation("Etc/UTC")
+	epoch = time.Date(1970, 1, 1, 0, 0, 0, 0, location)
 
 	if db, err = huautla.New(
 		&types.Config{
@@ -44,5 +52,13 @@ func init() {
 		log.WithField("test-suite", "system")); err != nil {
 
 		panic(err)
+	}
+}
+
+func equalErrorMessages(t *testing.T, expected, actual error) {
+	if expected != nil && actual != nil {
+		require.Equal(t, expected.Error(), actual.Error())
+	} else if expected != nil || actual != nil {
+		require.Equal(t, expected, actual)
 	}
 }

@@ -27,12 +27,17 @@ func (db *Conn) SelectAllSubstrates(ctx context.Context, cid types.CID) ([]types
 
 	for rows.Next() {
 		row := types.Substrate{}
-		rows.Scan(
+		if err = rows.Scan(
 			&row.UUID,
 			&row.Name,
 			&row.Type,
 			&row.Vendor.UUID,
-			&row.Vendor.Name)
+			&row.Vendor.Name); err != nil {
+
+			return nil, err
+		} else if err = db.GetAllIngredients(ctx, &row, cid); err != nil {
+			return nil, err
+		}
 		result = append(result, row)
 	}
 
@@ -91,7 +96,8 @@ func (db *Conn) UpdateSubstrate(ctx context.Context, id types.UUID, s types.Subs
 	deferred, start, l := initAccessFuncs("UpdateSubstrate", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["substrate"]["update"], s.Name, s.Type, s.Vendor.UUID, id)
+	// result, err := db.ExecContext(ctx, db.sql["substrate"]["update"], s.Name, s.Type, s.Vendor.UUID, id)
+	result, err := db.ExecContext(ctx, db.sql["substrate"]["update"], s.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

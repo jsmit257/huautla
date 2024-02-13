@@ -12,13 +12,13 @@ import (
 func (db *Conn) SelectLifecycle(ctx context.Context, id types.UUID, cid types.CID) (types.Lifecycle, error) {
 	var err error
 
-	deferred, start, l := initAccessFuncs("SelectEventType", db.logger, id, cid)
+	deferred, start, l := initAccessFuncs("SelectLifecycle", db.logger, id, cid)
 	defer deferred(start, err, l)
 
 	result := types.Lifecycle{UUID: id}
 
 	if err = db.
-		QueryRowContext(ctx, db.sql["eventtype"]["select"], id).
+		QueryRowContext(ctx, db.sql["lifecycle"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Location,
@@ -95,7 +95,7 @@ func (db *Conn) InsertLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 	} else if rows, err = result.RowsAffected(); err != nil {
 		return lc, err
 	} else if rows != 1 {
-		return lc, fmt.Errorf("lifecycle was not added")
+		return lc, fmt.Errorf("lifecycle was not added: %d", rows)
 	}
 
 	return db.SelectLifecycle(ctx, lc.UUID, cid)
@@ -122,13 +122,14 @@ func (db *Conn) UpdateLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 		lc.MTime,
 		lc.Strain.UUID,
 		lc.GrainSubstrate.UUID,
-		lc.BulkSubstrate.UUID); err != nil {
+		lc.BulkSubstrate.UUID,
+		lc.UUID); err != nil {
 
 		return err
 	} else if rows, err = result.RowsAffected(); err != nil {
 		return err
 	} else if rows != 1 {
-		err = fmt.Errorf("lifecycle was not added")
+		err = fmt.Errorf("lifecycle was not updated")
 	}
 
 	return err
