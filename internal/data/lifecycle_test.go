@@ -440,7 +440,7 @@ func Test_InsertLifecycle(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			err: fmt.Errorf("lifecycle was not added"),
+			err: fmt.Errorf("lifecycle was not added: 0"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -514,7 +514,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 				return db
 			},
 			lc:  types.Lifecycle{},
-			err: fmt.Errorf("lifecycle was not added"),
+			err: fmt.Errorf("lifecycle was not updated"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {

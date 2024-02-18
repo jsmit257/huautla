@@ -19,5 +19,5 @@ files=(
 #   -run Test_SelectByEventType \
 #   -run Test_RemoveEvent \
 #   "${files[@]}"
-go test -run Test_UpdateLifecycle "${files[@]}"
+go test "${files[@]}"
   
