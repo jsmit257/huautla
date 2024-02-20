@@ -18,7 +18,7 @@ func (db *Conn) KnownAttributeNames(ctx context.Context, cid types.CID) ([]strin
 
 	var rows *sql.Rows
 
-	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["get-unique-names"])
+	rows, err = db.query.QueryContext(ctx, psqls["strainattribute"]["get-unique-names"])
 	if err != nil {
 		return result, err
 	}
@@ -45,7 +45,7 @@ func (db *Conn) GetAllAttributes(ctx context.Context, s *types.Strain, cid types
 
 	s.Attributes = make([]types.StrainAttribute, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["strainattribute"]["all"], s.UUID)
+	rows, err = db.query.QueryContext(ctx, psqls["strainattribute"]["all"], s.UUID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (db *Conn) AddAttribute(ctx context.Context, s *types.Strain, n, v string, 
 	deferred, start, l := initAccessFuncs("AddAttribute", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["add"], id, n, v, s.UUID)
+	result, err := db.ExecContext(ctx, psqls["strainattribute"]["add"], id, n, v, s.UUID)
 
 	if err != nil {
 		if isPrimaryKeyViolation(err) {
@@ -101,7 +101,7 @@ func (db *Conn) ChangeAttribute(ctx context.Context, s *types.Strain, n, v strin
 	deferred, start, l := initAccessFuncs("ChangeAttribute", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["change"], v, n, s.UUID)
+	result, err := db.ExecContext(ctx, psqls["strainattribute"]["change"], v, n, s.UUID)
 
 	if err != nil {
 		return err
@@ -128,7 +128,7 @@ func (db *Conn) RemoveAttribute(ctx context.Context, s *types.Strain, id types.U
 	deferred, start, l := initAccessFuncs("RemoveAttribute", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strainattribute"]["remove"], id)
+	result, err := db.ExecContext(ctx, psqls["strainattribute"]["remove"], id)
 
 	if err != nil {
 		return err

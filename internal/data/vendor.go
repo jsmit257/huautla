@@ -18,7 +18,7 @@ func (db *Conn) SelectAllVendors(ctx context.Context, cid types.CID) ([]types.Ve
 
 	result := make([]types.Vendor, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["vendor"]["select-all"])
+	rows, err = db.query.QueryContext(ctx, psqls["vendor"]["select-all"])
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (db *Conn) SelectVendor(ctx context.Context, id types.UUID, cid types.CID) 
 
 	result := types.Vendor{UUID: id}
 	err = db.
-		QueryRowContext(ctx, db.sql["vendor"]["select"], id).
+		QueryRowContext(ctx, psqls["vendor"]["select"], id).
 		Scan(&result.Name)
 
 	return result, err
@@ -56,7 +56,7 @@ func (db *Conn) InsertVendor(ctx context.Context, v types.Vendor, cid types.CID)
 	deferred, start, l := initAccessFuncs("InsertVendor", db.logger, v.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err = db.ExecContext(ctx, db.sql["vendor"]["insert"], v.UUID, v.Name)
+	result, err = db.ExecContext(ctx, psqls["vendor"]["insert"], v.UUID, v.Name)
 	if err != nil {
 		if isPrimaryKeyViolation(err) {
 			return db.InsertVendor(ctx, v, cid) // FIXME: infinite loop?
@@ -77,7 +77,7 @@ func (db *Conn) UpdateVendor(ctx context.Context, id types.UUID, v types.Vendor,
 	deferred, start, l := initAccessFuncs("UpdateVendor", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["vendor"]["update"], v.Name, id)
+	result, err := db.ExecContext(ctx, psqls["vendor"]["update"], v.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

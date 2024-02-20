@@ -18,7 +18,7 @@ func (db *Conn) SelectAllStages(ctx context.Context, cid types.CID) ([]types.Sta
 
 	result := make([]types.Stage, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["stage"]["select-all"])
+	rows, err = db.query.QueryContext(ctx, psqls["stage"]["select-all"])
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (db *Conn) SelectStage(ctx context.Context, id types.UUID, cid types.CID) (
 
 	result := types.Stage{UUID: id}
 	err = db.
-		QueryRowContext(ctx, db.sql["stage"]["select"], id).
+		QueryRowContext(ctx, psqls["stage"]["select"], id).
 		Scan(&result.Name)
 
 	return result, err
@@ -54,7 +54,7 @@ func (db *Conn) InsertStage(ctx context.Context, s types.Stage, cid types.CID) (
 	deferred, start, l := initAccessFuncs("InsertStage", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["stage"]["insert"], s.UUID, s.Name)
+	result, err := db.ExecContext(ctx, psqls["stage"]["insert"], s.UUID, s.Name)
 	if err != nil {
 		// FIXME: choose what to do based on the tupe of error
 		duplicatePrimaryKeyErr := false
@@ -77,7 +77,7 @@ func (db *Conn) UpdateStage(ctx context.Context, id types.UUID, s types.Stage, c
 	deferred, start, l := initAccessFuncs("UpdateStage", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["stage"]["update"], s.Name, id)
+	result, err := db.ExecContext(ctx, psqls["stage"]["update"], s.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

@@ -18,7 +18,7 @@ func (db *Conn) SelectAllIngredients(ctx context.Context, cid types.CID) ([]type
 
 	result := make([]types.Ingredient, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["ingredient"]["select-all"])
+	rows, err = db.query.QueryContext(ctx, psqls["ingredient"]["select-all"])
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (db *Conn) SelectIngredient(ctx context.Context, id types.UUID, cid types.C
 
 	result := types.Ingredient{UUID: id}
 	err = db.
-		QueryRowContext(ctx, db.sql["ingredient"]["select"], id).
+		QueryRowContext(ctx, psqls["ingredient"]["select"], id).
 		Scan(&result.Name)
 
 	return result, err
@@ -57,7 +57,7 @@ func (db *Conn) InsertIngredient(ctx context.Context, i types.Ingredient, cid ty
 	deferred, start, l := initAccessFuncs("InsertIngredient", db.logger, i.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["ingredient"]["insert"], i.UUID, i.Name)
+	result, err := db.ExecContext(ctx, psqls["ingredient"]["insert"], i.UUID, i.Name)
 	if err != nil {
 		// FIXME: choose what to do based on the tupe of error
 		duplicatePrimaryKeyErr := false
@@ -80,7 +80,7 @@ func (db *Conn) UpdateIngredient(ctx context.Context, id types.UUID, i types.Ing
 	deferred, start, l := initAccessFuncs("UpdateIngredient", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["ingredient"]["update"], i.Name, id)
+	result, err := db.ExecContext(ctx, psqls["ingredient"]["update"], i.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

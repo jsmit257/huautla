@@ -15,7 +15,7 @@ func (db *Conn) GetLifecycleEvents(ctx context.Context, lc *types.Lifecycle, cid
 	deferred, start, l := initAccessFuncs("GetLifecycleEvents", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
-	lc.Events, err = db.selectEventsList(ctx, db.sql["event"]["all-by-lifecycle"], lc.UUID)
+	lc.Events, err = db.selectEventsList(ctx, psqls["event"]["all-by-lifecycle"], lc.UUID)
 
 	return err
 }
@@ -26,7 +26,7 @@ func (db *Conn) SelectByEventType(ctx context.Context, et types.EventType, cid t
 	deferred, start, l := initAccessFuncs("SelectByEventType", db.logger, et.UUID, cid)
 	defer deferred(start, err, l)
 
-	return db.selectEventsList(ctx, db.sql["event"]["all-by-eventtype"], et.UUID)
+	return db.selectEventsList(ctx, psqls["event"]["all-by-eventtype"], et.UUID)
 }
 
 func (db *Conn) selectEventsList(ctx context.Context, query string, id types.UUID) ([]types.Event, error) {
@@ -74,7 +74,7 @@ func (db *Conn) SelectEvent(ctx context.Context, id types.UUID, cid types.CID) (
 	result := types.Event{UUID: id}
 
 	if err = db.
-		QueryRowContext(ctx, db.sql["event"]["select"], id).
+		QueryRowContext(ctx, psqls["event"]["select"], id).
 		Scan(
 			&result.Temperature,
 			&result.Humidity,
@@ -103,7 +103,7 @@ func (db *Conn) AddEvent(ctx context.Context, lc *types.Lifecycle, e types.Event
 	e.MTime = time.Now().UTC()
 	e.CTime = e.MTime
 
-	result, err = db.ExecContext(ctx, db.sql["event"]["add"],
+	result, err = db.ExecContext(ctx, psqls["event"]["add"],
 		e.UUID,
 		e.Temperature,
 		e.Humidity,
@@ -136,7 +136,7 @@ func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Ev
 
 	e.MTime = time.Now().UTC()
 
-	result, err = db.ExecContext(ctx, db.sql["event"]["change"],
+	result, err = db.ExecContext(ctx, psqls["event"]["change"],
 		e.Temperature,
 		e.Humidity,
 		e.MTime,
@@ -166,7 +166,7 @@ func (db *Conn) RemoveEvent(ctx context.Context, lc *types.Lifecycle, id types.U
 	deferred, start, l := initAccessFuncs("RemoveEvent", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["event"]["remove"], id)
+	result, err := db.ExecContext(ctx, psqls["event"]["remove"], id)
 
 	if err != nil {
 		return err

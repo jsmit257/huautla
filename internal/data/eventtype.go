@@ -18,7 +18,7 @@ func (db *Conn) SelectAllEventTypes(ctx context.Context, cid types.CID) ([]types
 
 	result := make([]types.EventType, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["eventtype"]["select-all"])
+	rows, err = db.query.QueryContext(ctx, psqls["eventtype"]["select-all"])
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (db *Conn) SelectEventType(ctx context.Context, id types.UUID, cid types.CI
 	result := types.EventType{UUID: id}
 
 	err = db.
-		QueryRowContext(ctx, db.sql["eventtype"]["select"], id).
+		QueryRowContext(ctx, psqls["eventtype"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Severity,
@@ -69,7 +69,7 @@ func (db *Conn) InsertEventType(ctx context.Context, e types.EventType, cid type
 	deferred, start, l := initAccessFuncs("InsertEventType", db.logger, e.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["eventtype"]["insert"], e.UUID, e.Name, e.Severity, e.Stage.UUID)
+	result, err := db.ExecContext(ctx, psqls["eventtype"]["insert"], e.UUID, e.Name, e.Severity, e.Stage.UUID)
 	if err != nil {
 		if isPrimaryKeyViolation(err) {
 			return db.InsertEventType(ctx, e, cid) // FIXME: infinite loop?
@@ -90,8 +90,8 @@ func (db *Conn) UpdateEventType(ctx context.Context, id types.UUID, e types.Even
 	deferred, start, l := initAccessFuncs("UpdateEventType", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	// result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, e.Severity, id)
-	result, err := db.ExecContext(ctx, db.sql["eventtype"]["update"], e.Name, id)
+	// result, err := db.ExecContext(ctx, psqls["eventtype"]["update"], e.Name, e.Severity, id)
+	result, err := db.ExecContext(ctx, psqls["eventtype"]["update"], e.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

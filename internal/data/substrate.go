@@ -18,7 +18,7 @@ func (db *Conn) SelectAllSubstrates(ctx context.Context, cid types.CID) ([]types
 
 	result := make([]types.Substrate, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["substrate"]["select-all"])
+	rows, err = db.query.QueryContext(ctx, psqls["substrate"]["select-all"])
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (db *Conn) SelectSubstrate(ctx context.Context, id types.UUID, cid types.CI
 	result := types.Substrate{UUID: id}
 
 	if err = db.
-		QueryRowContext(ctx, db.sql["substrate"]["select"], id).
+		QueryRowContext(ctx, psqls["substrate"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Type,
@@ -74,7 +74,7 @@ func (db *Conn) InsertSubstrate(ctx context.Context, s types.Substrate, cid type
 	deferred, start, l := initAccessFuncs("InsertSubstrate", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["substrate"]["insert"], s.UUID, s.Name, s.Type, s.Vendor.UUID)
+	result, err := db.ExecContext(ctx, psqls["substrate"]["insert"], s.UUID, s.Name, s.Type, s.Vendor.UUID)
 
 	if err != nil {
 		if isPrimaryKeyViolation(err) {
@@ -96,8 +96,8 @@ func (db *Conn) UpdateSubstrate(ctx context.Context, id types.UUID, s types.Subs
 	deferred, start, l := initAccessFuncs("UpdateSubstrate", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	// result, err := db.ExecContext(ctx, db.sql["substrate"]["update"], s.Name, s.Type, s.Vendor.UUID, id)
-	result, err := db.ExecContext(ctx, db.sql["substrate"]["update"], s.Name, id)
+	// result, err := db.ExecContext(ctx, psqls["substrate"]["update"], s.Name, s.Type, s.Vendor.UUID, id)
+	result, err := db.ExecContext(ctx, psqls["substrate"]["update"], s.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

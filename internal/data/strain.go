@@ -18,7 +18,7 @@ func (db *Conn) SelectAllStrains(ctx context.Context, cid types.CID) ([]types.St
 
 	result := make([]types.Strain, 0, 100)
 
-	rows, err = db.query.QueryContext(ctx, db.sql["strain"]["select-all"])
+	rows, err = db.query.QueryContext(ctx, psqls["strain"]["select-all"])
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (db *Conn) SelectStrain(ctx context.Context, id types.UUID, cid types.CID) 
 	result := types.Strain{UUID: id}
 
 	if err = db.
-		QueryRowContext(ctx, db.sql["strain"]["select"], id).
+		QueryRowContext(ctx, psqls["strain"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Vendor.UUID,
@@ -72,7 +72,7 @@ func (db *Conn) InsertStrain(ctx context.Context, s types.Strain, cid types.CID)
 	deferred, start, l := initAccessFuncs("InsertStrain", db.logger, s.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strain"]["insert"], s.UUID, s.Name, s.Vendor.UUID)
+	result, err := db.ExecContext(ctx, psqls["strain"]["insert"], s.UUID, s.Name, s.Vendor.UUID)
 	if err != nil {
 		if isPrimaryKeyViolation(err) {
 			return db.InsertStrain(ctx, s, cid) // FIXME: infinite loop?
@@ -93,7 +93,7 @@ func (db *Conn) UpdateStrain(ctx context.Context, id types.UUID, s types.Strain,
 	deferred, start, l := initAccessFuncs("UpdateStrain", db.logger, id, cid)
 	defer deferred(start, err, l)
 
-	result, err := db.ExecContext(ctx, db.sql["strain"]["update"], s.Name, id)
+	result, err := db.ExecContext(ctx, psqls["strain"]["update"], s.Name, id)
 	if err != nil {
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {

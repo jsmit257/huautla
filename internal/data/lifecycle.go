@@ -18,7 +18,7 @@ func (db *Conn) SelectLifecycle(ctx context.Context, id types.UUID, cid types.CI
 	result := types.Lifecycle{UUID: id}
 
 	if err = db.
-		QueryRowContext(ctx, db.sql["lifecycle"]["select"], id).
+		QueryRowContext(ctx, psqls["lifecycle"]["select"], id).
 		Scan(
 			&result.Name,
 			&result.Location,
@@ -72,7 +72,7 @@ func (db *Conn) InsertLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 	deferred, start, l := initAccessFuncs("InsertLifecycle", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
-	result, err = db.ExecContext(ctx, db.sql["lifecycle"]["insert"],
+	result, err = db.ExecContext(ctx, psqls["lifecycle"]["insert"],
 		lc.UUID,
 		lc.Name,
 		lc.Location,
@@ -111,7 +111,7 @@ func (db *Conn) UpdateLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 	deferred, start, l := initAccessFuncs("UpdateLifecycle", db.logger, lc.UUID, cid)
 	defer deferred(start, err, l)
 
-	if result, err = db.ExecContext(ctx, db.sql["lifecycle"]["update"],
+	if result, err = db.ExecContext(ctx, psqls["lifecycle"]["update"],
 		lc.Name,
 		lc.Location,
 		lc.GrainCost,
