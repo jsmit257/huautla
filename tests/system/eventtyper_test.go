@@ -12,7 +12,7 @@ import (
 var eventtypes = []types.EventType{
 	{UUID: "0", Name: "Condensation", Severity: "Warn", Stage: stages[3]},
 	{UUID: "1", Name: "Fruiting", Severity: "Info", Stage: stages[1]},
-	{UUID: "2", Name: "Crash", Severity: "Error", Stage: stages[1]},
+	{UUID: "2", Name: "Crashed", Severity: "Error", Stage: stages[1]},
 	{UUID: "3", Name: "Sunset", Severity: "RIP", Stage: stages[2]},
 }
 

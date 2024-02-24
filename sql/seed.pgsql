@@ -38,5 +38,8 @@ values('0', 'Gestation'),
 insert into event_types(uuid, name, severity, stage_uuid)
 values('0', 'Condensation', 'Warn', '3'),
       ('1', 'Fruiting', 'Info', '1'),
-      ('2', 'Crash', 'Error', '1'),
-      ('3', 'Sunset', 'RIP', '2');
+      ('2', 'Crashed', 'Error', '1'),
+      ('3', 'Sunset', 'RIP', '2'),
+      ('4', 'Spore printing', 'Info', '0'),
+      ('5', 'Innoculating agar substrate', 'Info', '0'),
+      ('6', 'Innoculating liquid substrate', 'Info', '0');
