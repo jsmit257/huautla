@@ -1,0 +1,44 @@
++ lifecycle
+  - location
+  - modified time
+  - create time
+  - ...
+  + strain
+    - name
+    + vendor
+      - name
+    + strainattributes
+      - key1/value1
+      - key2/value2
+      - ...
+  + grain substrate
+    - name
+    + vendor
+      - name
+    + ingredients
+      + ingredient1
+        - name
+      +  ingredient2
+        - name
+      + ...
+  + bulk substrate
+    - name
+    + vendor
+      - name
+    + ingredients
+      + ingredient1
+        - name
+      + ingredient2
+        - name
+      + ...
+  + events
+    - temperature
+    - humidity
+    - modified time
+    - create time
+    + eventtype
+      - name
+      - severity
+      + stage
+        - name
+
