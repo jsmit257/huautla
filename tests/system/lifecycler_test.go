@@ -21,8 +21,7 @@ func Test_SelectLifecycle(t *testing.T) {
 			id: "0",
 			result: types.Lifecycle{
 				UUID:           "0",
-				Name:           "reference implementation",
-				Location:       "testing",
+				Location:       "reference implementation",
 				GrainCost:      1,
 				BulkCost:       2,
 				Yield:          3,
@@ -63,8 +62,7 @@ func Test_InsertLifecycle(t *testing.T) {
 	}{
 		"happy_path": {
 			lc: types.Lifecycle{
-				Name:           "inserted record",
-				Location:       "testing",
+				Location:       "inserted record",
 				GrainCost:      1,
 				BulkCost:       2,
 				Yield:          3,
@@ -75,8 +73,7 @@ func Test_InsertLifecycle(t *testing.T) {
 				BulkSubstrate:  substrates[2],
 			},
 			result: types.Lifecycle{
-				Name:           "inserted record",
-				Location:       "testing",
+				Location:       "inserted record",
 				GrainCost:      1,
 				BulkCost:       2,
 				Yield:          3,
@@ -89,8 +86,7 @@ func Test_InsertLifecycle(t *testing.T) {
 		},
 		"no_rows_affected_grain": {
 			lc: types.Lifecycle{
-				Name:           "failed insert",
-				Location:       "testing",
+				Location:       "failed insert",
 				Strain:         strains[1],
 				GrainSubstrate: types.Substrate{UUID: "foobar"},
 				BulkSubstrate:  substrates[2],
@@ -100,8 +96,7 @@ func Test_InsertLifecycle(t *testing.T) {
 		},
 		"no_rows_affected_bulk": {
 			lc: types.Lifecycle{
-				Name:           "failed insert",
-				Location:       "testing",
+				Location:       "failed insert",
 				Strain:         strains[1],
 				GrainSubstrate: substrates[1],
 				BulkSubstrate:  types.Substrate{UUID: "foobar"},
@@ -111,8 +106,7 @@ func Test_InsertLifecycle(t *testing.T) {
 		},
 		"no_rows_affected_strain": {
 			lc: types.Lifecycle{
-				Name:           "failed insert",
-				Location:       "testing",
+				Location:       "failed insert",
 				Strain:         types.Strain{UUID: "foobar"},
 				GrainSubstrate: substrates[1],
 				BulkSubstrate:  substrates[2],
@@ -122,8 +116,7 @@ func Test_InsertLifecycle(t *testing.T) {
 		},
 		"no_rows_affected_check_grain_type": {
 			lc: types.Lifecycle{
-				Name:           "failed insert",
-				Location:       "testing",
+				Location:       "failed insert",
 				Strain:         strains[0],
 				GrainSubstrate: substrates[2],
 				BulkSubstrate:  substrates[2],
@@ -133,8 +126,7 @@ func Test_InsertLifecycle(t *testing.T) {
 		},
 		"no_rows_affected_check_bulk_type": {
 			lc: types.Lifecycle{
-				Name:           "failed insert",
-				Location:       "testing",
+				Location:       "failed insert",
 				Strain:         strains[0],
 				GrainSubstrate: substrates[1],
 				BulkSubstrate:  substrates[1],
@@ -142,17 +134,18 @@ func Test_InsertLifecycle(t *testing.T) {
 			// result: types.Lifecycle{Name: "failed insert"},
 			err: fmt.Errorf("lifecycle was not added: 0"),
 		},
-		"unique_key_violation": {
-			lc: types.Lifecycle{
-				Name:           "reference implementation",
-				Location:       "testing",
-				Strain:         strains[0],
-				GrainSubstrate: substrates[1],
-				BulkSubstrate:  substrates[2],
-			},
-			// result: types.Lifecycle{Name: "failed insert"},
-			err: fmt.Errorf(uniqueKeyViolation, "lifecycles_name_key"),
-		},
+		// // can't really test this anymore since the unique index changed to include
+		// // ctime; just leaving it here so nobody tries to reimplement it
+		// "unique_key_violation": {
+		// 	lc: types.Lifecycle{
+		// 		Location:       "reference implementation",
+		// 		Strain:         strains[0],
+		// 		GrainSubstrate: substrates[1],
+		// 		BulkSubstrate:  substrates[2],
+		// 	},
+		// 	// result: types.Lifecycle{Name: "failed insert"},
+		// 	err: fmt.Errorf(uniqueKeyViolation, "lifecycles_name_key"),
+		// },
 	}
 	for k, v := range set {
 		k, v := k, v
@@ -191,7 +184,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 	}{
 		"happy_path": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
-				lc.Name = "updated"
+				lc.Location = "updated"
 				return lc
 			},
 		},
@@ -232,10 +225,10 @@ func Test_UpdateLifecycle(t *testing.T) {
 		},
 		"unique_key_violation": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
-				lc.Name = "reference implementation"
+				lc.Location = "reference implementation"
 				return lc
 			},
-			err: fmt.Errorf(uniqueKeyViolation, "lifecycles_name_key"),
+			err: fmt.Errorf(uniqueKeyViolation, "lifecycles_location_ctime_key"),
 		},
 	}
 	for k, v := range set {

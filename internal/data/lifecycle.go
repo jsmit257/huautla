@@ -20,7 +20,6 @@ func (db *Conn) SelectLifecycle(ctx context.Context, id types.UUID, cid types.CI
 	if err = db.
 		QueryRowContext(ctx, psqls["lifecycle"]["select"], id).
 		Scan(
-			&result.Name,
 			&result.Location,
 			&result.GrainCost,
 			&result.BulkCost,
@@ -74,7 +73,6 @@ func (db *Conn) InsertLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 
 	result, err = db.ExecContext(ctx, psqls["lifecycle"]["insert"],
 		lc.UUID,
-		lc.Name,
 		lc.Location,
 		lc.GrainCost,
 		lc.BulkCost,
@@ -112,7 +110,6 @@ func (db *Conn) UpdateLifecycle(ctx context.Context, lc types.Lifecycle, cid typ
 	defer deferred(start, err, l)
 
 	if result, err = db.ExecContext(ctx, psqls["lifecycle"]["update"],
-		lc.Name,
 		lc.Location,
 		lc.GrainCost,
 		lc.BulkCost,

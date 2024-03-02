@@ -17,7 +17,6 @@ func Test_SelectLifecycle(t *testing.T) {
 	t.Parallel()
 
 	fieldnames := []string{
-		"name",
 		"location",
 		"graincost",
 		"bulkcost",
@@ -63,7 +62,6 @@ func Test_SelectLifecycle(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows(fieldnames).
 						AddRow(
-							"name",
 							"location",
 							0,
 							0,
@@ -116,7 +114,6 @@ func Test_SelectLifecycle(t *testing.T) {
 			id: "0",
 			result: types.Lifecycle{
 				UUID:      "0",
-				Name:      "name",
 				Location:  "location",
 				GrainCost: 0,
 				BulkCost:  0,
@@ -176,7 +173,6 @@ func Test_SelectLifecycle(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows(fieldnames).
 						AddRow(
-							"name",
 							"location",
 							0,
 							0,
@@ -214,7 +210,6 @@ func Test_SelectLifecycle(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows(fieldnames).
 						AddRow(
-							"name",
 							"location",
 							0,
 							0,
@@ -258,7 +253,6 @@ func Test_SelectLifecycle(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows(fieldnames).
 						AddRow(
-							"name",
 							"location",
 							0,
 							0,
@@ -334,7 +328,6 @@ func Test_InsertLifecycle(t *testing.T) {
 	t.Parallel()
 
 	fieldnames := []string{
-		"name",
 		"location",
 		"graincost",
 		"bulkcost",
@@ -381,7 +374,6 @@ func Test_InsertLifecycle(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows(fieldnames).
 						AddRow(
-							"name",
 							"location",
 							0,
 							0,

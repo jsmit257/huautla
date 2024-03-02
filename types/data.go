@@ -64,18 +64,17 @@ type (
 
 	Lifecycle struct {
 		UUID           `json:"id"`
-		Name           string    `json:"name"`
 		Location       string    `json:"location"`
-		GrainCost      float32   `json:"grain_cost"`
-		BulkCost       float32   `json:"bulk_cost"`
-		Yield          float32   `json:"yield"`
-		Count          int16     `json:"count"`
-		Gross          float32   `json:"gross"`
-		MTime          time.Time `json:"modified_date"`
-		CTime          time.Time `json:"create_date"`
-		Strain         `json:"strain"`
-		GrainSubstrate Substrate `json:"grain_substrate"`
-		BulkSubstrate  Substrate `json:"bulk_substrate"`
+		GrainCost      float32   `json:"grain_cost,omitempty"`
+		BulkCost       float32   `json:"bulk_cost,omitempty"`
+		Yield          float32   `json:"yield,omitempty"`
+		Count          int16     `json:"count,omitempty"`
+		Gross          float32   `json:"gross,omitempty"`
+		MTime          time.Time `json:"modified_date,omitempty"`
+		CTime          time.Time `json:"create_date,omitempty"`
+		Strain         `json:"strain,omitempty"`
+		GrainSubstrate Substrate `json:"grain_substrate,omitempty"`
+		BulkSubstrate  Substrate `json:"bulk_substrate,omitempty"`
 		Events         []Event   `json:"events,omitempty"`
 	}
 

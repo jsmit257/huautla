@@ -56,7 +56,6 @@ create table event_types (
 
 create table lifecycles (
   uuid                varchar(40)  not null primary key,
-  name                varchar(128) not null unique,
   location            varchar(128) not null,
   grain_cost          decimal(8,2) not null,
   bulk_cost           decimal(8,2) not null,
@@ -69,7 +68,8 @@ create table lifecycles (
   ctime               timestamp    not null default current_timestamp,
   strain_uuid         varchar(40)  not null references strains(uuid),
   grainsubstrate_uuid varchar(40)  not null references substrates(uuid),
-  bulksubstrate_uuid  varchar(40)  not null references substrates(uuid)
+  bulksubstrate_uuid  varchar(40)  not null references substrates(uuid),
+  unique(location, ctime)
 );
 
 create table events (

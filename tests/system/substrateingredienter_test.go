@@ -33,6 +33,7 @@ func Test_GetAllIngredients(t *testing.T) {
 		})
 	}
 }
+
 func Test_AddIngredient(t *testing.T) {
 	t.Parallel()
 
