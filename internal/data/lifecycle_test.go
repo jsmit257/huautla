@@ -18,6 +18,7 @@ func Test_SelectLifecycle(t *testing.T) {
 
 	fieldnames := []string{
 		"location",
+		"straincost",
 		"graincost",
 		"bulkcost",
 		"yield",
@@ -68,6 +69,7 @@ func Test_SelectLifecycle(t *testing.T) {
 							0,
 							0,
 							0,
+							0,
 							whenwillthenbenow,
 							whenwillthenbenow,
 							"0",
@@ -113,15 +115,16 @@ func Test_SelectLifecycle(t *testing.T) {
 			},
 			id: "0",
 			result: types.Lifecycle{
-				UUID:      "0",
-				Location:  "location",
-				GrainCost: 0,
-				BulkCost:  0,
-				Yield:     0,
-				Count:     0,
-				Gross:     0,
-				MTime:     whenwillthenbenow,
-				CTime:     whenwillthenbenow,
+				UUID:       "0",
+				Location:   "location",
+				StrainCost: 0,
+				GrainCost:  0,
+				BulkCost:   0,
+				Yield:      0,
+				Count:      0,
+				Gross:      0,
+				MTime:      whenwillthenbenow,
+				CTime:      whenwillthenbenow,
 				Strain: types.Strain{
 					UUID: "0",
 					Name: "strain 0",
@@ -179,6 +182,7 @@ func Test_SelectLifecycle(t *testing.T) {
 							0,
 							0,
 							0,
+							0,
 							whenwillthenbenow,
 							whenwillthenbenow,
 							"0",
@@ -211,6 +215,7 @@ func Test_SelectLifecycle(t *testing.T) {
 						NewRows(fieldnames).
 						AddRow(
 							"location",
+							0,
 							0,
 							0,
 							0,
@@ -254,6 +259,7 @@ func Test_SelectLifecycle(t *testing.T) {
 						NewRows(fieldnames).
 						AddRow(
 							"location",
+							0,
 							0,
 							0,
 							0,
@@ -329,6 +335,7 @@ func Test_InsertLifecycle(t *testing.T) {
 
 	fieldnames := []string{
 		"location",
+		"straincost",
 		"graincost",
 		"bulkcost",
 		"yield",
@@ -375,6 +382,7 @@ func Test_InsertLifecycle(t *testing.T) {
 						NewRows(fieldnames).
 						AddRow(
 							"location",
+							0,
 							0,
 							0,
 							0,

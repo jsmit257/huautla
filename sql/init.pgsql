@@ -57,6 +57,7 @@ create table event_types (
 create table lifecycles (
   uuid                varchar(40)  not null primary key,
   location            varchar(128) not null,
+  strain_cost         decimal(8,2) not null,
   grain_cost          decimal(8,2) not null,
   bulk_cost           decimal(8,2) not null,
   -- the net weight, fresh or dried; for dried, 1.0-(yield/gross) is how much water they typically contain

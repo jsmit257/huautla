@@ -59,14 +59,14 @@ insert into event_types(uuid, name, severity, stage_uuid)
 values('update me!', 'update me!', 'Info', '1'),
       ('delete me!', 'delete me!', 'Info', '1');
 
-insert into lifecycles(uuid, location, grain_cost, bulk_cost, yield, headcount, gross, mtime, ctime, strain_uuid, grainsubstrate_uuid, bulksubstrate_uuid)
-values('0', 'reference implementation', 1, 2, 3, 4, 5, '1970-01-01', '1970-01-01', '0', '0', '2'),
-      ('1', 'reference implementation 2', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
-      ('add event', 'add event', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
-      ('change event', 'change event', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0'),
-      ('remove event', 'remove event', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0'),
-      ('update me!', 'update me!', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
-      ('delete me!', 'delete me!', 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0');
+insert into lifecycles(uuid, location, strain_cost, grain_cost, bulk_cost, yield, headcount, gross, mtime, ctime, strain_uuid, grainsubstrate_uuid, bulksubstrate_uuid)
+values('0', 'reference implementation', 8, 1, 2, 3, 4, 5, '1970-01-01', '1970-01-01', '0', '0', '2'),
+      ('1', 'reference implementation 2', 7, 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
+      ('add event', 'add event', 6, 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
+      ('change event', 'change event', 5, 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0'),
+      ('remove event', 'remove event', 4, 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0'),
+      ('update me!', 'update me!', 3, 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '2'),
+      ('delete me!', 'delete me!', 2, 0, 0, 0, 0, 0, '1970-01-01', '1970-01-01', '0', '0', '0');
 
 insert into events(uuid, temperature, humidity, mtime, ctime, lifecycle_uuid, eventtype_uuid)
 values('0', 2, 1, '1970-01-01T00:00:00.0Z', '1970-01-01T00:00:00.0Z', '0', '1'),

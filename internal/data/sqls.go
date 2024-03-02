@@ -121,6 +121,7 @@ var psqls = sqlMap{
 		// it's an ugly, bad precedent, except that it saves a lot of hits to the db
 		"select": `
     select lc.location,
+           lc.strain_cost,
            lc.grain_cost,
            lc.bulk_cost,
            lc.yield,
@@ -161,6 +162,7 @@ var psqls = sqlMap{
       into lifecycles(
            uuid,
            location,
+           strain_cost,
            grain_cost,
            bulk_cost,
            yield,
@@ -180,38 +182,40 @@ var psqls = sqlMap{
            $7,
            $8,
            $9,
+           $10,
            s.uuid,
            gs.uuid,
            bs.uuid
       from strains s,
            substrates gs,
            substrates bs
-     where s.uuid = $10
-       and gs.uuid = $11
+     where s.uuid = $11
+       and gs.uuid = $12
        and gs.type = 'Grain'
-       and bs.uuid = $12
+       and bs.uuid = $13
        and bs.type = 'Bulk'`,
 		"update": `
     update lifecycles
        set location = $1,
-           grain_cost = $2,
-           bulk_cost = $3,
-           yield = $4,
-           headcount = $5,
-           gross = $6,
-           mtime = $7,
+           strain_cost = $2,
+           grain_cost = $3,
+           bulk_cost = $4,
+           yield = $5,
+           headcount = $6,
+           gross = $7,
+           mtime = $8,
            strain_uuid = s.uuid,
            grainsubstrate_uuid = gs.uuid,
            bulksubstrate_uuid = bs.uuid
       from strains s,
            substrates gs,
            substrates bs
-     where s.uuid = $8
-       and gs.uuid = $9
+     where s.uuid = $9
+       and gs.uuid = $10
        and gs.type = 'Grain'
-       and bs.uuid = $10
+       and bs.uuid = $11
        and bs.type = 'Bulk'
-       and lifecycles.uuid = $11`,
+       and lifecycles.uuid = $12`,
 		"delete": `delete from lifecycles where uuid = $1`,
 	},
 

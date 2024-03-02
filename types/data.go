@@ -65,6 +65,7 @@ type (
 	Lifecycle struct {
 		UUID           `json:"id"`
 		Location       string    `json:"location"`
+		StrainCost     float32   `json:"strain_cost,omitempty"`
 		GrainCost      float32   `json:"grain_cost,omitempty"`
 		BulkCost       float32   `json:"bulk_cost,omitempty"`
 		Yield          float32   `json:"yield,omitempty"`
