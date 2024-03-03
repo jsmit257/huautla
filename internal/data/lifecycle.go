@@ -9,6 +9,33 @@ import (
 	"github.com/jsmit257/huautla/types"
 )
 
+func (db *Conn) SelectLifecycleIndex(ctx context.Context, cid types.CID) ([]types.Lifecycle, error) {
+	var err error
+
+	deferred, start, l := initAccessFuncs("SelectLifecycleIndex", db.logger, "nil", cid)
+	defer deferred(start, err, l)
+
+	var rows *sql.Rows
+
+	result := make([]types.Lifecycle, 0, 1000)
+
+	rows, err = db.query.QueryContext(ctx, psqls["lifecycle"]["index"])
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		row := types.Lifecycle{}
+		if err = rows.Scan(&row.UUID, &row.Location, &row.CTime); err != nil {
+			break
+		}
+		result = append(result, row)
+	}
+
+	return result, err
+
+}
+
 func (db *Conn) SelectLifecycle(ctx context.Context, id types.UUID, cid types.CID) (types.Lifecycle, error) {
 	var err error
 

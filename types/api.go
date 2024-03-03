@@ -42,6 +42,7 @@ type (
 	}
 
 	Lifecycler interface {
+		SelectLifecycleIndex(ctx context.Context, cid CID) ([]Lifecycle, error)
 		SelectLifecycle(ctx context.Context, id UUID, cid CID) (Lifecycle, error)
 		InsertLifecycle(ctx context.Context, lc Lifecycle, cid CID) (Lifecycle, error)
 		UpdateLifecycle(ctx context.Context, lc Lifecycle, cid CID) error

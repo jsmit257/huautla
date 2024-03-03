@@ -119,103 +119,110 @@ var psqls = sqlMap{
 
 	"lifecycle": {
 		// it's an ugly, bad precedent, except that it saves a lot of hits to the db
+		"index": `
+      select uuid,
+             location,
+             ctime
+       from  lifecycles
+      order
+         by  ctime desc`,
 		"select": `
-    select lc.location,
-           lc.strain_cost,
-           lc.grain_cost,
-           lc.bulk_cost,
-           lc.yield,
-           lc.headcount,
-           lc.gross,
-           lc.mtime at time zone 'utc',
-           lc.ctime at time zone 'utc',
-           s.uuid as strain_uuid,
-           s.name as strain_name,
-           sv.uuid as strain_vendor_uuid,
-           sv.name as strain_vendor_name,
-           gs.uuid as grain_substrate_uuid,
-           gs.name as grain_substrate_name,
-           gs.type as grain_substrate_type,
-           gv.uuid as grain_vendor_uuid,
-           gv.name as grain_vendor_name,
-           bs.uuid as bulk_substrate_uuid,
-           bs.name as bulk_substrate_name,
-           bs.type as bulk_substrate_type,
-           bv.uuid as bulk_vendor_uuid,
-           bv.name as bulk_vendor_name
-      from lifecycles lc
-      join strains s
-        on lc.strain_uuid = s.uuid
-      join vendors sv
-        on s.vendor_uuid = sv.uuid
-      join substrates gs
-        on lc.grainsubstrate_uuid = gs.uuid
-      join vendors gv
-        on gs.vendor_uuid = gv.uuid
-      join substrates bs
-        on lc.bulksubstrate_uuid = bs.uuid
-      join vendors bv
-        on bs.vendor_uuid = bv.uuid
-     where lc.uuid = $1`,
+      select lc.location,
+             lc.strain_cost,
+             lc.grain_cost,
+             lc.bulk_cost,
+             lc.yield,
+             lc.headcount,
+             lc.gross,
+             lc.mtime at time zone 'utc',
+             lc.ctime at time zone 'utc',
+             s.uuid as strain_uuid,
+             s.name as strain_name,
+             sv.uuid as strain_vendor_uuid,
+             sv.name as strain_vendor_name,
+             gs.uuid as grain_substrate_uuid,
+             gs.name as grain_substrate_name,
+             gs.type as grain_substrate_type,
+             gv.uuid as grain_vendor_uuid,
+             gv.name as grain_vendor_name,
+             bs.uuid as bulk_substrate_uuid,
+             bs.name as bulk_substrate_name,
+             bs.type as bulk_substrate_type,
+             bv.uuid as bulk_vendor_uuid,
+             bv.name as bulk_vendor_name
+       from  lifecycles lc
+       join  strains s
+         on  lc.strain_uuid = s.uuid
+       join  vendors sv
+         on  s.vendor_uuid = sv.uuid
+       join  substrates gs
+         on  lc.grainsubstrate_uuid = gs.uuid
+       join  vendors gv
+         on  gs.vendor_uuid = gv.uuid
+       join  substrates bs
+         on  lc.bulksubstrate_uuid = bs.uuid 
+       join  vendors bv
+         on  bs.vendor_uuid = bv.uuid
+      where  lc.uuid = $1`,
 		"insert": `
-    insert
-      into lifecycles(
-           uuid,
-           location,
-           strain_cost,
-           grain_cost,
-           bulk_cost,
-           yield,
-           headcount,
-           gross,
-           mtime,
-           ctime,
-           strain_uuid,
-           grainsubstrate_uuid,
-           bulksubstrate_uuid)
-    select $1,
-           $2,
-           $3,
-           $4,
-           $5,
-           $6,
-           $7,
-           $8,
-           $9,
-           $10,
-           s.uuid,
-           gs.uuid,
-           bs.uuid
-      from strains s,
-           substrates gs,
-           substrates bs
-     where s.uuid = $11
-       and gs.uuid = $12
-       and gs.type = 'Grain'
-       and bs.uuid = $13
-       and bs.type = 'Bulk'`,
+      insert
+        into lifecycles(
+            uuid,
+            location,
+            strain_cost,
+            grain_cost,
+            bulk_cost,
+            yield,
+            headcount,
+            gross,
+            mtime,
+            ctime,
+            strain_uuid,
+            grainsubstrate_uuid,
+            bulksubstrate_uuid)
+      select $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            $6,
+            $7,
+            $8,
+            $9,
+            $10,
+            s.uuid,
+            gs.uuid,
+            bs.uuid
+        from strains s,
+            substrates gs,
+            substrates bs
+      where s.uuid = $11
+        and gs.uuid = $12
+        and gs.type = 'Grain'
+        and bs.uuid = $13
+        and bs.type = 'Bulk'`,
 		"update": `
-    update lifecycles
-       set location = $1,
-           strain_cost = $2,
-           grain_cost = $3,
-           bulk_cost = $4,
-           yield = $5,
-           headcount = $6,
-           gross = $7,
-           mtime = $8,
-           strain_uuid = s.uuid,
-           grainsubstrate_uuid = gs.uuid,
-           bulksubstrate_uuid = bs.uuid
-      from strains s,
-           substrates gs,
-           substrates bs
-     where s.uuid = $9
-       and gs.uuid = $10
-       and gs.type = 'Grain'
-       and bs.uuid = $11
-       and bs.type = 'Bulk'
-       and lifecycles.uuid = $12`,
+      update lifecycles
+        set location = $1,
+            strain_cost = $2,
+            grain_cost = $3,
+            bulk_cost = $4,
+            yield = $5,
+            headcount = $6,
+            gross = $7,
+            mtime = $8,
+            strain_uuid = s.uuid,
+            grainsubstrate_uuid = gs.uuid,
+            bulksubstrate_uuid = bs.uuid
+        from strains s,
+            substrates gs,
+            substrates bs
+      where s.uuid = $9
+        and gs.uuid = $10
+        and gs.type = 'Grain'
+        and bs.uuid = $11
+        and bs.type = 'Bulk'
+        and lifecycles.uuid = $12`,
 		"delete": `delete from lifecycles where uuid = $1`,
 	},
 

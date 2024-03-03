@@ -9,6 +9,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_SelectLifecycleIndex(t *testing.T) {
+	t.Parallel()
+
+	set := map[string]struct {
+		result []types.Lifecycle
+		err    error
+	}{
+		"happy_path": {
+			result: []types.Lifecycle{
+				{UUID: "0", Location: "reference implementation", CTime: epoch},
+				{UUID: "1", Location: "reference implementation 2", CTime: epoch},
+			},
+		},
+	}
+	for k, v := range set {
+		k, v := k, v
+		t.Run(k, func(t *testing.T) {
+			t.Parallel()
+			result, err := db.SelectLifecycleIndex(context.Background(), types.CID(k))
+			require.Equal(t, v.err, err)
+			require.LessOrEqual(t, 2, len(result))
+		})
+	}
+}
+
 func Test_SelectLifecycle(t *testing.T) {
 	t.Parallel()
 

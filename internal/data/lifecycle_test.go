@@ -13,6 +13,74 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_SelectLifecycleIndex(t *testing.T) {
+	t.Parallel()
+
+	whenwillthenbenow := time.Now() // time.Soon()
+
+	l := log.WithField("test", "SelectLifecycleIndex")
+
+	tcs := map[string]struct {
+		db     getMockDB
+		result []types.Lifecycle
+		err    error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"uuid", "location", "ctime"}).
+						AddRow("0", "happy_path", whenwillthenbenow).
+						AddRow("1", "happy_path 2", whenwillthenbenow))
+				return db
+			},
+			result: []types.Lifecycle{
+				{UUID: "0", Location: "happy_path", CTime: whenwillthenbenow},
+				{UUID: "1", Location: "happy_path 2", CTime: whenwillthenbenow},
+			},
+		},
+		"db_error": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectQuery("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		// "row_error": {
+		// 	db: func() *sql.DB {
+		// 		db, mock, _ := sqlmock.New()
+		// 		mock.
+		// 			ExpectQuery("").
+		// 			WillReturnRows(sqlmock.
+		// 				NewRows([]string{"uuid", "location", "ctime"}).
+		// 				AddRow("0", "row_error", whenwillthenbenow).
+		// 				RowError(1, fmt.Errorf("some error")))
+		// 		return db
+		// 	},
+		// 	err:    fmt.Errorf("some error"),
+		// },
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+
+			result, err := (&Conn{
+				query:        tc.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).SelectLifecycleIndex(context.Background(), "Test_SelectLifecycleIndex")
+
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, result)
+		})
+	}
+}
+
 func Test_SelectLifecycle(t *testing.T) {
 	t.Parallel()
 
