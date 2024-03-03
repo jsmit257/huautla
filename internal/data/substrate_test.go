@@ -31,10 +31,10 @@ func Test_SelectAllSubstrates(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "type", "vendor_uuid", "vendor_name"}).
-						AddRow("0", "substrate 0", types.GrainType, "0", "vendor 0").
-						AddRow("1", "substrate 1", types.GrainType, "1", "vendor 1").
-						AddRow("2", "substrate 2", types.GrainType, "1", "vendor 1"))
+						NewRows([]string{"id", "name", "type", "vendor_uuid", "vendor_name", "vendor_website"}).
+						AddRow("0", "substrate 0", types.GrainType, "0", "vendor 0", "website").
+						AddRow("1", "substrate 1", types.GrainType, "1", "vendor 1", "website").
+						AddRow("2", "substrate 2", types.GrainType, "1", "vendor 1", "website"))
 				for i := 0; i < 3; i++ {
 					mock.ExpectQuery("").
 						WillReturnRows(sqlmock.
@@ -49,9 +49,9 @@ func Test_SelectAllSubstrates(t *testing.T) {
 				return db
 			},
 			result: []types.Substrate{
-				{UUID: "0", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Ingredients: []types.Ingredient{}},
-				{UUID: "1", Name: "substrate 1", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: []types.Ingredient{}},
-				{UUID: "2", Name: "substrate 2", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Ingredients: []types.Ingredient{}},
+				{UUID: "0", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website"}, Ingredients: []types.Ingredient{}},
+				{UUID: "1", Name: "substrate 1", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website"}, Ingredients: []types.Ingredient{}},
+				{UUID: "2", Name: "substrate 2", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website"}, Ingredients: []types.Ingredient{}},
 			},
 		},
 		"query_fails": {
@@ -100,8 +100,8 @@ func Test_SelectSubstrate(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "type", "vendor_uuid", "vendor_name"}).
-						AddRow("substrate 0", types.GrainType, "0", "vendor 0"))
+						NewRows([]string{"name", "type", "vendor_uuid", "vendor_name", "vendor_website"}).
+						AddRow("substrate 0", types.GrainType, "0", "vendor 0", "website"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
@@ -115,7 +115,7 @@ func Test_SelectSubstrate(t *testing.T) {
 				UUID:   "0",
 				Name:   "substrate 0",
 				Type:   types.GrainType,
-				Vendor: types.Vendor{UUID: "0", Name: "vendor 0"},
+				Vendor: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website"},
 				Ingredients: []types.Ingredient{
 					{UUID: "0", Name: "ingredient 0"},
 					{UUID: "1", Name: "ingredient 1"},

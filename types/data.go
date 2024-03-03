@@ -20,8 +20,9 @@ type (
 	}
 
 	Vendor struct {
-		UUID `json:"id"`
-		Name string `json:"name"`
+		UUID    `json:"id"`
+		Name    string `json:"name"`
+		Website string `json:"website,omitempty"`
 	}
 
 	Substrate struct {

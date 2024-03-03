@@ -28,16 +28,16 @@ func Test_SelectAllStrains(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "vendor_uuid", "vendor_name"}).
-						AddRow("0", "strain 0", "0", "vendor 0").
-						AddRow("1", "strain 1", "1", "vendor 1").
-						AddRow("2", "strain 2", "1", "vendor 1"))
+						NewRows([]string{"id", "name", "vendor_uuid", "vendor_name", "vendor_website"}).
+						AddRow("0", "strain 0", "0", "vendor 0", "website").
+						AddRow("1", "strain 1", "1", "vendor 1", "website").
+						AddRow("2", "strain 2", "1", "vendor 1", "website"))
 				return db
 			},
 			result: []types.Strain{
-				{UUID: "0", Name: "strain 0", Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Attributes: nil},
-				{UUID: "1", Name: "strain 1", Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Attributes: nil},
-				{UUID: "2", Name: "strain 2", Vendor: types.Vendor{UUID: "1", Name: "vendor 1"}, Attributes: nil},
+				{UUID: "0", Name: "strain 0", Vendor: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website"}, Attributes: nil},
+				{UUID: "1", Name: "strain 1", Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website"}, Attributes: nil},
+				{UUID: "2", Name: "strain 2", Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website"}, Attributes: nil},
 			},
 		},
 		"query_fails": {
@@ -86,8 +86,8 @@ func Test_SelectStrain(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "vendor_uuid", "vendor_name"}).
-						AddRow("strain 0", "0", "vendor 0"))
+						NewRows([]string{"name", "vendor_uuid", "vendor_name", "vendor_website"}).
+						AddRow("strain 0", "0", "vendor 0", "website"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -97,7 +97,7 @@ func Test_SelectStrain(t *testing.T) {
 				return db
 			},
 			id: "0",
-			result: types.Strain{UUID: "0", Name: "strain 0", Vendor: types.Vendor{UUID: "0", Name: "vendor 0"}, Attributes: []types.StrainAttribute{
+			result: types.Strain{UUID: "0", Name: "strain 0", Vendor: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website"}, Attributes: []types.StrainAttribute{
 				{UUID: "0", Name: "name 0", Value: "value 0"},
 				{UUID: "1", Name: "name 1", Value: "value 1"},
 				{UUID: "2", Name: "name 2", Value: "value 2"},

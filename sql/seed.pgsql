@@ -5,8 +5,8 @@
 \c huautla
 
 -- vendors
-insert into vendors(uuid, name)
-values('0', '127.0.0.1');
+insert into vendors(uuid, name, website)
+values('0', '127.0.0.1', 'https://localhost:8080/');
 
 -- ingredients 
 insert into ingredients(uuid, name)

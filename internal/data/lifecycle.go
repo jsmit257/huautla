@@ -60,16 +60,19 @@ func (db *Conn) SelectLifecycle(ctx context.Context, id types.UUID, cid types.CI
 			&result.Strain.Name,
 			&result.Strain.Vendor.UUID,
 			&result.Strain.Vendor.Name,
+			&result.Strain.Vendor.Website,
 			&result.GrainSubstrate.UUID,
 			&result.GrainSubstrate.Name,
 			&result.GrainSubstrate.Type,
 			&result.GrainSubstrate.Vendor.UUID,
 			&result.GrainSubstrate.Vendor.Name,
+			&result.GrainSubstrate.Vendor.Website,
 			&result.BulkSubstrate.UUID,
 			&result.BulkSubstrate.Name,
 			&result.BulkSubstrate.Type,
 			&result.BulkSubstrate.Vendor.UUID,
-			&result.BulkSubstrate.Vendor.Name); err != nil {
+			&result.BulkSubstrate.Vendor.Name,
+			&result.BulkSubstrate.Vendor.Website); err != nil {
 
 		return result, err
 	}

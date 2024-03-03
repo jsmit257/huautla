@@ -1,8 +1,9 @@
 \c huautla;
 
 create table vendors (
-  uuid varchar(40)  not null primary key,
-  name varchar(512) not null unique
+  uuid    varchar(40)  not null primary key,
+  name    varchar(512) not null unique,
+  website varchar(512) not null default ''
 );
 
 create table substrates (

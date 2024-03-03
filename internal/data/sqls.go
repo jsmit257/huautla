@@ -140,16 +140,19 @@ var psqls = sqlMap{
              s.name as strain_name,
              sv.uuid as strain_vendor_uuid,
              sv.name as strain_vendor_name,
+             sv.website as strain_vendor_website,
              gs.uuid as grain_substrate_uuid,
              gs.name as grain_substrate_name,
              gs.type as grain_substrate_type,
              gv.uuid as grain_vendor_uuid,
              gv.name as grain_vendor_name,
+             gv.website as grain_vendor_website,
              bs.uuid as bulk_substrate_uuid,
              bs.name as bulk_substrate_name,
              bs.type as bulk_substrate_type,
              bv.uuid as bulk_vendor_uuid,
-             bv.name as bulk_vendor_name
+             bv.name as bulk_vendor_name,
+             bv.website as bulk_vendor_website
        from  lifecycles lc
        join  strains s
          on  lc.strain_uuid = s.uuid
@@ -167,40 +170,40 @@ var psqls = sqlMap{
 		"insert": `
       insert
         into lifecycles(
-            uuid,
-            location,
-            strain_cost,
-            grain_cost,
-            bulk_cost,
-            yield,
-            headcount,
-            gross,
-            mtime,
-            ctime,
-            strain_uuid,
-            grainsubstrate_uuid,
-            bulksubstrate_uuid)
+             uuid,
+             location,
+             strain_cost,
+             grain_cost,
+             bulk_cost,
+             yield,
+             headcount,
+             gross,
+             mtime,
+             ctime,
+             strain_uuid,
+             grainsubstrate_uuid,
+             bulksubstrate_uuid)
       select $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8,
-            $9,
-            $10,
-            s.uuid,
-            gs.uuid,
-            bs.uuid
-        from strains s,
-            substrates gs,
-            substrates bs
-      where s.uuid = $11
-        and gs.uuid = $12
-        and gs.type = 'Grain'
-        and bs.uuid = $13
-        and bs.type = 'Bulk'`,
+             $2,
+             $3,
+             $4,
+             $5,
+             $6,
+             $7,
+             $8,
+             $9,
+             $10,
+             s.uuid,
+             gs.uuid,
+             bs.uuid
+       from  strains s,
+             substrates gs,
+             substrates bs
+      where  s.uuid = $11
+        and  gs.uuid = $12
+        and  gs.type = 'Grain'
+        and  bs.uuid = $13
+        and  bs.type = 'Bulk'`,
 		"update": `
       update lifecycles
         set location = $1,
@@ -236,29 +239,31 @@ var psqls = sqlMap{
 
 	"strain": {
 		"select-all": `
-    select s.uuid,
-           s.name,
-           v.uuid as vendor_uuid,
-           v.name as vendor_name
-      from strains s
-      join vendors v
-        on s.vendor_uuid = v.uuid
-     order
-        by s.name`,
+      select  s.uuid,
+              s.name,
+              v.uuid as vendor_uuid,
+              v.name as vendor_name,
+              v.website as vendor_website
+        from  strains s
+        join  vendors v
+          on  s.vendor_uuid = v.uuid
+       order
+          by  s.name`,
 		"select": `
-    select s.name,
-           v.uuid as vendor_uuid,
-           v.name as vendor_name
-      from strains s
-      join vendors v
-        on s.vendor_uuid = v.uuid
-     where s.uuid = $1`,
+      select  s.name,
+              v.uuid as vendor_uuid,
+              v.name as vendor_name,
+              v.website as vendor_website
+        from  strains s
+        join  vendors v
+          on  s.vendor_uuid = v.uuid
+       where  s.uuid = $1`,
 		"insert": `
-    insert
-      into strains(uuid, name, vendor_uuid)
-    select $1, $2, v.uuid
-      from vendors v
-     where v.uuid = $3`,
+      insert
+        into  strains(uuid, name, vendor_uuid)
+      select  $1, $2, v.uuid
+        from  vendors v
+       where  v.uuid = $3`,
 		"update": `update strains set name = $1 where uuid = $2`,
 		"delete": `delete from strains where uuid = $1`,
 	},
@@ -315,40 +320,42 @@ var psqls = sqlMap{
 
 	"substrate": {
 		"select-all": `
-    select s.uuid,
-           s.name,
-           s.type,
-           v.uuid as vendor_uuid,
-           v.name as vendor_name
-      from substrates s
-      join vendors v
-        on s.vendor_uuid = v.uuid
-     order
-        by s.name`,
+      select  s.uuid,
+              s.name,
+              s.type,
+              v.uuid as vendor_uuid,
+              v.name as vendor_name,
+              v.website as vendor_website
+        from  substrates s
+        join  vendors v
+          on  s.vendor_uuid = v.uuid
+       order
+          by  s.name`,
 		"select": `
-    select s.name,
-           s.type,
-           v.uuid as vendor_uuid,
-           v.name as vendor_name
-      from substrates s
-      join vendors v
-        on s.vendor_uuid = v.uuid
-     where s.uuid = $1`,
+      select  s.name,
+              s.type,
+              v.uuid as vendor_uuid,
+              v.name as vendor_name,
+              v.website as vendor_website
+        from  substrates s
+        join  vendors v
+          on  s.vendor_uuid = v.uuid
+       where  s.uuid = $1`,
 		"insert": `
-    insert
-      into substrates(uuid, name, type, vendor_uuid)
-    select $1, $2, $3, v.uuid
-      from vendors v
-     where v.uuid = $4`,
+      insert
+        into substrates(uuid, name, type, vendor_uuid)
+      select $1, $2, $3, v.uuid
+        from vendors v
+      where v.uuid = $4`,
 		"update": `update substrates set name = $1 where uuid = $2`,
 		"delete": `delete from substrates where uuid = $1`,
 	},
 
 	"vendor": {
-		"select-all": `select uuid, name from vendors order by name`,
-		"select":     `select name from vendors where uuid = $1`,
-		"insert":     `insert into vendors(uuid, name) values($1, $2)`,
-		"update":     `update vendors set name = $1 where uuid = $2`,
+		"select-all": `select uuid, name, website from vendors order by name`,
+		"select":     `select name, website from vendors where uuid = $1`,
+		"insert":     `insert into vendors(uuid, name, website) values($1, $2, $3)`,
+		"update":     `update vendors set name = $1, website = $2 where uuid = $3`,
 		"delete":     `delete from vendors where uuid = $1`,
 	},
 }

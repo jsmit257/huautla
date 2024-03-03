@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var vendor0 = types.Vendor{UUID: "0", Name: "127.0.0.1"}
+var vendor0 = types.Vendor{UUID: "0", Name: "127.0.0.1", Website: "https://localhost:8080/"}
 
 func Test_SelectAllVendors(t *testing.T) {
 	t.Parallel()

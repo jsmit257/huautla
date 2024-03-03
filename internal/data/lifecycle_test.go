@@ -98,16 +98,19 @@ func Test_SelectLifecycle(t *testing.T) {
 		"strain_name",
 		"strain_vendor_uuid",
 		"strain_vendor_name",
+		"strain_vendor_website",
 		"grain_substrate_uuid",
 		"grain_substrate_name",
 		"grain_substrate_type",
 		"grain_vendor_uuid",
 		"grain_vendor_name",
+		"grain_vendor_website",
 		"bulk_substrate_uuid",
 		"bulk_substrate_name",
 		"bulk_substrate_type",
 		"bulk_vendor_uuid",
 		"bulk_vendor_name",
+		"bulk_vendor_website",
 	}
 
 	e0, e1, e2 := types.Event{UUID: "0"},
@@ -144,16 +147,19 @@ func Test_SelectLifecycle(t *testing.T) {
 							"strain 0",
 							"x",
 							"vendor x",
+							"website",
 							"gs",
 							"gs",
 							types.GrainType,
 							"1",
 							"vendor 1",
+							"website",
 							"bs",
 							"bs",
 							types.BulkType,
 							"2",
-							"vendor 2"))
+							"vendor 2",
+							"website"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -197,8 +203,9 @@ func Test_SelectLifecycle(t *testing.T) {
 					UUID: "0",
 					Name: "strain 0",
 					Vendor: types.Vendor{
-						UUID: "x",
-						Name: "vendor x",
+						UUID:    "x",
+						Name:    "vendor x",
+						Website: "website",
 					},
 					Attributes: []types.StrainAttribute{
 						{UUID: "0", Name: "name 0", Value: "value 0"},
@@ -211,8 +218,9 @@ func Test_SelectLifecycle(t *testing.T) {
 					Name: "gs",
 					Type: types.GrainType,
 					Vendor: types.Vendor{
-						UUID: "1",
-						Name: "vendor 1",
+						UUID:    "1",
+						Name:    "vendor 1",
+						Website: "website",
 					},
 					Ingredients: []types.Ingredient{
 						{UUID: "0", Name: "ingredient 0"},
@@ -225,8 +233,9 @@ func Test_SelectLifecycle(t *testing.T) {
 					Name: "bs",
 					Type: types.BulkType,
 					Vendor: types.Vendor{
-						UUID: "2",
-						Name: "vendor 2",
+						UUID:    "2",
+						Name:    "vendor 2",
+						Website: "website",
 					},
 					Ingredients: []types.Ingredient{
 						{UUID: "0", Name: "ingredient 0"},
@@ -257,16 +266,19 @@ func Test_SelectLifecycle(t *testing.T) {
 							"strain 0",
 							"x",
 							"vendor x",
+							"website",
 							"gs",
 							"gs",
 							types.GrainType,
 							"1",
 							"vendor 1",
+							"website",
 							"bs",
 							"bs",
 							types.BulkType,
 							"2",
-							"vendor 2"))
+							"vendor 2",
+							"website"))
 				mock.ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 
@@ -295,16 +307,19 @@ func Test_SelectLifecycle(t *testing.T) {
 							"strain 0",
 							"x",
 							"vendor x",
+							"website",
 							"gs",
 							"gs",
 							types.GrainType,
 							"1",
 							"vendor 1",
+							"website",
 							"bs",
 							"bs",
 							types.BulkType,
 							"2",
-							"vendor 2"))
+							"vendor 2",
+							"website"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -339,16 +354,19 @@ func Test_SelectLifecycle(t *testing.T) {
 							"strain 0",
 							"x",
 							"vendor x",
+							"website",
 							"gs",
 							"gs",
 							types.GrainType,
 							"1",
 							"vendor 1",
+							"website",
 							"bs",
 							"bs",
 							types.BulkType,
 							"2",
-							"vendor 2"))
+							"vendor 2",
+							"website"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -415,16 +433,19 @@ func Test_InsertLifecycle(t *testing.T) {
 		"strain_name",
 		"strain_vendor_uuid",
 		"strain_vendor_name",
+		"strain_vendor_website",
 		"grain_substrate_uuid",
 		"grain_substrate_name",
 		"grain_substrate_type",
 		"grain_vendor_uuid",
 		"grain_vendor_name",
+		"grain_vendor_website",
 		"bulk_substrate_uuid",
 		"bulk_substrate_name",
 		"bulk_substrate_type",
 		"bulk_vendor_uuid",
 		"bulk_vendor_name",
+		"bulk_vendor_website",
 	}
 
 	e0, e1, e2 := types.Event{UUID: "0"},
@@ -462,16 +483,19 @@ func Test_InsertLifecycle(t *testing.T) {
 							"strain 0",
 							"x",
 							"vendor x",
+							"website",
 							"gs",
 							"gs",
 							types.GrainType,
 							"1",
 							"vendor 1",
+							"website",
 							"bs",
 							"bs",
 							types.BulkType,
 							"2",
-							"vendor 2"))
+							"vendor 2",
+							"website"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).

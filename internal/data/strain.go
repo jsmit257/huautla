@@ -31,7 +31,8 @@ func (db *Conn) SelectAllStrains(ctx context.Context, cid types.CID) ([]types.St
 			&row.UUID,
 			&row.Name,
 			&row.Vendor.UUID,
-			&row.Vendor.Name)
+			&row.Vendor.Name,
+			&row.Vendor.Website)
 
 		if err != nil {
 			break
@@ -56,7 +57,8 @@ func (db *Conn) SelectStrain(ctx context.Context, id types.UUID, cid types.CID) 
 		Scan(
 			&result.Name,
 			&result.Vendor.UUID,
-			&result.Vendor.Name); err == nil {
+			&result.Vendor.Name,
+			&result.Vendor.Website); err == nil {
 
 		err = db.GetAllAttributes(ctx, &result, cid)
 	}

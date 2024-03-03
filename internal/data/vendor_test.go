@@ -33,16 +33,16 @@ func Test_SelectAllVendors(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "vendor 0").
-						AddRow("1", "vendor 1").
-						AddRow("2", "vendor 2"))
+						NewRows([]string{"id", "name", "website"}).
+						AddRow("0", "vendor 0", "website").
+						AddRow("1", "vendor 1", "website").
+						AddRow("2", "vendor 2", "website"))
 				return db
 			},
 			result: []types.Vendor{
-				{UUID: "0", Name: "vendor 0"},
-				{UUID: "1", Name: "vendor 1"},
-				{UUID: "2", Name: "vendor 2"},
+				{UUID: "0", Name: "vendor 0", Website: "website"},
+				{UUID: "1", Name: "vendor 1", Website: "website"},
+				{UUID: "2", Name: "vendor 2", Website: "website"},
 			},
 		},
 		"query_fails": {
@@ -91,14 +91,14 @@ func Test_SelectVendor(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"name"}).
-						AddRow("vendor 0").
-						AddRow("vendor 1").
-						AddRow("vendor 2"))
+						NewRows([]string{"name", "website"}).
+						AddRow("vendor 0", "website").
+						AddRow("vendor 1", "website").
+						AddRow("vendor 2", "website"))
 				return db
 			},
 			id:     "0",
-			result: types.Vendor{UUID: "0", Name: "vendor 0"},
+			result: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website"},
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -273,7 +273,8 @@ func Test_UpdateVendor(t *testing.T) {
 			}).UpdateVendor(
 				context.Background(),
 				tc.id,
-				types.Vendor{Name: "vendor " + string(tc.id)},
+				types.Vendor{},
+				// types.Vendor{Name: "vendor " + string(tc.id)},
 				"Test_UpdateVendors")
 
 			require.Equal(t, tc.err, err)
