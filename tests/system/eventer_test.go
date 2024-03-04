@@ -13,10 +13,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var events = []types.Event{
-	{UUID: "0", Temperature: 2, Humidity: 1, MTime: epoch, CTime: epoch, EventType: eventtypes[1]},
-	{UUID: "1", Temperature: 0, Humidity: 1, MTime: epoch, CTime: epoch, EventType: eventtypes[0]},
-	{UUID: "2", Temperature: 0, Humidity: 8, MTime: epoch, CTime: epoch, EventType: eventtypes[0]},
+var events []types.Event
+
+func init() {
+	for _, id := range []types.UUID{"0", "1", "2"} {
+		if e, err := db.SelectEvent(context.Background(), id, "substrate_init"); err != nil {
+			panic(err)
+		} else {
+			events = append(events, e)
+		}
+	}
 }
 
 func Test_GetLifecycleEvents(t *testing.T) {

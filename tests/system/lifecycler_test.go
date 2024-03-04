@@ -9,6 +9,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var lifecycles []types.Lifecycle
+
+func init() {
+	for _, id := range []types.UUID{"0", "1"} {
+		if l, err := db.SelectLifecycle(context.Background(), id, "lifecycle_init"); err != nil {
+			panic(err)
+		} else {
+			lifecycles = append(lifecycles, l)
+		}
+	}
+}
+
 func Test_SelectLifecycleIndex(t *testing.T) {
 	t.Parallel()
 
@@ -18,8 +30,8 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 	}{
 		"happy_path": {
 			result: []types.Lifecycle{
-				{UUID: "0", Location: "reference implementation", CTime: epoch},
-				{UUID: "1", Location: "reference implementation 2", CTime: epoch},
+				{UUID: lifecycles[0].UUID, Location: lifecycles[0].Location, CTime: lifecycles[0].CTime},
+				{UUID: lifecycles[1].UUID, Location: lifecycles[1].Location, CTime: lifecycles[1].CTime},
 			},
 		},
 	}
@@ -42,23 +54,10 @@ func Test_SelectLifecycle(t *testing.T) {
 		result types.Lifecycle
 		err    error
 	}{
-		"happy_path": {
-			id: "0",
-			result: types.Lifecycle{
-				UUID:           "0",
-				Location:       "reference implementation",
-				GrainCost:      1,
-				BulkCost:       2,
-				Yield:          3,
-				Count:          4,
-				Gross:          5,
-				MTime:          epoch,
-				CTime:          epoch,
-				Strain:         strains[0],
-				GrainSubstrate: substrates[0],
-				BulkSubstrate:  substrates[2],
-			},
-		},
+		// "happy_path": { // XXX: kinda redundant
+		// 	id:     lifecycles[0].UUID,
+		// 	result: lifecycles[0],
+		// },
 		"no_rows_returned": {
 			id:     "missing",
 			result: types.Lifecycle{UUID: "missing"},

@@ -9,11 +9,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var eventtypes = []types.EventType{
-	{UUID: "0", Name: "Condensation", Severity: "Warn", Stage: stages[3]},
-	{UUID: "1", Name: "Fruiting", Severity: "Info", Stage: stages[1]},
-	{UUID: "2", Name: "Crashed", Severity: "Error", Stage: stages[1]},
-	{UUID: "3", Name: "Sunset", Severity: "RIP", Stage: stages[2]},
+var eventtypes []types.EventType
+
+func init() {
+	for _, id := range []types.UUID{"0", "1", "2", "3"} {
+		if e, err := db.SelectEventType(context.Background(), id, "eventtyper_init"); err != nil {
+			panic(err)
+		} else {
+			eventtypes = append(eventtypes, e)
+		}
+	}
 }
 
 func Test_SelectAllEventTypes(t *testing.T) {

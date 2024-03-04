@@ -36,14 +36,14 @@ values('0', '0', '2'),
       ('remove ingredient 2', 'remove ingredient', '13'),
       ('remove ingredient 3', 'remove ingredient', '14');
 
-insert into strains(uuid, name, vendor_uuid)
-values('0', 'Morel', '0'),
-      ('1', 'Hens o'' the Wood', '0'),
-      ('add attribute', 'add attribute', 0),
-      ('change attribute', 'change attribute', 0),
-      ('remove attribute', 'remove attribute', 0),
-      ('update me!', 'update me!', '0'),
-      ('delete me!', 'delete me!', '0');
+insert into strains(uuid, species, name, ctime, vendor_uuid)
+values('0', 'M.esculenta', 'Morel', '1970-01-01', '0'),
+      ('1', 'G.frondosa', 'Hens o'' the Wood', '1970-01-01', '0'),
+      ('add attribute', '', 'add attribute', '1970-01-01', '0'),
+      ('change attribute', '', 'change attribute', '1970-01-01', '0'),
+      ('remove attribute', '', 'remove attribute', '1970-01-01', '0'),
+      ('update me!', '', 'update me!', '1970-01-01', '0'),
+      ('delete me!', '', 'delete me!', '1970-01-01', '0');
 
 insert into strain_attributes(uuid, name, value, strain_uuid)
 values('0', 'contamination resistance', 'high', '0'),

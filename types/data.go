@@ -40,7 +40,9 @@ type (
 
 	Strain struct {
 		UUID       `json:"id"`
-		Name       string `json:"name"`
+		Species    string    `json:"species,omitempty"`
+		Name       string    `json:"name"`
+		CTime      time.Time `json:"create_date"`
 		Vendor     `json:"vendor"`
 		Attributes []StrainAttribute `json:"attributes,omitempty"`
 	}

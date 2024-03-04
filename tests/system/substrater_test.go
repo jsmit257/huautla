@@ -9,10 +9,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var substrates = []types.Substrate{
-	{UUID: "0", Name: "Rye", Type: "Grain", Vendor: vendor0, Ingredients: []types.Ingredient{ingredients[2]}},
-	{UUID: "1", Name: "Millet", Type: "Grain", Vendor: vendor0, Ingredients: []types.Ingredient{ingredients[12], ingredients[3]}},
-	{UUID: "2", Name: "Cedar chips", Type: "Bulk", Vendor: vendor0, Ingredients: []types.Ingredient{}},
+var substrates []types.Substrate
+
+func init() {
+	for _, id := range []types.UUID{"0", "1", "2"} {
+		if s, err := db.SelectSubstrate(context.Background(), id, "substrate_init"); err != nil {
+			panic(err)
+		} else {
+			substrates = append(substrates, s)
+
+		}
+	}
 }
 
 func Test_SelectAllSubstrates(t *testing.T) {

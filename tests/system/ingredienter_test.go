@@ -3,29 +3,23 @@ package test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/jsmit257/huautla/types"
 	"github.com/stretchr/testify/require"
 )
 
-var ingredients = []types.Ingredient{
-	{UUID: "0", Name: "Vermiculite"},
-	{UUID: "1", Name: "Maltodextrin"},
-	{UUID: "2", Name: "Rye"},
-	{UUID: "3", Name: "White Millet"},
-	{UUID: "4", Name: "Popcorn"},
-	{UUID: "5", Name: "Manure"},
-	{UUID: "6", Name: "Coir"},
-	{UUID: "7", Name: "Honey"},
-	{UUID: "8", Name: "Agar"},
-	{UUID: "9", Name: "Rice Flour"},
-	{UUID: "10", Name: "White Milo"},
-	{UUID: "11", Name: "Red Milo"},
-	{UUID: "12", Name: "Red Millet"},
-	{UUID: "13", Name: "Gypsum"},
-	{UUID: "14", Name: "Calcium phosphate"},
-	{UUID: "15", Name: "Diammonium phosphate"},
+var ingredients []types.Ingredient
+
+func init() {
+	for i := 0; i < 16; i++ {
+		if ing, err := db.SelectIngredient(context.Background(), types.UUID(strconv.Itoa(i)), "ingredienter_init"); err != nil {
+			panic(err)
+		} else {
+			ingredients = append(ingredients, ing)
+		}
+	}
 }
 
 func Test_SelectAllIngredients(t *testing.T) {

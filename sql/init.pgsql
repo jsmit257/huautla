@@ -28,10 +28,11 @@ create table substrate_ingredients (
 
 create table strains (
   uuid        varchar(40)  not null primary key,
+  species     varchar(128) not null default '',
   name        varchar(512) not null,
-  -- TODO: species     varchar(128) not null,
+  ctime       timestamp    not null default current_timestamp,
   vendor_uuid varchar(40)  not null references vendors(uuid),
-  unique(name, vendor_uuid)
+  unique(name, vendor_uuid, ctime)
 );
 
 create table strain_attributes (

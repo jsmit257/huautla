@@ -127,46 +127,48 @@ var psqls = sqlMap{
       order
          by  ctime desc`,
 		"select": `
-      select lc.location,
-             lc.strain_cost,
-             lc.grain_cost,
-             lc.bulk_cost,
-             lc.yield,
-             lc.headcount,
-             lc.gross,
-             lc.mtime at time zone 'utc',
-             lc.ctime at time zone 'utc',
-             s.uuid as strain_uuid,
-             s.name as strain_name,
-             sv.uuid as strain_vendor_uuid,
-             sv.name as strain_vendor_name,
-             sv.website as strain_vendor_website,
-             gs.uuid as grain_substrate_uuid,
-             gs.name as grain_substrate_name,
-             gs.type as grain_substrate_type,
-             gv.uuid as grain_vendor_uuid,
-             gv.name as grain_vendor_name,
-             gv.website as grain_vendor_website,
-             bs.uuid as bulk_substrate_uuid,
-             bs.name as bulk_substrate_name,
-             bs.type as bulk_substrate_type,
-             bv.uuid as bulk_vendor_uuid,
-             bv.name as bulk_vendor_name,
-             bv.website as bulk_vendor_website
-       from  lifecycles lc
-       join  strains s
-         on  lc.strain_uuid = s.uuid
-       join  vendors sv
-         on  s.vendor_uuid = sv.uuid
-       join  substrates gs
-         on  lc.grainsubstrate_uuid = gs.uuid
-       join  vendors gv
-         on  gs.vendor_uuid = gv.uuid
-       join  substrates bs
-         on  lc.bulksubstrate_uuid = bs.uuid 
-       join  vendors bv
-         on  bs.vendor_uuid = bv.uuid
-      where  lc.uuid = $1`,
+      select  lc.location,
+              lc.strain_cost,
+              lc.grain_cost,
+              lc.bulk_cost,
+              lc.yield,
+              lc.headcount,
+              lc.gross,
+              lc.mtime at time zone 'utc',
+              lc.ctime at time zone 'utc',
+              s.uuid as strain_uuid,
+              s.species as strain_species,
+              s.name as strain_name,
+              s.ctime as strain_ctime,
+              sv.uuid as strain_vendor_uuid,
+              sv.name as strain_vendor_name,
+              sv.website as strain_vendor_website,
+              gs.uuid as grain_substrate_uuid,
+              gs.name as grain_substrate_name,
+              gs.type as grain_substrate_type,
+              gv.uuid as grain_vendor_uuid,
+              gv.name as grain_vendor_name,
+              gv.website as grain_vendor_website,
+              bs.uuid as bulk_substrate_uuid,
+              bs.name as bulk_substrate_name,
+              bs.type as bulk_substrate_type,
+              bv.uuid as bulk_vendor_uuid,
+              bv.name as bulk_vendor_name,
+              bv.website as bulk_vendor_website
+        from  lifecycles lc
+        join  strains s
+          on  lc.strain_uuid = s.uuid
+        join  vendors sv
+          on  s.vendor_uuid = sv.uuid
+        join  substrates gs
+          on  lc.grainsubstrate_uuid = gs.uuid
+        join  vendors gv
+          on  gs.vendor_uuid = gv.uuid
+        join  substrates bs
+          on  lc.bulksubstrate_uuid = bs.uuid 
+        join  vendors bv
+          on  bs.vendor_uuid = bv.uuid
+       where  lc.uuid = $1`,
 		"insert": `
       insert
         into lifecycles(
@@ -240,7 +242,9 @@ var psqls = sqlMap{
 	"strain": {
 		"select-all": `
       select  s.uuid,
+              s.species,
               s.name,
+              s.ctime,
               v.uuid as vendor_uuid,
               v.name as vendor_name,
               v.website as vendor_website
@@ -250,7 +254,9 @@ var psqls = sqlMap{
        order
           by  s.name`,
 		"select": `
-      select  s.name,
+      select  s.species,
+              s.name,
+              s.ctime,
               v.uuid as vendor_uuid,
               v.name as vendor_name,
               v.website as vendor_website
@@ -260,11 +266,11 @@ var psqls = sqlMap{
        where  s.uuid = $1`,
 		"insert": `
       insert
-        into  strains(uuid, name, vendor_uuid)
-      select  $1, $2, v.uuid
+        into  strains(uuid, species, name, ctime, vendor_uuid)
+      select  $1, $2, $3, $4, v.uuid
         from  vendors v
-       where  v.uuid = $3`,
-		"update": `update strains set name = $1 where uuid = $2`,
+       where  v.uuid = $5`,
+		"update": `update strains set species = $1, name = $2 where uuid = $3`,
 		"delete": `delete from strains where uuid = $1`,
 	},
 

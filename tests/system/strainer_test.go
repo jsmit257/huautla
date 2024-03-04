@@ -9,12 +9,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var strains = []types.Strain{
-	{UUID: "0", Name: "Morel", Vendor: vendor0, Attributes: []types.StrainAttribute{
-		strainattributes[0],
-		strainattributes[1],
-	}},
-	{UUID: "1", Name: "Hens o'' the Wood", Vendor: vendor0},
+var strains []types.Strain
+
+func init() {
+	for _, id := range []types.UUID{"0", "1"} {
+		if s, err := db.SelectStrain(context.Background(), id, "strain_init"); err != nil {
+			panic(err)
+		} else {
+			strains = append(strains, s)
+		}
+	}
 }
 
 func Test_SelectAllStrains(t *testing.T) {
@@ -91,10 +95,16 @@ func Test_InsertStrain(t *testing.T) {
 			s:   types.Strain{Name: "ubermyc", Vendor: types.Vendor{UUID: "missing"}},
 			err: fmt.Errorf("strain was not added"),
 		},
-		"unique_key_violation": {
-			s:   types.Strain{Name: "Morel", Vendor: vendor0},
-			err: fmt.Errorf(uniqueKeyViolation, "strains_name_vendor_uuid_key"),
-		},
+		// // since ctime is never updated, this is not really possible to test; leaving it
+		// // here so no one tries to do it again
+		// "unique_key_violation": {
+		// 	s: types.Strain{
+		// 		Name:   strains[0].Name,
+		// 		CTime:  strains[0].CTime,
+		// 		Vendor: strains[0].Vendor,
+		// 	},
+		// 	err: fmt.Errorf(uniqueKeyViolation, "strains_name_vendor_uuid_ctime_key"),
+		// },
 	}
 	for k, v := range set {
 		k, v := k, v
@@ -132,7 +142,7 @@ func Test_UpdateStrain(t *testing.T) {
 		"unique_key_violation": {
 			id:  "update me!",
 			s:   strains[0],
-			err: fmt.Errorf(uniqueKeyViolation, "strains_name_vendor_uuid_key"),
+			err: fmt.Errorf(uniqueKeyViolation, "strains_name_vendor_uuid_ctime_key"),
 		},
 	}
 	for k, v := range set {

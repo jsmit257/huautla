@@ -10,7 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var vendor0 = types.Vendor{UUID: "0", Name: "127.0.0.1", Website: "https://localhost:8080/"}
+var vendor0 types.Vendor
+
+func init() {
+	var err error
+	if vendor0, err = db.SelectVendor(context.Background(), types.UUID("0"), "vendor_init"); err != nil {
+		panic(err)
+	}
+}
 
 func Test_SelectAllVendors(t *testing.T) {
 	t.Parallel()

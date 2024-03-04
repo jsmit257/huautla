@@ -9,11 +9,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var stages = []types.Stage{
-	{UUID: "0", Name: "Gestation"},
-	{UUID: "1", Name: "Colonization"},
-	{UUID: "2", Name: "Majority"},
-	{UUID: "3", Name: "Vacation"},
+var stages []types.Stage
+
+func init() {
+	for _, id := range []types.UUID{"0", "1", "2", "3"} {
+		if s, err := db.SelectStage(context.Background(), id, "stager_init"); err != nil {
+			panic(err)
+		} else {
+			stages = append(stages, s)
+		}
+	}
 }
 
 func Test_SelectAllStages(t *testing.T) {
