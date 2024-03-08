@@ -137,7 +137,7 @@ func Test_AddAttribute(t *testing.T) {
 	tcs := map[string]struct {
 		db     getMockDB
 		id     types.UUID
-		n, v   string
+		a      types.StrainAttribute
 		result []types.StrainAttribute
 		err    error
 	}{
@@ -197,19 +197,19 @@ func Test_AddAttribute(t *testing.T) {
 
 			s := &types.Strain{}
 
-			err := (&Conn{
+			a, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).AddAttribute(
 				context.Background(),
 				s,
-				tc.n,
-				tc.v,
+				types.StrainAttribute{},
 				"Test_InsertStrains")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, s.Attributes)
+			require.NotEmpty(t, a)
 		})
 	}
 }
@@ -293,8 +293,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			}).ChangeAttribute(
 				context.Background(),
 				s,
-				tc.n,
-				tc.v,
+				types.StrainAttribute{Name: tc.n, Value: tc.v},
 				"Test_RemoveAttribute")
 
 			require.Equal(t, tc.err, err)

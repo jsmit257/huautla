@@ -114,20 +114,20 @@ func Test_UpdateEventType(t *testing.T) {
 	}{
 		"happy_path": {
 			id: "update me!",
-			e:  types.EventType{Name: "renamed"},
+			e:  types.EventType{Name: "renamed", Severity: "Info", Stage: stages[1]},
 		},
 		"no_rows_affected": {
 			id:  "missing",
 			err: fmt.Errorf("eventtype was not updated: 'missing'"),
 		},
-		// "no_rows_affected_typecheck": { // currently don't update severity
-		// 	id:  "update me!",
-		// 	e:   types.EventType{Name: "bogus", Stage: stages[0]},
-		// 	err: fmt.Errorf(checkConstraintViolation, "event_types", "event_types_severity_check"),
-		// },
+		"no_rows_affected_typecheck": { // currently don't update severity
+			id:  "update me!",
+			e:   types.EventType{Name: "bogus", Stage: stages[0]},
+			err: fmt.Errorf(checkConstraintViolation, "event_types", "event_types_severity_check"),
+		},
 		"unique_key_violation": { // currently don't update stage_uuid
 			id:  "update me!",
-			e:   types.EventType{Name: "Fruiting", Stage: stages[1]},
+			e:   types.EventType{Name: "Fruiting", Severity: "Info", Stage: stages[1]},
 			err: fmt.Errorf(uniqueKeyViolation, "event_types_name_stage_uuid_key"),
 		},
 	}

@@ -73,14 +73,13 @@ func Test_AddAttribute(t *testing.T) {
 
 	set := map[string]struct {
 		s      types.Strain
-		n, v   string
+		a      types.StrainAttribute
 		result int
 		err    error
 	}{
 		"happy_path": {
 			s:      strain,
-			n:      "new name",
-			v:      "new value",
+			a:      types.StrainAttribute{Name: "new name", Value: "new value"},
 			result: 2,
 		},
 		"no_rows_affected": {
@@ -89,7 +88,7 @@ func Test_AddAttribute(t *testing.T) {
 		},
 		"unique_key_violation": {
 			s:      strain,
-			n:      "existing",
+			a:      types.StrainAttribute{Name: "existing"},
 			result: 1,
 			err:    fmt.Errorf(uniqueKeyViolation, "strain_attributes_name_strain_uuid_key"),
 		},
@@ -98,9 +97,10 @@ func Test_AddAttribute(t *testing.T) {
 		k, v := k, v
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			err := db.AddAttribute(context.Background(), &v.s, v.n, v.v, types.CID(k))
+			a, err := db.AddAttribute(context.Background(), &v.s, v.a, types.CID(k))
 			equalErrorMessages(t, v.err, err)
 			require.Equal(t, v.result, len(v.s.Attributes))
+			require.NotEmpty(t, a)
 		})
 	}
 }
@@ -112,13 +112,12 @@ func Test_ChangeAttribute(t *testing.T) {
 	require.Nil(t, err)
 
 	set := map[string]struct {
-		n, v   string
+		a      types.StrainAttribute
 		result []types.StrainAttribute
 		err    error
 	}{
 		"happy_path": { // run this first, synchronously
-			n: strain.Attributes[0].Name,
-			v: "malabar",
+			a: types.StrainAttribute{Name: strain.Attributes[0].Name, Value: "malabar"},
 			result: []types.StrainAttribute{
 				func() types.StrainAttribute {
 					result := strain.Attributes[0]
@@ -128,8 +127,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			},
 		},
 		"no_rows_affected": {
-			n:      "effervescence",
-			v:      "fuzzy",
+			a:      types.StrainAttribute{Name: "effervescence", Value: "fuzzy"},
 			result: strain.Attributes[:],
 			err:    fmt.Errorf("attribute was not changed"),
 		},
@@ -138,7 +136,7 @@ func Test_ChangeAttribute(t *testing.T) {
 		k, v, strain := k, v, strain
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			err := db.ChangeAttribute(context.Background(), &strain, v.n, v.v, types.CID(k))
+			err := db.ChangeAttribute(context.Background(), &strain, v.a, types.CID(k))
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result, strain.Attributes)
 		})
