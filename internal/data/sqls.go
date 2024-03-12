@@ -364,11 +364,13 @@ var psqls = sqlMap{
         from vendors v
       where v.uuid = $4`,
 		"update": `
-      update  substrates 
+      update  substrates s
          set  name = $1,
               type = $2,
-              vendor_uuid = $3 
-       where  uuid = $4`,
+              vendor_uuid = v.uuid
+        from  vendors v 
+       where  v.uuid = $3
+         and  s.uuid = $4`,
 		"delete": `delete from substrates where uuid = $1`,
 	},
 

@@ -118,8 +118,12 @@ func (db *Conn) AddEvent(ctx context.Context, lc *types.Lifecycle, e types.Event
 		return err
 	} else if rows, err := result.RowsAffected(); err != nil {
 		return err
-	} else if rows != 1 { // most likely cause is a bad vendor.uuid
+	} else if rows != 1 { // most likely cause is a bad eventtype.uuid
 		return fmt.Errorf("event was not added")
+	}
+
+	if e.EventType, err = db.SelectEventType(ctx, e.EventType.UUID, cid); err != nil {
+		return fmt.Errorf("couldn't fetch eventtype")
 	}
 
 	lc.Events = append(lc.Events, e)
@@ -127,7 +131,7 @@ func (db *Conn) AddEvent(ctx context.Context, lc *types.Lifecycle, e types.Event
 	return err
 }
 
-func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Event, cid types.CID) error {
+func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Event, cid types.CID) (types.Event, error) {
 	var err error
 	var result sql.Result
 
@@ -143,11 +147,15 @@ func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Ev
 		e.UUID,
 		e.EventType.UUID)
 	if err != nil {
-		return err
+		return e, err
 	} else if rows, err := result.RowsAffected(); err != nil {
-		return err
-	} else if rows != 1 { // most likely cause is a bad vendor.uuid
-		return fmt.Errorf("event was not changed")
+		return e, err
+	} else if rows != 1 { // most likely cause is a bad eventtype.uuid
+		return e, fmt.Errorf("event was not changed")
+	}
+
+	if e.EventType, err = db.SelectEventType(ctx, e.EventType.UUID, cid); err != nil {
+		return e, fmt.Errorf("couldn't fetch eventtype")
 	}
 
 	i, j := 0, len(lc.Events)
@@ -156,7 +164,7 @@ func (db *Conn) ChangeEvent(ctx context.Context, lc *types.Lifecycle, e types.Ev
 	}
 	lc.Events[i] = e
 
-	return err
+	return e, err
 }
 
 func (db *Conn) RemoveEvent(ctx context.Context, lc *types.Lifecycle, id types.UUID, cid types.CID) error {

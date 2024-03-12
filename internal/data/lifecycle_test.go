@@ -656,7 +656,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 
 			// there's no good way to test the returned lifecycle, to start, the
 			// timestamps are non-deterministic; system tests will vet the rest
-			err := (&Conn{
+			_, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),

@@ -204,11 +204,28 @@ func Test_InsertEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
+						AddRow("type 0", "Info", "0", "stage 0"))
 				return db
 			},
 			evts:   []types.Event{e0, e1},
 			evt:    e2,
 			result: []types.Event{e0, e1, e2},
+		},
+		"eventtype_error": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.
+					ExpectQuery("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("couldn't fetch eventtype"),
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -289,11 +306,28 @@ func Test_UpdateEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
+						AddRow("type 0", "Info", "0", "stage 0"))
 				return db
 			},
 			evts:   []types.Event{e0, e1, e2},
 			evt:    modifyevent(e1),
 			result: []types.Event{e0, modifyevent(e1), e2},
+		},
+		"eventtype_error": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.
+					ExpectQuery("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("couldn't fetch eventtype"),
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -332,7 +366,7 @@ func Test_UpdateEvent(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := (&Conn{
+			_, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),

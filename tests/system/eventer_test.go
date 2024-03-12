@@ -196,7 +196,7 @@ func Test_ChangeEvent(t *testing.T) {
 		lc.Events = append([]types.Event{}, lc.Events...)
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			err := db.ChangeEvent(context.Background(), &lc, v.e, types.CID(k))
+			_, err := db.ChangeEvent(context.Background(), &lc, v.e, types.CID(k))
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result, lc.Events[0].EventType)
 		})

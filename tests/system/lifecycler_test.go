@@ -260,7 +260,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			lc := v.xform(updated)
-			err := db.UpdateLifecycle(context.Background(), lc, types.CID(k))
+			_, err := db.UpdateLifecycle(context.Background(), lc, types.CID(k))
 			equalErrorMessages(t, v.err, err)
 		})
 	}
