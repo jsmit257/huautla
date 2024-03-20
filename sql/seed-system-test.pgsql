@@ -7,8 +7,25 @@ values('updating substrate', 'updating substrate'),
       ('update me!', 'update me!'),
       ('delete me!', 'delete me!');
 
+-- ingredients 
 insert into ingredients(uuid, name)
-values('update me!', 'update me!'),
+values('0', 'Vermiculite'),
+      ('1', 'Maltodextrin'),
+      ('2', 'Rye'),
+      ('3', 'White Millet'),
+      ('4', 'Popcorn'),
+      ('5', 'Manure'),
+      ('6', 'Coir'),
+      ('7', 'Honey'),
+      ('8', 'Agar'),
+      ('9', 'Rice Flour'),
+      ('10', 'White Milo'),
+      ('11', 'Red Milo'),
+      ('12', 'Red Millet'),
+      ('13', 'Gypsum'),
+      ('14', 'Calcium phosphate'),
+      ('15', 'Diammonium phosphate'),
+      ('update me!', 'update me!'),
       ('delete me!', 'delete me!');
 
 insert into stages(uuid, name)

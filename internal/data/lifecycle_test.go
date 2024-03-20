@@ -30,14 +30,14 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"uuid", "location", "ctime"}).
-						AddRow("0", "happy_path", whenwillthenbenow).
-						AddRow("1", "happy_path 2", whenwillthenbenow))
+						NewRows([]string{"uuid", "location", "mtime", "ctime"}).
+						AddRow("0", "happy_path", whenwillthenbenow, whenwillthenbenow).
+						AddRow("1", "happy_path 2", whenwillthenbenow, whenwillthenbenow))
 				return db
 			},
 			result: []types.Lifecycle{
-				{UUID: "0", Location: "happy_path", CTime: whenwillthenbenow},
-				{UUID: "1", Location: "happy_path 2", CTime: whenwillthenbenow},
+				{UUID: "0", Location: "happy_path", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
+				{UUID: "1", Location: "happy_path 2", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
 			},
 		},
 		"db_error": {
@@ -600,7 +600,6 @@ func Test_UpdateLifecycle(t *testing.T) {
 
 	tcs := map[string]struct {
 		db  getMockDB
-		lc  types.Lifecycle
 		err error
 	}{
 		"happy_path": {
@@ -611,7 +610,6 @@ func Test_UpdateLifecycle(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			lc: types.Lifecycle{},
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -621,7 +619,6 @@ func Test_UpdateLifecycle(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			lc:  types.Lifecycle{},
 			err: fmt.Errorf("lifecycle was not updated"),
 		},
 		"query_fails": {
@@ -632,7 +629,6 @@ func Test_UpdateLifecycle(t *testing.T) {
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			lc:  types.Lifecycle{},
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
@@ -643,7 +639,6 @@ func Test_UpdateLifecycle(t *testing.T) {
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
-			lc:  types.Lifecycle{},
 			err: fmt.Errorf("some error"),
 		},
 	}
@@ -660,9 +655,81 @@ func Test_UpdateLifecycle(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).UpdateLifecycle(context.Background(), tc.lc, "Test_UpdateLifecycle")
+			}).UpdateLifecycle(context.Background(), types.Lifecycle{}, "Test_UpdateLifecycle")
 
 			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func Test_UpdateModified(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "UpdateModified")
+
+	now := time.Now()
+
+	tcs := map[string]struct {
+		db       getMockDB
+		modified time.Time
+		err      error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				return db
+			},
+			modified: now,
+		},
+		"no_rows_affected": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			err: fmt.Errorf("mtime was not updated"),
+		},
+		"row_error": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"db_error": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := (&Conn{
+				query:        tc.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).UpdateModified(context.Background(), &types.Lifecycle{}, time.Now(), "Test_UpdateLifecycle")
+
+			require.Equal(t, tc.err, err)
+			// require.Equal(t, tc.modified, lc.MTime)
 		})
 	}
 }

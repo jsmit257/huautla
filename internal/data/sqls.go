@@ -23,7 +23,7 @@ var psqls = sqlMap{
         on et.stage_uuid = s.uuid
      where lifecycle_uuid = $1
      order
-        by mtime`,
+        by mtime desc`,
 		"all-by-eventtype": `
     select e.uuid,
            e.temperature,
@@ -86,7 +86,9 @@ var psqls = sqlMap{
            s.name as stage_name
       from event_types e
       join stages s
-        on e.stage_uuid = s.uuid`,
+        on e.stage_uuid = s.uuid
+     order
+        by s.name, e.name`,
 		"select": `
     select e.name,
            e.severity,
@@ -127,10 +129,11 @@ var psqls = sqlMap{
 		"index": `
       select uuid,
              location,
+             mtime,
              ctime
        from  lifecycles
       order
-         by  ctime desc`,
+         by  mtime desc`,
 		"select": `
       select  lc.location,
               lc.strain_cost,
@@ -233,7 +236,8 @@ var psqls = sqlMap{
         and bs.uuid = $11
         and bs.type = 'Bulk'
         and lifecycles.uuid = $12`,
-		"delete": `delete from lifecycles where uuid = $1`,
+		"modified": `update lifecycles set mtime = $1 where uuid = $2`,
+		"delete":   `delete from lifecycles where uuid = $1`,
 	},
 
 	"stage": {

@@ -182,10 +182,10 @@ func Test_SelectEvent(t *testing.T) {
 	}
 }
 
-func Test_InsertEvent(t *testing.T) {
+func Test_AddEvent(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "InsertEvent")
+	l := log.WithField("test", "AddEvent")
 
 	e0, e1, e2 := types.Event{UUID: "0"},
 		types.Event{UUID: "1"},
@@ -208,11 +208,34 @@ func Test_InsertEvent(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
 						AddRow("type 0", "Info", "0", "stage 0"))
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			evts:   []types.Event{e0, e1},
 			evt:    e2,
 			result: []types.Event{e0, e1, e2},
+		},
+		"modified_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
+						AddRow("type 0", "Info", "0", "stage 0"))
+				mock.
+					ExpectExec("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			evts:   []types.Event{e0, e1},
+			evt:    e2,
+			result: []types.Event{e0, e1, e2},
+			err:    fmt.Errorf("couldn't update lifecycle.mtime"),
 		},
 		"eventtype_error": {
 			db: func() *sql.DB {
@@ -272,17 +295,17 @@ func Test_InsertEvent(t *testing.T) {
 				context.Background(),
 				&types.Lifecycle{Events: tc.evts},
 				tc.evt,
-				"Test_InsertEvent")
+				"Test_AddEvent")
 
 			require.Equal(t, tc.err, err)
 		})
 	}
 }
 
-func Test_UpdateEvent(t *testing.T) {
+func Test_ChangeEvent(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "InsertEvent")
+	l := log.WithField("test", "ChangeEvent")
 
 	e0, e1, e2 := types.Event{UUID: "0"},
 		types.Event{UUID: "1"},
@@ -310,11 +333,34 @@ func Test_UpdateEvent(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
 						AddRow("type 0", "Info", "0", "stage 0"))
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			evts:   []types.Event{e0, e1, e2},
 			evt:    modifyevent(e1),
 			result: []types.Event{e0, modifyevent(e1), e2},
+		},
+		"modified_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
+						AddRow("type 0", "Info", "0", "stage 0"))
+				mock.
+					ExpectExec("").
+					WillReturnError(fmt.Errorf("couldn't update lifecycle.mtime"))
+				return db
+			},
+			evts:   []types.Event{e0, e1, e2},
+			evt:    modifyevent(e1),
+			result: []types.Event{e0, modifyevent(e1), e2},
+			err:    fmt.Errorf("couldn't update lifecycle.mtime"),
 		},
 		"eventtype_error": {
 			db: func() *sql.DB {
@@ -374,17 +420,17 @@ func Test_UpdateEvent(t *testing.T) {
 				context.Background(),
 				&types.Lifecycle{Events: tc.evts},
 				tc.evt,
-				"Test_InsertEvent")
+				"Test_ChangeEvent")
 
 			require.Equal(t, tc.err, err)
 		})
 	}
 }
 
-func Test_DeleteEvent(t *testing.T) {
+func Test_RemoveEvent(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "DeleteEvent")
+	l := log.WithField("test", "RemoveEvent")
 
 	e0, e1, e2 := types.Event{UUID: "0"},
 		types.Event{UUID: "1"},
@@ -403,11 +449,30 @@ func Test_DeleteEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			evts:   []types.Event{e0, e1, e2},
 			id:     e1.UUID,
 			result: []types.Event{e0, e2},
+		},
+		"modified_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.
+					ExpectExec("").
+					WillReturnError(fmt.Errorf("couldn't update lifecycle.mtime"))
+				return db
+			},
+			evts:   []types.Event{e0, e1, e2},
+			id:     e1.UUID,
+			result: []types.Event{e0, e2},
+			err:    fmt.Errorf("couldn't update lifecycle.mtime"),
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -454,7 +519,7 @@ func Test_DeleteEvent(t *testing.T) {
 				context.Background(),
 				&types.Lifecycle{Events: tc.evts},
 				tc.id,
-				"Test_DeleteEvent")
+				"Test_RemoveEvent")
 
 			require.Equal(t, tc.err, err)
 		})
