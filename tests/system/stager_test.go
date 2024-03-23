@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var stages []types.Stage
+var stages = map[string]types.Stage{}
 
 func init() {
-	for _, id := range []types.UUID{"0", "1", "2", "3"} {
+	for _, id := range []types.UUID{"0", "1", "2", "3", "4"} {
 		if s, err := db.SelectStage(context.Background(), id, "stager_init"); err != nil {
 			panic(err)
 		} else {
-			stages = append(stages, s)
+			stages[s.Name] = s
 		}
 	}
 }
@@ -29,7 +29,13 @@ func Test_SelectAllStages(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			result: stages,
+			result: append(
+				[]types.Stage{stages["Gestation"]},
+				stages["Colonization"],
+				stages["Majority"],
+				stages["Vacation"],
+				stages["Any"],
+			),
 		},
 	}
 	for k, v := range set {
@@ -38,7 +44,7 @@ func Test_SelectAllStages(t *testing.T) {
 			t.Parallel()
 			result, err := db.SelectAllStages(context.Background(), types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Subset(t, result, v.result)
+			require.Subset(t, result, v.result, "wtf yo! %#v", v.result)
 		})
 	}
 }
@@ -51,8 +57,8 @@ func Test_SelectStage(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			id:     stages[2].UUID,
-			result: stages[2],
+			id:     stages["Majority"].UUID,
+			result: stages["Majority"],
 		},
 		"no_row_returned": {
 			id:     "8",
@@ -81,7 +87,7 @@ func Test_InsertStage(t *testing.T) {
 			s: types.Stage{Name: "bogus!"},
 		},
 		"duplicate_name_violation": {
-			s:   stages[0],
+			s:   stages["Gestation"],
 			err: fmt.Errorf(uniqueKeyViolation, "stages_name_key"),
 		},
 	}
@@ -114,7 +120,7 @@ func Test_UpdateStage(t *testing.T) {
 		},
 		"duplicate_name_violation": {
 			id:  "update me!",
-			s:   stages[0],
+			s:   stages["Gestation"],
 			err: fmt.Errorf(uniqueKeyViolation, "stages_name_key"),
 		},
 	}
@@ -142,7 +148,7 @@ func Test_DeleteStage(t *testing.T) {
 			err: fmt.Errorf("stage could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id: stages[1].UUID,
+			id: stages["Colonization"].UUID,
 			err: fmt.Errorf(foreignKeyViolation1toMany,
 				"stages",
 				"event_types_stage_uuid_fkey",

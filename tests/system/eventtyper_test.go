@@ -78,10 +78,10 @@ func Test_InsertEventType(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			e: types.EventType{Name: "bogus", Severity: "Info", Stage: stages[1]},
+			e: types.EventType{Name: "bogus", Severity: "Info", Stage: stages["Colonization"]},
 		},
 		"no_rows_affected_typecheck": {
-			e:   types.EventType{Name: "bogus", Stage: stages[0]},
+			e:   types.EventType{Name: "bogus", Stage: stages["Gestation"]},
 			err: fmt.Errorf(checkConstraintViolation, "event_types", "event_types_severity_check"),
 		},
 		"no_rows_affected_stage": {
@@ -89,7 +89,7 @@ func Test_InsertEventType(t *testing.T) {
 			err: fmt.Errorf("eventtype was not added"),
 		},
 		"unique_key_violation": {
-			e:   types.EventType{Name: "Vacation", Stage: stages[1]},
+			e:   types.EventType{Name: "Vacation", Stage: stages["Colonization"]},
 			err: fmt.Errorf(checkConstraintViolation, "event_types", "event_types_severity_check"),
 		},
 	}
@@ -114,7 +114,7 @@ func Test_UpdateEventType(t *testing.T) {
 	}{
 		"happy_path": {
 			id: "update me!",
-			e:  types.EventType{Name: "renamed", Severity: "Info", Stage: stages[1]},
+			e:  types.EventType{Name: "renamed", Severity: "Info", Stage: stages["Colonization"]},
 		},
 		"no_rows_affected": {
 			id:  "missing",
@@ -122,12 +122,12 @@ func Test_UpdateEventType(t *testing.T) {
 		},
 		"no_rows_affected_typecheck": { // currently don't update severity
 			id:  "update me!",
-			e:   types.EventType{Name: "bogus", Stage: stages[0]},
+			e:   types.EventType{Name: "bogus", Stage: stages["Gestation"]},
 			err: fmt.Errorf(checkConstraintViolation, "event_types", "event_types_severity_check"),
 		},
-		"unique_key_violation": { // currently don't update stage_uuid
+		"unique_key_violation": {
 			id:  "update me!",
-			e:   types.EventType{Name: "Fruiting", Severity: "Info", Stage: stages[1]},
+			e:   types.EventType{Name: "Fruiting", Severity: "Info", Stage: stages["Majority"]},
 			err: fmt.Errorf(uniqueKeyViolation, "event_types_name_stage_uuid_key"),
 		},
 	}

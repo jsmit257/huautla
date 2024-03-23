@@ -31,18 +31,30 @@ func Test_SelectAllStrains(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website"}).
-						AddRow("0", "X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website").
-						AddRow("1", "X.species", "strain 1", whenwillthenbenow, "1", "vendor 1", "website").
-						AddRow("2", "X.species", "strain 2", whenwillthenbenow, "1", "vendor 1", "website"))
+						NewRows([]string{"id", "species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
+						AddRow("0", "X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website", nil).
+						AddRow("1", "X.species", "strain 1", whenwillthenbenow, "1", "vendor 1", "website", nil).
+						AddRow("2", "X.species", "strain 2", whenwillthenbenow, "1", "vendor 1", "website", "0"))
 				return db
 			},
 			result: []types.Strain{
 				{UUID: "0", Species: "X.species", Name: "strain 0", CTime: whenwillthenbenow, Vendor: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website"}, Attributes: nil},
 				{UUID: "1", Species: "X.species", Name: "strain 1", CTime: whenwillthenbenow, Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website"}, Attributes: nil},
-				{UUID: "2", Species: "X.species", Name: "strain 2", CTime: whenwillthenbenow, Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website"}, Attributes: nil},
+				{UUID: "2", Species: "X.species", Name: "strain 2", CTime: whenwillthenbenow, Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website"}, Attributes: nil, Generation: &types.Generation{UUID: "0"}},
 			},
 		},
+		// "scan_error": {
+		// 	db: func() *sql.DB {
+		// 		db, mock, _ := sqlmock.New()
+		// 		mock.ExpectQuery("").
+		// 			WillReturnRows(sqlmock.
+		// 				NewRows([]string{"id", "species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
+		// 				AddRow("0", "X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website", nil).
+		// 				RowError(0, fmt.Errorf("some error")))
+		// 		return db
+		// 	},
+		// 	err: fmt.Errorf("some error"),
+		// },
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
@@ -91,8 +103,8 @@ func Test_SelectStrain(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website"}).
-						AddRow("X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website"))
+						NewRows([]string{"species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
+						AddRow("X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website", nil))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -113,7 +125,7 @@ func Test_SelectStrain(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "vendor_uuid", "vendor_name"}))
+						NewRows([]string{"species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}))
 				return db
 			},
 			id:     "0",

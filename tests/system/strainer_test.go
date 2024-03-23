@@ -12,7 +12,14 @@ import (
 var strains []types.Strain
 
 func init() {
-	for _, id := range []types.UUID{"0", "1"} {
+	for _, id := range []types.UUID{
+		"0",
+		"1",
+		"add strain source",
+		"change strain source 0",
+		"remove strain source",
+		"change strain source 1",
+	} {
 		if s, err := db.SelectStrain(context.Background(), id, "strain_init"); err != nil {
 			panic(err)
 		} else {
@@ -89,7 +96,7 @@ func Test_InsertStrain(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			s: types.Strain{Name: "ubermyc", Vendor: vendor0},
+			s: types.Strain{Name: "ubermyc", Vendor: vendors["localhost"]},
 		},
 		"no_rows_affected": {
 			s:   types.Strain{Name: "ubermyc", Vendor: types.Vendor{UUID: "missing"}},
@@ -127,11 +134,11 @@ func Test_UpdateStrain(t *testing.T) {
 	}{
 		"happy_path": {
 			id: "update me!",
-			s:  types.Strain{Name: "Chicken o' the Wood", Vendor: vendor0},
+			s:  types.Strain{Name: "Chicken o' the Wood", Vendor: vendors["localhost"]},
 		},
 		"no_rows_affected_strain": {
 			id:  "missing",
-			s:   types.Strain{Name: "Chicken o' the Wood", Vendor: vendor0},
+			s:   types.Strain{Name: "Chicken o' the Wood", Vendor: vendors["localhost"]},
 			err: fmt.Errorf("strain was not updated: 'missing'"),
 		},
 		// "no_rows_affected_vendor": {  // vendors aren't part of the update (yet)
@@ -176,6 +183,10 @@ func Test_DeleteStrain(t *testing.T) {
 				"strains",
 				"strain_attributes_strain_uuid_fkey",
 				"strain_attributes"),
+		},
+		"used_as_source": {
+			id:  "change strain source 0",
+			err: fmt.Errorf("pq: foreign key violation"),
 		},
 	}
 	for k, v := range set {

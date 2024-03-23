@@ -9,15 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var substrates []types.Substrate
+var substrates = map[types.SubstrateType][]types.Substrate{}
 
 func init() {
-	for _, id := range []types.UUID{"0", "1", "2"} {
+	for _, id := range []types.UUID{"0", "1", "2", "3", "update generation"} {
 		if s, err := db.SelectSubstrate(context.Background(), id, "substrate_init"); err != nil {
 			panic(err)
 		} else {
-			substrates = append(substrates, s)
-
+			substrates[types.SubstrateType(s.Type)] = append(substrates[types.SubstrateType(s.Type)], s)
 		}
 	}
 }
@@ -30,7 +29,12 @@ func Test_SelectAllSubstrates(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			result: substrates,
+			result: append(
+				[]types.Substrate{substrates[types.BulkType][0]},
+				substrates[types.GrainType][0],
+				substrates[types.LiquidType][0],
+				substrates[types.PlatingType][0],
+			),
 		},
 	}
 	for k, v := range set {
@@ -53,8 +57,8 @@ func Test_SelectSubstrate(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			id:     substrates[0].UUID,
-			result: substrates[0],
+			id:     substrates[types.GrainType][0].UUID,
+			result: substrates[types.GrainType][0],
 		},
 		"no_rows_returned": {
 			id:     "missing",
@@ -81,14 +85,14 @@ func Test_InsertSubstrate(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			s: types.Substrate{Name: "Honey Solution", Type: "Bulk", Vendor: vendor0},
+			s: types.Substrate{Name: "Honey Solution", Type: "Bulk", Vendor: vendors["localhost"]},
 		},
 		"unique_key_violation": {
-			s:   substrates[0],
+			s:   substrates[types.BulkType][0],
 			err: fmt.Errorf(uniqueKeyViolation, "substrates_name_vendor_uuid_key"),
 		},
 		"check_constraint_violation": {
-			s:   types.Substrate{Name: "Maltodextrin", Type: "Stardust", Vendor: vendor0},
+			s:   types.Substrate{Name: "Maltodextrin", Type: "Stardust", Vendor: vendors["localhost"]},
 			err: fmt.Errorf(checkConstraintViolation, "substrates", "substrates_type_check"),
 		},
 	}
@@ -170,7 +174,7 @@ func Test_DeleteSubstrate(t *testing.T) {
 			err: fmt.Errorf("substrate could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id: substrates[0].UUID,
+			id: substrates[types.GrainType][0].UUID,
 			err: fmt.Errorf(foreignKeyViolation1toMany,
 				"substrates",
 				"substrate_ingredients_substrate_uuid_fkey",

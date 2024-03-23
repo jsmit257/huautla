@@ -18,7 +18,7 @@ func Test_GetAllIngredients(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			s:      substrates[1],
+			s:      substrates[types.GrainType][0],
 			result: []types.Ingredient{ingredients[3], ingredients[12]},
 		},
 		"no_rows_found": {

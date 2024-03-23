@@ -23,11 +23,12 @@ services:
   system-test:
     depends_on: [ postgres ]
     image: golang:bookworm
+    volumes: [ .:/go/src/github.com/jsmit257/huautla ]
     environment:
       POSTGRES_HOST: *pghost
       POSTGRES_PORT: *pgport
       POSTGRES_USER: *pguser
       POSTGRES_PASSWORD: *pgpass
       POSTGRES_SSLMODE: *pgssl
-    working_dir: /huautla
+    working_dir: /go/src/github.com/jsmit257/huautla
     command: ./bin/system-test.sh

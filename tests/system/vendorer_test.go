@@ -10,12 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var vendor0 types.Vendor
+var vendors = map[string]types.Vendor{}
 
 func init() {
-	var err error
-	if vendor0, err = db.SelectVendor(context.Background(), types.UUID("0"), "vendor_init"); err != nil {
-		panic(err)
+	for _, id := range []types.UUID{"localhost"} {
+		if v, err := db.SelectVendor(context.Background(), id, "substrate_init"); err != nil {
+			panic(err)
+		} else {
+			vendors[string(v.UUID)] = v
+		}
 	}
 }
 
@@ -27,7 +30,7 @@ func Test_SelectAllVendors(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			result: []types.Vendor{vendor0},
+			result: []types.Vendor{vendors["localhost"]},
 		},
 	}
 	for k, v := range set {
@@ -48,10 +51,10 @@ func Test_SelectVendor(t *testing.T) {
 		result types.Vendor
 		err    error
 	}{
-		"happy_path": {
-			id:     "0",
-			result: vendor0,
-		},
+		// "happy_path": { // already been done
+		// 	id:     "localhost",
+		// 	result: vendors["localhost"],
+		// },
 		"no_row_returned": {
 			id:     "8",
 			result: types.Vendor{UUID: "8", Name: ""},
@@ -80,7 +83,7 @@ func Test_InsertVendor(t *testing.T) {
 			v: types.Vendor{Name: "inserted vendor"},
 		},
 		"duplicate_name_violation": {
-			v:   vendor0,
+			v:   vendors["localhost"],
 			err: fmt.Errorf(`pq: duplicate key value violates unique constraint "vendors_name_key"`),
 		},
 	}
@@ -108,7 +111,7 @@ func Test_UpdateVendor(t *testing.T) {
 		},
 		"duplicate_name_violation": {
 			id:  "update me!",
-			v:   vendor0,
+			v:   vendors["localhost"],
 			err: fmt.Errorf(uniqueKeyViolation, "vendors_name_key"),
 		},
 		"no_rows_affected": {
@@ -140,7 +143,7 @@ func Test_DeleteVendor(t *testing.T) {
 			err: fmt.Errorf("vendor could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id: "0",
+			id: "localhost",
 			err: fmt.Errorf(foreignKeyViolation1toMany,
 				"vendors",
 				"substrates_vendor_uuid_fkey",

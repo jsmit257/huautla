@@ -10,6 +10,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/jsmit257/huautla/types"
 	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -387,10 +388,10 @@ func Test_SelectLifecycle(t *testing.T) {
 						AddRow("2", "name 2", "value 2"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "value"}).
-						AddRow("0", "name 0", "value 0").
-						AddRow("1", "name 1", "value 1").
-						AddRow("2", "name 2", "value 2"))
+						NewRows([]string{"id", "name"}).
+						AddRow("0", "ingredient 0").
+						AddRow("1", "ingredient 1").
+						AddRow("2", "ingredient 2"))
 				mock.ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 
@@ -422,7 +423,9 @@ func Test_SelectLifecycle(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).SelectLifecycle(context.Background(), tc.id, "Test_SelectLifecycle")
 
-			require.Equal(t, tc.err, err)
+			if !assert.Equal(t, tc.err, err) {
+				panic(err)
+			}
 			// require.Equal(t, tc.result, result)
 		})
 	}
@@ -662,10 +665,10 @@ func Test_UpdateLifecycle(t *testing.T) {
 	}
 }
 
-func Test_UpdateModified(t *testing.T) {
+func Test_UpdateLifecycleMTime(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "UpdateModified")
+	l := log.WithField("test", "UpdateLifecycleMTime")
 
 	now := time.Now()
 
@@ -726,7 +729,7 @@ func Test_UpdateModified(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).UpdateModified(context.Background(), &types.Lifecycle{}, time.Now(), "Test_UpdateLifecycle")
+			}).UpdateLifecycleMTime(context.Background(), &types.Lifecycle{}, time.Now(), "Test_UpdateLifecycle")
 
 			require.Equal(t, tc.err, err)
 			// require.Equal(t, tc.modified, lc.MTime)

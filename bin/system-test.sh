@@ -8,16 +8,14 @@ files=(
   ./tests/system/substrateingredienter_test.go
   ./tests/system/stager_test.go
   ./tests/system/eventtyper_test.go
-  ./tests/system/eventer_test.go
+  ./tests/system/observer_test.go
   ./tests/system/strainer_test.go
   ./tests/system/strainattributer_test.go
   ./tests/system/lifecycler_test.go
+  ./tests/system/lifecycleeventer_test.go
+  ./tests/system/generationer_test.go
+  ./tests/system/generationeventer_test.go
+  ./tests/system/sourcer_test.go
 )
 
-# go test \
-#   -run Test_GetLifecycleEvents \
-#   -run Test_SelectByEventType \
-#   -run Test_RemoveEvent \
-#   "${files[@]}"
 go test "${files[@]}"
-  

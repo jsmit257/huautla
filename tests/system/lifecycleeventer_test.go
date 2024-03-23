@@ -9,24 +9,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jsmit257/huautla/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/jsmit257/huautla/types"
 )
 
-var events []types.Event
-
-func init() {
-	for _, id := range []types.UUID{"0", "1", "2"} {
-		if e, err := db.SelectEvent(context.Background(), id, "substrate_init"); err != nil {
-			panic(err)
-		} else {
-			events = append(events, e)
-		}
-	}
-}
-
 func Test_GetLifecycleEvents(t *testing.T) {
-	// t.Skip()
 	t.Parallel()
 
 	set := map[string]struct {
@@ -60,82 +48,10 @@ func Test_GetLifecycleEvents(t *testing.T) {
 	}
 }
 
-func Test_SelectByEventType(t *testing.T) {
+func Test_AddLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	set := map[string]struct {
-		e      types.EventType
-		result []types.Event
-		err    error
-	}{
-		"happy_path": {
-			e:      eventtypes[0],
-			result: []types.Event{events[1], events[2]},
-		},
-		"no_rows_returned": {
-			e:      types.EventType{UUID: "missing"},
-			result: []types.Event{},
-			// err: fmt.Errorf("sql: no rows in result set"),
-		},
-	}
-	for k, v := range set {
-		k, v := k, v
-		t.Run(k, func(t *testing.T) {
-			t.Parallel()
-			var actual types.Event
-			result, err := db.SelectByEventType(context.Background(), v.e, types.CID(k))
-			require.Equal(t, v.err, err)
-			for i, j := 0, len(v.result); i < j; i++ {
-				event := v.result[i]
-				actual, err = findEvent(result, v.result[i].UUID)
-				require.Nil(t, err)
-				require.Equal(t, event.Temperature, actual.Temperature)
-				require.Equal(t, event.Humidity, actual.Humidity)
-				// require.Equalf(t, event.MTime.UnixMilli(), actual.MTime.UnixMilli(), "expected\n'%#v'\nactual\n'%#v'", event.MTime.String(), actual.MTime.String()) // get fucked!
-				// require.Truef(t, event.CTime == actual.CTime, "expected\n'%#q'\nactual\n'%#q'", event.CTime, actual.CTime)
-				require.Equal(t, event.EventType, actual.EventType)
-			}
-		})
-	}
-}
-
-func Test_SelectEvent(t *testing.T) {
-	t.Parallel()
-
-	set := map[string]struct {
-		id     types.UUID
-		result types.Event
-		err    error
-	}{
-		"happy_path": {
-			id:     events[0].UUID,
-			result: events[0],
-		},
-		"no_rows_returned": {
-			id:     "missing",
-			result: types.Event{UUID: "missing"},
-			err:    fmt.Errorf("sql: no rows in result set"),
-		},
-	}
-	for k, v := range set {
-		k, v := k, v
-		t.Run(k, func(t *testing.T) {
-			t.Parallel()
-			result, err := db.SelectEvent(context.Background(), v.id, types.CID(k))
-			require.Equal(t, v.err, err)
-			require.Equal(t, v.result.Temperature, result.Temperature)
-			require.Equal(t, v.result.Humidity, result.Humidity)
-			// require.Truef(t, v.result.MTime.String() == result.MTime.String(), "expected\n'%#v'\nactual\n'%#v'", v.result.MTime.String(), result.MTime.String()) // get fucked!
-			// require.Truef(t, v.result.CTime == result.CTime, "expected\n'%#q'\nactual\n'%#q'", v.result.CTime, result.CTime)
-			require.Equal(t, v.result.EventType, result.EventType)
-		})
-	}
-}
-
-func Test_AddEvent(t *testing.T) {
-	t.Parallel()
-
-	lc, err := db.SelectLifecycle(context.Background(), "add event", types.CID("Test_AddEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "add event", types.CID("Test_AddLifecycleEvent"))
 	require.Nil(t, err)
 
 	set := map[string]struct {
@@ -157,7 +73,7 @@ func Test_AddEvent(t *testing.T) {
 		k, v, lc := k, v, lc
 		t.Run(k, func(t *testing.T) {
 			// t.Parallel()
-			err := db.AddEvent(context.Background(), &lc, v.e, types.CID(k))
+			err := db.AddLifecycleEvent(context.Background(), &lc, v.e, types.CID(k))
 			t.Logf("actual: %#v", lc.Events)
 			require.Equal(t, v.err, err)
 			require.Equalf(t, v.count, len(lc.Events), "actual: %#v", lc.Events)
@@ -165,10 +81,10 @@ func Test_AddEvent(t *testing.T) {
 	}
 }
 
-func Test_ChangeEvent(t *testing.T) {
+func Test_ChangeLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lc, err := db.SelectLifecycle(context.Background(), "change event", types.CID("Test_ChangeEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "change event", types.CID("Test_ChangeLifecycleEvent"))
 	require.Nil(t, err)
 
 	set := map[string]struct {
@@ -196,24 +112,24 @@ func Test_ChangeEvent(t *testing.T) {
 		lc.Events = append([]types.Event{}, lc.Events...)
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			_, err := db.ChangeEvent(context.Background(), &lc, v.e, types.CID(k))
+			_, err := db.ChangeLifecycleEvent(context.Background(), &lc, v.e, types.CID(k))
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result, lc.Events[0].EventType)
 		})
 	}
 }
 
-func Test_RemoveEvent(t *testing.T) {
+func Test_RemoveLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lc, err := db.SelectLifecycle(context.Background(), "remove event", types.CID("Test_RemoveEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "remove event", types.CID("Test_RemoveLifecycleEvent"))
 	require.Nil(t, err)
 
 	set := map[string]struct {
 		id     types.UUID
 		result []types.Event
 		err    error
-	}{ // NB: the order in which the test cases are declared matters: errors should come first
+	}{
 		"no_rows_affected": {
 			id:     "missing event",
 			result: lc.Events,
@@ -223,12 +139,16 @@ func Test_RemoveEvent(t *testing.T) {
 			id:     "remove event 2",
 			result: []types.Event{lc.Events[0], lc.Events[2]},
 		},
+		// "used_by_sources": {
+		// 	id:  "clone",
+		// 	err: fmt.Errorf("pq: foreign key violation"),
+		// },
 	}
 	for k, v := range set {
 		k, v, lc := k, v, lc
 		t.Run(k, func(t *testing.T) {
-			t.Parallel() // XXX: don't do this, the data doesn't support it
-			err := db.RemoveEvent(context.Background(), &lc, v.id, types.CID(k))
+			t.Parallel()
+			err := db.RemoveLifecycleEvent(context.Background(), &lc, v.id, types.CID(k))
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result, lc.Events)
 		})
@@ -236,9 +156,9 @@ func Test_RemoveEvent(t *testing.T) {
 }
 
 func findEvent(events []types.Event, id types.UUID) (types.Event, error) {
-	for i, j := 0, len(events); i < j; i++ {
-		if events[i].UUID == id {
-			return events[i], nil
+	for _, e := range events {
+		if e.UUID == id {
+			return e, nil
 		}
 	}
 	return types.Event{}, fmt.Errorf("id: '%s' was not found in '%#v'", id, events)

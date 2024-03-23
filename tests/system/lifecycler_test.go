@@ -93,8 +93,8 @@ func Test_InsertLifecycle(t *testing.T) {
 				Count:          4,
 				Gross:          5,
 				Strain:         strains[1],
-				GrainSubstrate: substrates[1],
-				BulkSubstrate:  substrates[2],
+				GrainSubstrate: substrates[types.GrainType][0],
+				BulkSubstrate:  substrates[types.BulkType][0],
 			},
 			result: types.Lifecycle{
 				Location:       "inserted record",
@@ -104,8 +104,8 @@ func Test_InsertLifecycle(t *testing.T) {
 				Count:          4,
 				Gross:          5,
 				Strain:         strains[1],
-				GrainSubstrate: substrates[1],
-				BulkSubstrate:  substrates[2],
+				GrainSubstrate: substrates[types.GrainType][0],
+				BulkSubstrate:  substrates[types.BulkType][0],
 			},
 		},
 		"no_rows_affected_grain": {
@@ -113,7 +113,7 @@ func Test_InsertLifecycle(t *testing.T) {
 				Location:       "failed insert",
 				Strain:         strains[1],
 				GrainSubstrate: types.Substrate{UUID: "foobar"},
-				BulkSubstrate:  substrates[2],
+				BulkSubstrate:  substrates[types.BulkType][0],
 			},
 			// result: types.Lifecycle{Name: "failed insert"},
 			err: fmt.Errorf("lifecycle was not added: 0"),
@@ -122,7 +122,7 @@ func Test_InsertLifecycle(t *testing.T) {
 			lc: types.Lifecycle{
 				Location:       "failed insert",
 				Strain:         strains[1],
-				GrainSubstrate: substrates[1],
+				GrainSubstrate: substrates[types.GrainType][0],
 				BulkSubstrate:  types.Substrate{UUID: "foobar"},
 			},
 			// result: types.Lifecycle{Name: "failed insert"},
@@ -132,8 +132,8 @@ func Test_InsertLifecycle(t *testing.T) {
 			lc: types.Lifecycle{
 				Location:       "failed insert",
 				Strain:         types.Strain{UUID: "foobar"},
-				GrainSubstrate: substrates[1],
-				BulkSubstrate:  substrates[2],
+				GrainSubstrate: substrates[types.GrainType][0],
+				BulkSubstrate:  substrates[types.BulkType][0],
 			},
 			// result: types.Lifecycle{Name: "failed insert"},
 			err: fmt.Errorf("lifecycle was not added: 0"),
@@ -142,8 +142,8 @@ func Test_InsertLifecycle(t *testing.T) {
 			lc: types.Lifecycle{
 				Location:       "failed insert",
 				Strain:         strains[0],
-				GrainSubstrate: substrates[2],
-				BulkSubstrate:  substrates[2],
+				GrainSubstrate: substrates[types.BulkType][0],
+				BulkSubstrate:  substrates[types.BulkType][0],
 			},
 			// result: types.Lifecycle{Name: "failed insert"},
 			err: fmt.Errorf("lifecycle was not added: 0"),
@@ -152,8 +152,8 @@ func Test_InsertLifecycle(t *testing.T) {
 			lc: types.Lifecycle{
 				Location:       "failed insert",
 				Strain:         strains[0],
-				GrainSubstrate: substrates[1],
-				BulkSubstrate:  substrates[1],
+				GrainSubstrate: substrates[types.GrainType][0],
+				BulkSubstrate:  substrates[types.GrainType][0],
 			},
 			// result: types.Lifecycle{Name: "failed insert"},
 			err: fmt.Errorf("lifecycle was not added: 0"),
@@ -180,18 +180,6 @@ func Test_InsertLifecycle(t *testing.T) {
 			if err != nil {
 				require.NotEmpty(t, result.UUID)
 			}
-			// require.Equal(t, v.result.Name, result.Name)
-			// require.Equal(t, v.result.Location, result.Location)
-			// require.Equal(t, v.result.GrainCost, result.GrainCost)
-			// require.Equal(t, v.result.BulkCost, result.BulkCost)
-			// require.Equal(t, v.result.Yield, result.Yield)
-			// require.Equal(t, v.result.Count, result.Count)
-			// require.Equal(t, v.result.Gross, result.Gross)
-			// require.Equal(t, v.result.Strain.Name, result.Strain.Name)
-			// require.Equal(t, v.result.GrainSubstrate.Name, result.GrainSubstrate.Name)
-			// require.Equal(t, v.result.BulkSubstrate.Name, result.BulkSubstrate.Name)
-			// require.Less(t, epoch, v.result.MTime)
-			// require.Less(t, epoch, v.result.CTime)
 		})
 	}
 }
@@ -235,21 +223,21 @@ func Test_UpdateLifecycle(t *testing.T) {
 		},
 		"check_grain_type": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
-				lc.GrainSubstrate = substrates[2]
+				lc.GrainSubstrate = substrates[types.BulkType][0]
 				return lc
 			},
 			err: fmt.Errorf("lifecycle was not updated"),
 		},
 		"check_bulk_type": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
-				lc.BulkSubstrate = substrates[1]
+				lc.BulkSubstrate = substrates[types.GrainType][0]
 				return lc
 			},
 			err: fmt.Errorf("lifecycle was not updated"),
 		},
 		"unique_key_violation": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
-				lc.Location = "reference implementation"
+				lc.Location = "reference implementation 2"
 				return lc
 			},
 			err: fmt.Errorf(uniqueKeyViolation, "lifecycles_location_ctime_key"),
@@ -282,7 +270,7 @@ func Test_DeleteLifecycle(t *testing.T) {
 		},
 		"referential_violation": {
 			id:  "0",
-			err: fmt.Errorf(foreignKeyViolation1toMany, "lifecycles", "events_lifecycle_uuid_fkey", "events"),
+			err: fmt.Errorf("pq: foreign key violation"),
 		},
 	}
 	for k, v := range set {
