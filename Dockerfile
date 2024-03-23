@@ -10,4 +10,8 @@ RUN grep -v 'exec "$@"' /usr/local/bin/docker-entrypoint.sh > /docker-entrypoint
 RUN /docker-entrypoint.sh postgres
 
 FROM postgres:bookworm
+RUN mkdir -v /pgbackup
+COPY ./bin/migration-entrypoint.sh /migration-entrypoint.sh
+COPY ./bin/backup-entrypoint.sh /backup-entrypoint.sh
+COPY ./bin/restore-entrypoint.sh /restore-entrypoint.sh
 COPY --from=build /var/lib/postgresql/data /var/lib/postgresql/data

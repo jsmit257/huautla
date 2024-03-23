@@ -125,9 +125,9 @@ func Test_UpdateEventType(t *testing.T) {
 			e:   types.EventType{Name: "bogus", Stage: stages[0]},
 			err: fmt.Errorf(checkConstraintViolation, "event_types", "event_types_severity_check"),
 		},
-		"unique_key_violation": { // currently don't update stage_uuid
+		"unique_key_violation": {
 			id:  "update me!",
-			e:   types.EventType{Name: "Fruiting", Severity: "Info", Stage: stages[1]},
+			e:   types.EventType{Name: "Fruiting", Severity: "Info", Stage: stages[2]},
 			err: fmt.Errorf(uniqueKeyViolation, "event_types_name_stage_uuid_key"),
 		},
 	}

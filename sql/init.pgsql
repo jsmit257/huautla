@@ -51,7 +51,7 @@ create table stages (
 create table event_types (
   uuid       varchar(40)  not null primary key,
   name       varchar(512) not null,
-  severity   varchar(10)  not null check (severity in ('Info', 'Warn', 'Error', 'Fatal', 'RIP')),
+  severity   varchar(10)  not null check (severity in ('Begin', 'Info', 'Warn', 'Error', 'Fatal', 'RIP')),
   stage_uuid varchar(40)  not null references stages(uuid),
   unique(name, stage_uuid)
 );

@@ -20,17 +20,23 @@ postgres:
 inspect:
 	docker-compose exec -it postgres /bin/sh -c "psql -hlocalhost -Upostgres huautla"
 
-.PHONY: system-test
-system-test: postgres
+.PHONY: install-system-test
+install-system-test: postgres
+	sleep 2s
 	docker-compose exec \
-		-ePOSTGRES_HOST=localhost \
+		-ePOSTGRES_HOST=huautla \
 		-ePOSTGRES_PORT=5432 \
 		-ePOSTGRES_USER=postgres \
 		-ePOSTGRES_PASSWORD=root \
 		postgres \
-    /bin/sh -c "cd /huautla && ./bin/install-system-test.sh"
-	# -docker-compose up --build --remove-orphans system-test
-	docker tag huautla:latest huautla:lkg
+		/bin/sh -c "cd /huautla && ./bin/install-system-test.sh"
+	docker tag huautla:latest jsmit257/huautla:lkg
+	# make docker-down
+
+.PHONY: system-test
+system-test: install-system-test
+	docker-compose up system-test
+	# docker push jsmit257/huautla:lkg
 	make docker-down
 
 vet:

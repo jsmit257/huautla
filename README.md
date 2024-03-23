@@ -1,4 +1,4 @@
-## Huautla
+## [Huautla](https://github.com/jsmit257/huautla)
 Named after the town in Jiménez that was the bridge between native traditions and what qualifies as a modern understanding of psychedelics. There's an interesting story of people and politics behind their noteriety, so like any memorial, this is a nod to what we consider to be a remarkable moment in history.
 
 ### Overview
@@ -13,16 +13,49 @@ More details of a lifecycle are described in the [object model](#object-model), 
 
 ### Requirements
 To develop and test locally, you'll need at least:
-* Git (you'll need an account if you plan to change anything)
+* Git (you only need an account if you plan to change anything)
 * Golang environment
 * docker/docker-compose (sometimes they're packaged separately, get both)
-* postgres-client (optional) is useful if you want to poke around the db after a feiled test, otherwise it's not needed
-* postgres-server (optional) if you want to work/test on a database that won't be removed when the tests finish
-* make
-* bash-compatible shell (bourne doesn't handle arrays nicely)
+* postgres-client (optional) if you'd like to query the running container from localhost, for debugging, etc
+* postgres-server (optional) if you want to work/test on a local database like one that you use for other things, with scheduled backups, etc; see [Docker](#docker) for a turnkey standalone database container
+* `make` probably a GNU-compatible one
+* bash-compatible shell (bourne doesn't handle arrays nicely); changing this would require other users to use your shell, s0 we prefer `bash`; `zsh` is ubiquitous, but `tcsh` is a bit much
 
-### Basics
-???
+### Docker
+The only build artifacts from this project are the docker images at [dockerhub](https://hub.docker.com/repository/docker/jsmit257/huautla/tags?page=1&ordering=last_updated). Proper semantic/commit-sha versioning isn't currently supported, but there will always be at least `...:lkg` (last-known good) and `...:lts` (long-term-support) versions. Last-known good is tagged when `make install-system-test` successfully seeds the test data. LKG is pushed to the remote as `jsmit257/huautla:lkg` when `make system-test` succeeds.
+
+Only the minimal seed data is captured in the image, the test data is lost when the test container exits. 
+
+Additional entrypoints are also packaged in the image for the purpose of persistence management. References implementations for all the following features are documented in [cffc standalone](https://github.com/jsmit257/centerforfunguscontrol/standalone/docker-compose.yml). The scripts themselves have descriptive errors, where possible.
+
+- [migration](./bin/migration-entrypoint.sh) restores data from a running source to a destination. In the reference implementation, the source is the minimally pre-seeded huautla database, and the destination is a short-lived empty database with a volume mounted from the host - hence, persistent. This should only be run once - the service issues appropriate errors for troubleshooting.
+  #### parameters:
+    - `SOURCE_HOST`: (required) data source hostname; typically, the hostname of a venilla instance of `jsmit257:lkg` or similar
+    - `SOURCE_PORT`: (optional, default:5432) postgres port on the source host
+    - `SOURCE_USER`: (optional, default:postgres) user with admin privileges on the source server
+    - `DEST_HOST`: (optional, default:localhost) instance to seed from the source; the service fails with a descriptive error if a database already exists
+    - `SOURCE_PORT`: (optional, default:5432) postgres port on the destination host
+    - `SOURE_USER`: (optional, default:postgres) user with admin privileges on the destination server
+- [backup](./bin/backup-entrypoint.sh) backup a running instance to the `/pgbackups` directory. This is mostly only useful if that directory is mapped to a persistent volume.
+  #### parameters:
+    - `SOURCE_HOST`: (required) data source hostname
+    - `SOURCE_PORT`: (optional, default:5432) postgres port on the source host
+    - `SOURCE_USER`: (optional, default:postgres) user with admin privileges on the source server
+    - `POSTGRES_PASSWORD`: (required) password for the source user. This is typically supplied by a `docker-compose.yml` and/or `.env` file. These passwords are typically stock `root` when used with a vanilla `postgres:<whatever>` tag, but attempt to avoid saving this anywhere including command history if it's at-all sensitive
+- [restore](./bin/restore-entrypoint.sh) restores an archive to a running instance of the huautla database This is mostly only useful if that directory is mapped to a persistent volume.
+  #### parameters:
+    - `DEST_HOST`: (required) data destination hostname
+    - `DEST_PORT`: (optional, default:5432) postgres port on the destination host
+    - `DEST_USER`: (optional, default:postgres) user with admin privileges on the destination server
+    - `POSTGRES_PASSWORD`: (required) password for the destination user. The same recommendations and caveats apply as with `backup`
+    - `RESTORE_POINT`: (required) see the reference implementation for a description of this parameter
+
+TODO: webhook with github/et al.
+
+### Local Database
+
+### Using
+Public bindings are consolidated in the [api](./types/api.go) and [data types](./types/data.go).
 
 ### Object Model
 These are the database tables described as a golang object tree; the sql perspective is [here](./sql/init.pgsql), and there are [cliff-notes](./sql/cliff-notes); no, this isn't really yaml
@@ -110,40 +143,9 @@ Config struct {
 ```
 There's a workable reference implementation in the system test [init()](./tests/system/main_test.go) function.
 
-FWIW, that test implementation expects a return type of `types.DB`. As you can see from [the api](./types/api.go), this is all the methods for all the entities in the database. That's a miserable test-harness to have to maintain in a properly modular client. Instead, consider this pattern:
-
-```go
-db, err := huautla.New(...)
-if err != nil { ... }
-
-huautlaAdaptors := struct{
-  ClientEventer
-  ClientEventTyper
-  ...
-  ClientVendorer
-}{
-  ClientEventer: ClientEventer {
-    config: ...,
-    Eventer: db,
-  },
-  ClientEventTyper: { ..., EventTyper: db },
-  ...
-  ClientVendorer: : { ..., Vendorer: db },
-}
-```
-Where each `Client*` type is a candidate to be a receiver, encapsulating its own context/configuration/etc, with its reference to `types.DB` constrained to just the functionality for a single relation, while identifying this database unambigiously from others used by this client.
-
-There are also all the anonymous interface shennanigans you can use in function signatures and other typecasts, but worry about that when you really need to.
-
-### Installing
-This just means installing the database, since the API is installed by vendoring. The `install` target in [the makefile](./Makefile), along with the `install` service in [docker-compose](./docker-compose.yml) will connect with a database instance and run the create statements necessary to build a complete `huautla` database with users, tables, etc. By default, the `install` service connects to the docker-compose `postgres` service, which is great if you're going to run tests, but everything gets lost when the containers go down. Overriding the pg* environment vars in `docker-compose` allows to connect to a durable instance (e.g. not a container), and the created database will be suitable for hosting any application that uses this project. It will *not* clobber an existing database - you've got to do that manually, for legal reasons.
-
-### Using
-Comments are inlined in the [api](./types/api.go) source, rather than have to maintain that file and a README separately.
-
 ### Testing
-TBD: tag docker postgres+huautla images with code releases
-
-Until then, the [docker-compose](./docker-compose.yml) should be pretty portable to client environments, but you'll need to change the location of the [sql](./sql/) and [bin](./bin) script sources, unless you're cloning this repo standalone (really not a bad option). You only need enough tweaking to run the `install` service mentioned [above](#installing).
+- `make unit` obviously handles the unit-testing - i.e. how the persistence-bindings respond to cretain events from the database server
+- `make system-test` loads additional data, partly to make sure any referential- or other integrity-constraints aren't violated, then runs the [system tests](./tests/system) to veryfy basic CRUD opeartions, including all possible errors thrown from the database.
 
 ### Contributing
+Please do!!! The [license](./LICENCE.md) is open and free with attribution.

@@ -14,10 +14,5 @@ files=(
   ./tests/system/lifecycler_test.go
 )
 
-# go test \
-#   -run Test_GetLifecycleEvents \
-#   -run Test_SelectByEventType \
-#   -run Test_RemoveEvent \
-#   "${files[@]}"
 go test "${files[@]}"
   
