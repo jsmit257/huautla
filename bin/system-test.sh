@@ -16,6 +16,8 @@ files=(
   ./tests/system/generationer_test.go
   ./tests/system/generationeventer_test.go
   ./tests/system/sourcer_test.go
+  ./tests/system/noter_test.go
+  ./tests/system/photoer_test.go
 )
 
 go test "${files[@]}"

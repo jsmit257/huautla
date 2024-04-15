@@ -1,4 +1,4 @@
--- run this after `seed.pqsql` to add system-data (e.g. fake data and foreign key relationships)
+-- run this after `seed.sql` to add default system-data (e.g. fake data and foreign key relationships)
 
 \c huautla
 
@@ -81,6 +81,10 @@ values('0', 'reference implementation', 8, 1, 2, 3, 4, 5, '0', '0', '2'),
       ('change event', 'change event', 5, 0, 0, 0, 0, 0, '0', '0', '0'),
       ('remove event', 'remove event', 4, 0, 0, 0, 0, 0, '0', '0', '0'),
       ('add event source lc', 'add event source', 4, 0, 0, 0, 0, 0, '0', '0', '0'),
+      ('notable', 'notable', 0, 0, 0, 0, 0, 0, '0', '0', '1'),
+      ('delete notable', 'delete notable', 0, 0, 0, 0, 0, 0, '0', '0', '1'),
+      ('update photo', 'update photo', 0, 0, 0, 0, 0, 0, '0', '0', '1'),
+      ('delete photo', 'delete photo', 0, 0, 0, 0, 0, 0, '0', '0', '1'),
       ('update me!', 'update me!', 3, 0, 0, 0, 0, 0, '0', '0', '1'),
       ('delete me!', 'delete me!', 2, 0, 0, 0, 0, 0, '0', '0', '0');
 
@@ -99,11 +103,14 @@ values('0', '2', '3'),
       ('add gen event', '2', '3'),
       ('has events', '2', '3'),
       ('change event', '2', '3'),
-      ('remove gen event', '2', '3'),
       ('get gen event', '2', '3'),
+      ('insert notable', '2', '3'),
+      ('update notable', '2', '3'),
+      ('remove gen event', '2', '3'),
+      ('photo', '2', '3'),
+      ('add photo', '2', '3'),
       ('update me!', '2', '3'),
-      ('delete me!', '2', '3')
-;
+      ('delete me!', '2', '3');
 
 insert into events(uuid, temperature, humidity, observable_uuid, eventtype_uuid)
 values('0', 2, 1, '0', '1'),
@@ -130,6 +137,14 @@ values('0', 2, 1, '0', '1'),
       ('add spore event source 2', 0, 8, 'add event source lc', '26'),
       ('add clone event source 0', 0, 8, 'add event source lc', '27'),
       ('add clone event source 1', 0, 8, 'add event source lc', '27'),
+      ('notable lifecycle', 0, 0, 'notable', '0'),
+      ('insert notable', 0, 0, 'insert notable', '0'),
+      ('update notable', 0, 0, 'update notable', '0'),
+      ('delete notable', 0, 0, 'delete notable', '0'),
+      ('generation photo', 0, 0, 'photo', '28'),
+      ('add photo event 0', 0, 0, 'add photo', '28'),
+      ('change photo event', 0, 0, 'update photo', '28'),
+      ('delete photo event 0', 0, 0, 'delete photo', '28'),
       ('update me!', 0, 8, 'update me!', '0');
 
 insert into sources(uuid, type, progenitor_uuid, generation_uuid)
@@ -144,5 +159,22 @@ values('0', 'Spore', 'spore print', '0'),
       ('change source 0', 'Spore', 'change strain source 0', 'change source'),
       ('change source 1', 'Spore', 'change strain source 1', 'change source'),
       ('change_source_fail_type 0', 'Spore', 'change strain source 1', 'change_source_fail_type'),
-      ('delete me!', 'Spore', 'remove strain source', 'remove source')
-;
+      ('delete me!', 'Spore', 'remove strain source', 'remove source');
+
+insert into event_photos(uuid, filename, event_uuid)
+values('gen photo 0', 'gen photo 0', 'generation photo'),
+      ('gen photo 1', 'gen photo 1', 'generation photo'),
+      ('gen photo 2', 'gen photo 2', 'change photo event'),
+      ('gen photo 3', 'gen photo 3', 'remove gen event 0'),
+      ('photo 2', 'photo 2', 'delete photo event 0');
+
+insert into notes(uuid, note, notable_uuid)
+values('notable lifecycle 0', 'notable lifecycle 0', 'notable lifecycle'),
+      ('notable lifecycle 1', 'notable lifecycle 1', 'notable lifecycle'),
+      ('notable lifecycle 2', 'notable lifecycle 2', 'delete notable'),
+      ('notable generation 2', 'notable generation 2', 'update notable'),
+      ('notable generation 0', 'notable generation 0', 'insert notable'),
+      ('photo foreign key', 'photo foreign key', 'gen photo 2'),
+      ('event foreign key', 'event foreign key', 'remove gen event 0'),
+      ('photoable generation 0', 'photoable generation 0', 'gen photo 0'),
+      ('photoable generation 1', 'photoable generation 1', 'gen photo 0');

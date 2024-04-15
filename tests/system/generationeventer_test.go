@@ -1,9 +1,5 @@
 package test
 
-// yeah, all these things could be tested in the lifecycler tests,
-// but it's easy to separate them this way, and ignore these details
-// in livecycler_test
-
 import (
 	"context"
 	"fmt"
@@ -96,7 +92,6 @@ func Test_AddGenerationEvent(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			// t.Parallel()
 			err := db.AddGenerationEvent(context.Background(), &g, v.e, types.CID(k))
-			t.Logf("actual: %#v", g.Events)
 			require.Equal(t, v.err, err)
 			require.Equalf(t, v.count, len(g.Events), "actual: %#v", g.Events)
 		})
@@ -156,6 +151,18 @@ func Test_RemoveGenerationEvent(t *testing.T) {
 			id:     "missing event",
 			result: g.Events,
 			err:    fmt.Errorf("event could not be removed"),
+		},
+		"notes_foreign_key": {
+			id:     "event foreign key",
+			result: g.Events,
+			err:    fmt.Errorf("event could not be removed"),
+			// err: fmt.Errorf("pq: foreign key violation"),
+		},
+		"photos_foreign_key": {
+			id:     "gen photo 3",
+			result: g.Events,
+			err:    fmt.Errorf("event could not be removed"),
+			// err: fmt.Errorf("pq: foreign key violation"),
 		},
 		"happy_path": {
 			id:     "remove gen event 1",

@@ -26,7 +26,7 @@ func (db *Conn) SelectGenerationIndex(ctx context.Context, cid types.CID) ([]typ
 
 	defer rows.Close()
 
-	row := types.Generation{}
+	var row *types.Generation
 
 	var lcID *types.UUID
 
@@ -57,6 +57,8 @@ func (db *Conn) SelectGenerationIndex(ctx context.Context, cid types.CID) ([]typ
 			&temp.Sources[0].Strain.Vendor.UUID,
 			&temp.Sources[0].Strain.Vendor.Name,
 			&temp.Sources[0].Strain.Vendor.Website,
+			&temp.MTime,
+			&temp.CTime,
 		); err != nil {
 			return result, err
 		}
@@ -65,15 +67,19 @@ func (db *Conn) SelectGenerationIndex(ctx context.Context, cid types.CID) ([]typ
 			temp.Sources[0].Lifecycle = &types.Lifecycle{UUID: *lcID}
 		}
 
-		if row.UUID == temp.UUID {
-			temp.Sources = append(temp.Sources, row.Sources...)
-		} else if row.UUID != "" {
-			result = append(result, row)
+		if row != nil {
+			if row.UUID == temp.UUID {
+				temp.Sources = append(temp.Sources, row.Sources...)
+			} else {
+				result = append(result, *row)
+			}
 		}
-		row = temp
+		row = &temp
 	}
 
-	result = append(result, row)
+	if row != nil {
+		result = append(result, *row)
+	}
 
 	return result, err
 }

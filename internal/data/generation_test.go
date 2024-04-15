@@ -19,7 +19,7 @@ func Test_SelectGenerationIndex(t *testing.T) {
 	t.Parallel()
 
 	whenwillthenbenow := time.Now()
-	fields := [23]string{
+	fields := [25]string{
 		"uuid",
 		"plating_id",
 		"plating_name",
@@ -43,6 +43,8 @@ func Test_SelectGenerationIndex(t *testing.T) {
 		"strain_vendor_id",
 		"strain_vendor_name",
 		"strain_vendor_website",
+		"generation_mtime",
+		"generation_ctime",
 	}
 
 	l := log.WithField("test", "SelectGenerationIndex")
@@ -81,7 +83,9 @@ func Test_SelectGenerationIndex(t *testing.T) {
 							whenwillthenbenow,
 							"strain_vendor_id",
 							"strain_vendor_name",
-							"strain_vendor_website").
+							"strain_vendor_website",
+							whenwillthenbenow,
+							whenwillthenbenow).
 						AddRow(
 							"happy_path",
 							"plating_id",
@@ -105,7 +109,9 @@ func Test_SelectGenerationIndex(t *testing.T) {
 							whenwillthenbenow,
 							"strain_vendor_id",
 							"strain_vendor_name",
-							"strain_vendor_website").
+							"strain_vendor_website",
+							whenwillthenbenow,
+							whenwillthenbenow).
 						AddRow(
 							"happy_path 2",
 							"plating_id",
@@ -129,12 +135,16 @@ func Test_SelectGenerationIndex(t *testing.T) {
 							whenwillthenbenow,
 							"strain_vendor_id",
 							"strain_vendor_name",
-							"strain_vendor_website"))
+							"strain_vendor_website",
+							whenwillthenbenow,
+							whenwillthenbenow))
 				return db
 			},
 			result: []types.Generation{
 				{
-					UUID: "happy_path",
+					UUID:  "happy_path",
+					MTime: whenwillthenbenow,
+					CTime: whenwillthenbenow,
 					PlatingSubstrate: types.Substrate{
 						UUID: "plating_id",
 						Name: "plating_name",
@@ -191,7 +201,9 @@ func Test_SelectGenerationIndex(t *testing.T) {
 					},
 				},
 				{
-					UUID: "happy_path 2",
+					UUID:  "happy_path 2",
+					MTime: whenwillthenbenow,
+					CTime: whenwillthenbenow,
 					PlatingSubstrate: types.Substrate{
 						UUID: "plating_id",
 						Name: "plating_name",
@@ -332,10 +344,10 @@ func Test_SelectGeneration(t *testing.T) {
 						AddRow("2", "ingredient 2"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "eventtype_name", "eventtype_severity", "stage_uuid", "stage_name"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "note_id", "note", "note_mtime", "note_ctime", "has_photos"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, nil, nil, nil, nil, 0).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, nil, nil, nil, nil, 0).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, nil, nil, nil, nil, 0))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{
@@ -549,10 +561,10 @@ func Test_SelectGeneration(t *testing.T) {
 						AddRow("2", "ingredient 2"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "eventtype_name", "eventtype_severity", "stage_uuid", "stage_name"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "note_id", "note", "note_mtime", "note_ctime", "has_photos"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, nil, nil, nil, nil, 0).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, nil, nil, nil, nil, 0).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, nil, nil, nil, nil, 0))
 				mock.ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
@@ -660,10 +672,10 @@ func Test_InsertGeneration(t *testing.T) {
 						AddRow("2", "ingredient 2"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "eventtype_name", "eventtype_severity", "stage_uuid", "stage_name"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "note_id", "note", "note_mtime", "note_ctime", "has_photos"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, nil, nil, nil, nil, 0).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, nil, nil, nil, nil, 0).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, nil, nil, nil, nil, 0))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{

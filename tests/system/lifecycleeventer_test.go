@@ -139,17 +139,18 @@ func Test_RemoveLifecycleEvent(t *testing.T) {
 			id:     "remove event 2",
 			result: []types.Event{lc.Events[0], lc.Events[2]},
 		},
-		// "used_by_sources": {
-		// 	id:  "clone",
-		// 	err: fmt.Errorf("pq: foreign key violation"),
-		// },
+		"used_by_sources": {
+			id:     "clone",
+			result: lc.Events,
+			err:    fmt.Errorf("pq: foreign key violation"),
+		},
 	}
 	for k, v := range set {
 		k, v, lc := k, v, lc
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.RemoveLifecycleEvent(context.Background(), &lc, v.id, types.CID(k))
-			require.Equal(t, v.err, err)
+			equalErrorMessages(t, v.err, err)
 			require.Equal(t, v.result, lc.Events)
 		})
 	}
