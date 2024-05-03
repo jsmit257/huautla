@@ -112,9 +112,9 @@ create table event_types (
 create table lifecycles (
   uuid                varchar(40)  not null primary key,
   location            varchar(128) not null,
-  strain_cost         decimal(8,2) not null,
-  grain_cost          decimal(8,2) not null,
-  bulk_cost           decimal(8,2) not null,
+  strain_cost         decimal(8,2) not null default 0.0,
+  grain_cost          decimal(8,2) not null default 0.0,
+  bulk_cost           decimal(8,2) not null default 0.0,
   -- the net weight, fresh or dried; for dried, 1.0-(yield/gross) is how much water they typically contain
   yield               decimal(84,2) not null default 0,
   headcount           decimal(5) not null default 0,
@@ -146,7 +146,7 @@ create table generations (
   liquidsubstrate_uuid  varchar(40) not null references substrates(uuid)
 ) inherits(observables, notables);
 
-alter table strains add generation_uuid varchar(40) null references generations(uuid);
+alter table strains add generation_uuid varchar(40) null references generations(uuid) unique;
 
 create table sources (
   uuid            varchar(40) not null primary key,
