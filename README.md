@@ -98,7 +98,7 @@ Config struct {
   PGSSL  string
 }
 ```
-There's a workable reference implementation in the system test [init()](./tests/system/main_test.go) function. The SSL field exists for testing with `postgres/bookworm` (and probably others) who don't ship with SSL enabled by default.
+There's a workable reference implementation in the system test [init()](./tests/system/main_test.go) function. The SSL field exists for testing with `postgres:bookworm` (and probably others) who don't ship with SSL enabled by default.
 
 ### Testing
 - `make unit` obviously handles the unit-testing - i.e. how the persistence-bindings respond to cretain all possible events from the database server

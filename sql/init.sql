@@ -136,7 +136,7 @@ create table events (
 
 create table event_photos (
   uuid       varchar(40) not null primary key,
-  filename   varchar(44) not null unique,
+  filename   varchar(45) not null unique,
   event_uuid varchar(40) not null references events(uuid)
 ) inherits(uuids, notables);
 
