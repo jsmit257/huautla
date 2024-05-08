@@ -1,12 +1,12 @@
 \c huautla;
 
-create table uuids (
-  uuid  varchar(40) not null primary key,
-  mtime timestamp   not null default current_timestamp,
-  ctime timestamp   not null default current_timestamp
-);
-
 begin; /** base table creation */
+  create table uuids (
+    uuid  varchar(40) not null primary key,
+    mtime timestamp   not null default current_timestamp,
+    ctime timestamp   not null default current_timestamp
+  );
+
   -- anything that donates DNA to a generation
   create table progenitors () inherits(uuids);
 
@@ -16,6 +16,9 @@ begin; /** base table creation */
 
   -- anything you want to keep notes on - which could be most things
   create table notables() inherits(uuids);
+
+  -- don't abuse this! not everything needs its picture taken
+  create table photoables() inherits(uuids);
 
   begin; /** base table constraints */
     create function noinsert()
@@ -50,7 +53,13 @@ begin; /** base table creation */
     before insert
         on notables
       for each statement
-  execute function noinsert();
+    execute function noinsert();
+
+    create trigger PhotoableInserter
+    before insert
+        on photoables
+      for each statement
+    execute function noinsert();
   end;
 end;
 
@@ -86,7 +95,7 @@ create table strains (
   name        varchar(512) not null,
   vendor_uuid varchar(40)  not null references vendors(uuid),
   unique(name, vendor_uuid, ctime)
-) inherits(progenitors);
+) inherits(progenitors, photoables);
 
 create table strain_attributes (
   uuid         varchar(40)  not null primary key,
@@ -130,15 +139,15 @@ create table events (
   uuid            varchar(40)  not null primary key,
   temperature     numeric(4,1) not null default 0.0,
   humidity        int          not null default 0,
-  observable_uuid varchar(40)  not null /*references observables(uuid)*/,
+  observable_uuid varchar(40)  not null,
   eventtype_uuid  varchar(40)  not null references event_types(uuid)
-) inherits(progenitors, notables);
+) inherits(progenitors, notables, photoables);
 
-create table event_photos (
-  uuid       varchar(40) not null primary key,
-  filename   varchar(45) not null unique,
-  event_uuid varchar(40) not null references events(uuid)
-) inherits(uuids, notables);
+create table photos (
+  uuid           varchar(40) not null primary key,
+  filename       varchar(45) not null unique,
+  photoable_uuid varchar(40) not null
+) inherits(notables);
 
 create table generations (
   uuid                  varchar(40) not null primary key,
@@ -242,9 +251,9 @@ begin; /** notable constraints */
       for each row
   execute function notabledelete();
 
-  create trigger EventPhotoNotableDelete
+  create trigger PhotoNotableDelete
     before delete
-        on event_photos
+        on photos
       for each row
   execute function notabledelete();
 
@@ -253,6 +262,33 @@ begin; /** notable constraints */
         on generations
       for each row
   execute function notabledelete();
+end;
+
+begin; /** photoable constraints */
+  create function photoabledelete()
+  returns trigger
+  as
+  $$
+  begin
+    if exists (select 1 from photos p where p.photoable_uuid = old.uuid) then
+      raise exception 'foreign key violation';
+    end if;
+    return old;
+  end
+  $$
+  language plpgsql;
+
+  create trigger EventPhotoableDelete
+    before  delete
+        on  events
+       for  each row
+   execute  function photoabledelete();
+
+  create trigger StrainPhotoableDelete
+    before  delete
+        on  strains
+       for  each row
+   execute  function photoabledelete();
 end;
 
 begin; /** source constraints */
@@ -353,4 +389,25 @@ begin; /** note constraints */
         on notes
        for each row
    execute function notechange();
+end;
+
+begin; /** photo constraints */
+  create function photochange()
+  returns  trigger
+      as
+  $$
+  begin
+    if exists (select 1 from photoables p where p.uuid = new.photoable_uuid) then
+      return new;
+    end if;
+    raise exception 'foreign key violation';
+  end
+  $$
+  language plpgsql;
+
+  create trigger CheckPhotoable
+    before insert or update of photoable_uuid
+        on photos
+       for each row
+   execute function photochange();
 end;

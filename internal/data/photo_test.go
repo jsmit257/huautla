@@ -31,20 +31,16 @@ func Test_GetPhotos(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "filename", "ctime", "note_uuid", "note", "note_mtime", "note_ctime"}).
-						AddRow("id-0", "photo 0", whenwillthenbenow, "note-0", "note 0", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-0", "photo 0", whenwillthenbenow, "note-1", "note 1", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-1", "photo 1", whenwillthenbenow, nil, nil, nil, nil).
-						AddRow("id-2", "photo 2", whenwillthenbenow, nil, nil, nil, nil))
+						NewRows([]string{"id", "filename", "mtime", "ctime"}).
+						AddRow("id-0", "photo 0", whenwillthenbenow, whenwillthenbenow).
+						AddRow("id-1", "photo 1", whenwillthenbenow, whenwillthenbenow).
+						AddRow("id-2", "photo 2", whenwillthenbenow, whenwillthenbenow))
 				return db
 			},
 			result: []types.Photo{
-				{UUID: "id-0", Filename: "photo 0", CTime: whenwillthenbenow, Notes: []types.Note{
-					{UUID: "note-1", Note: "note 1", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-					{UUID: "note-0", Note: "note 0", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-				}},
-				{UUID: "id-1", Filename: "photo 1", CTime: whenwillthenbenow},
-				{UUID: "id-2", Filename: "photo 2", CTime: whenwillthenbenow},
+				{UUID: "id-0", Filename: "photo 0", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
+				{UUID: "id-1", Filename: "photo 1", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
+				{UUID: "id-2", Filename: "photo 2", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
 			},
 		},
 		"db_error": {

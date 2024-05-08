@@ -26,25 +26,16 @@ func Test_GetLifecycleEvents(t *testing.T) {
 
 	oneNote := e1
 	oneNote.UUID = "1 note"
-	oneNote.Notes = []types.Note{
-		{UUID: "note0", Note: "note 0", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-	}
+
 	twoNotes := e1
 	twoNotes.UUID = "2 notes"
-	twoNotes.Notes = []types.Note{
-		{UUID: "note2", Note: "note 2", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-		{UUID: "note1", Note: "note 1", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-	}
 
 	photo := e2
 	photo.UUID = "photos"
 	photo.Photos = []types.Photo{
-		{UUID: "id-0", Filename: "photo 0", CTime: whenwillthenbenow, Notes: []types.Note{
-			{UUID: "note-1", Note: "note 1", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-			{UUID: "note-0", Note: "note 0", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-		}},
-		{UUID: "id-1", Filename: "photo 1", CTime: whenwillthenbenow},
-		{UUID: "id-2", Filename: "photo 2", CTime: whenwillthenbenow},
+		{UUID: "id-0", Filename: "photo 0", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
+		{UUID: "id-1", Filename: "photo 1", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
+		{UUID: "id-2", Filename: "photo 2", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
 	}
 	tcs := map[string]struct {
 		db     getMockDB
@@ -56,21 +47,20 @@ func Test_GetLifecycleEvents(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "note_id", "note", "note_mtime", "note_ctime", "has_photos"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, nil, nil, nil, nil, 0).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, nil, nil, nil, nil, 0).
-						AddRow("1 note", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, "note0", "note 0", whenwillthenbenow, whenwillthenbenow, 0).
-						AddRow("2 notes", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, "note1", "note 1", whenwillthenbenow, whenwillthenbenow, 0).
-						AddRow("2 notes", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, "note2", "note 2", whenwillthenbenow, whenwillthenbenow, 0).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, nil, nil, nil, nil, 0).
-						AddRow("photos", e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, nil, nil, nil, nil, 1))
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "has_photos", "has_notes"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, 0, 0).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
+						AddRow("1 note", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
+						AddRow("2 notes", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, 0, 0).
+						AddRow("photos", e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, 1, 0))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "filename", "ctime", "note_uuid", "note", "note_mtime", "note_ctime"}).
-						AddRow("id-0", "photo 0", whenwillthenbenow, "note-0", "note 0", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-0", "photo 0", whenwillthenbenow, "note-1", "note 1", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-1", "photo 1", whenwillthenbenow, nil, nil, nil, nil).
-						AddRow("id-2", "photo 2", whenwillthenbenow, nil, nil, nil, nil))
+						NewRows([]string{"id", "filename", "mtime", "ctime"}).
+						AddRow("id-0", "photo 0", whenwillthenbenow, whenwillthenbenow).
+						AddRow("id-1", "photo 1", whenwillthenbenow, whenwillthenbenow).
+						AddRow("id-2", "photo 2", whenwillthenbenow, whenwillthenbenow))
+
 				return db
 			},
 			result: []types.Event{
@@ -87,14 +77,13 @@ func Test_GetLifecycleEvents(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "note_id", "note", "note_mtime", "note_ctime", "has_photos"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, nil, nil, nil, nil, 0).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, nil, nil, nil, nil, 0).
-						AddRow("1 note", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, "note0", "note 0", whenwillthenbenow, whenwillthenbenow, 0).
-						AddRow("2 notes", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, "note1", "note 1", whenwillthenbenow, whenwillthenbenow, 0).
-						AddRow("2 notes", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, "note2", "note 2", whenwillthenbenow, whenwillthenbenow, 0).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, nil, nil, nil, nil, 0).
-						AddRow("photos", e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, nil, nil, nil, nil, 1))
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "has_photos", "has_notes"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, 0, 0).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
+						AddRow("1 note", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
+						AddRow("2 notes", e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, 0, 0).
+						AddRow("photos", e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, 1, 1))
 				mock.ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
@@ -134,7 +123,7 @@ func Test_GetLifecycleEvents(t *testing.T) {
 			}).GetLifecycleEvents(context.Background(), lc, "Test_SelectAllEventTypes")
 
 			require.Equal(t, tc.err, err)
-			require.Equal(t, tc.result, lc.Events)
+			require.Equal(t, tc.result, lc.Events, lc.UUID)
 		})
 	}
 }
@@ -158,15 +147,13 @@ func Test_AddLifecycleEvent(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
+				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
 						AddRow("type 0", "Info", "0", "stage 0"))
-				mock.
-					ExpectExec("").
+				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -177,22 +164,20 @@ func Test_AddLifecycleEvent(t *testing.T) {
 		"modified_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
+				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
 						AddRow("type 0", "Info", "0", "stage 0"))
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectExec("").
+					WillReturnError(fmt.Errorf("couldn't update Lifecycle.mtime"))
 				return db
 			},
 			evts:   []types.Event{e0, e1},
 			evt:    e2,
 			result: []types.Event{e0, e1, e2},
-			err:    fmt.Errorf("couldn't update lifecycle.mtime"),
+			err:    fmt.Errorf("couldn't update Lifecycle.mtime"),
 		},
 		"eventtype_error": {
 			db: func() *sql.DB {
@@ -290,8 +275,7 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
 						AddRow("type 0", "Info", "0", "stage 0"))
-				mock.
-					ExpectExec("").
+				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -311,13 +295,13 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 						AddRow("type 0", "Info", "0", "stage 0"))
 				mock.
 					ExpectExec("").
-					WillReturnError(fmt.Errorf("couldn't update lifecycle.mtime"))
+					WillReturnError(fmt.Errorf("couldn't update Lifecycle.mtime"))
 				return db
 			},
 			evts:   []types.Event{e0, e1, e2},
 			evt:    modifyevent(e1),
 			result: []types.Event{e0, modifyevent(e1), e2},
-			err:    fmt.Errorf("couldn't update lifecycle.mtime"),
+			err:    fmt.Errorf("couldn't update Lifecycle.mtime"),
 		},
 		"eventtype_error": {
 			db: func() *sql.DB {
@@ -406,8 +390,7 @@ func Test_RemoveLifecycleEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.
-					ExpectExec("").
+				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -423,13 +406,13 @@ func Test_RemoveLifecycleEvent(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.
 					ExpectExec("").
-					WillReturnError(fmt.Errorf("couldn't update lifecycle.mtime"))
+					WillReturnError(fmt.Errorf("couldn't update Lifecycle.mtime"))
 				return db
 			},
 			evts:   []types.Event{e0, e1, e2},
 			id:     e1.UUID,
 			result: []types.Event{e0, e2},
-			err:    fmt.Errorf("couldn't update lifecycle.mtime"),
+			err:    fmt.Errorf("couldn't update Lifecycle.mtime"),
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {

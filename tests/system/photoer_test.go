@@ -16,13 +16,11 @@ func Test_GetPhotos(t *testing.T) {
 	set := map[string]struct {
 		id     types.UUID
 		photos int
-		notes  []int
 		err    error
 	}{
 		"happy_path": {
 			id:     "generation photo",
 			photos: 2,
-			notes:  []int{2, 0},
 		},
 	}
 	for k, v := range set {
@@ -32,9 +30,6 @@ func Test_GetPhotos(t *testing.T) {
 			result, err := db.GetPhotos(context.Background(), v.id, types.CID(k))
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.photos, len(result))
-			for i, p := range result {
-				require.Equal(t, v.notes[i], len(p.Notes))
-			}
 		})
 	}
 }
@@ -56,7 +51,7 @@ func Test_AddPhoto(t *testing.T) {
 		"no_rows_affected_photo": {
 			id:    "missing",
 			count: 0,
-			err:   fmt.Errorf(foreignKeyViolation1to1, "event_photos", "event_photos_event_uuid_fkey"),
+			err:   fmt.Errorf("pq: foreign key violation"),
 		},
 	}
 	for k, v := range set {

@@ -161,7 +161,7 @@ values('0', 'Spore', 'spore print', '0'),
       ('change_source_fail_type 0', 'Spore', 'change strain source 1', 'change_source_fail_type'),
       ('delete me!', 'Spore', 'remove strain source', 'remove source');
 
-insert into event_photos(uuid, filename, event_uuid)
+insert into photos(uuid, filename, photoable_uuid)
 values('gen photo 0', 'gen photo 0', 'generation photo'),
       ('gen photo 1', 'gen photo 1', 'generation photo'),
       ('gen photo 2', 'gen photo 2', 'change photo event'),

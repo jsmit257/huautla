@@ -117,7 +117,11 @@ func Test_ChangeAttribute(t *testing.T) {
 		err    error
 	}{
 		"happy_path": { // run this first, synchronously
-			a: types.StrainAttribute{Name: strain.Attributes[0].Name, Value: "malabar"},
+			a: types.StrainAttribute{
+				UUID:  strain.Attributes[0].UUID,
+				Name:  strain.Attributes[0].Name,
+				Value: "malabar",
+			},
 			result: []types.StrainAttribute{
 				func() types.StrainAttribute {
 					result := strain.Attributes[0]

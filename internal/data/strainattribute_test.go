@@ -223,6 +223,7 @@ func Test_ChangeAttribute(t *testing.T) {
 	tcs := map[string]struct {
 		db    getMockDB
 		attrs []types.StrainAttribute
+		id    types.UUID
 		n, v  string
 		err   error
 	}{
@@ -238,8 +239,9 @@ func Test_ChangeAttribute(t *testing.T) {
 				{UUID: "0", Name: "Mojo", Value: "Lost"},
 				{UUID: "1", Name: "Yield", Value: "Some"},
 			},
-			n: "Yield",
-			v: "Lots!!",
+			id: "1",
+			n:  "Yield",
+			v:  "Lots!!",
 		},
 		"no_rows_affected": {
 			db: func() *sql.DB {
@@ -293,7 +295,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			}).ChangeAttribute(
 				context.Background(),
 				s,
-				types.StrainAttribute{Name: tc.n, Value: tc.v},
+				types.StrainAttribute{UUID: tc.id, Name: tc.n, Value: tc.v},
 				"Test_RemoveAttribute")
 
 			require.Equal(t, tc.err, err)
