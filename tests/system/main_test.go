@@ -15,9 +15,8 @@ import (
 )
 
 var (
-	db     types.DB
-	epoch  time.Time
-	noRows error = fmt.Errorf("sql: no rows in result set")
+	db    types.DB
+	epoch time.Time
 )
 
 const (

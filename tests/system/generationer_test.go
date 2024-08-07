@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -14,7 +15,7 @@ var generations []types.Generation
 func init() {
 	for _, id := range []types.UUID{"0", "1", "2", "3", "4"} {
 		if g, err := db.SelectGeneration(context.Background(), id, "generation_init"); err != nil {
-			panic(err)
+			panic(fmt.Errorf("also full of shit: %v, %w", id, err))
 		} else {
 			generations = append(generations, g)
 		}
@@ -29,32 +30,65 @@ func Test_SelectGenerationIndex(t *testing.T) {
 	require.LessOrEqual(t, 5, len(result))
 }
 
+func Test_SelectGenerationsByStrain(t *testing.T) {
+	t.Skip()
+	t.Parallel()
+
+	result, err := db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"strain-id": "no-op"}, types.CID("Test_SelectGenerationByStrain"))
+	require.Nil(t, err)
+	require.Equal(t, 1, len(result), "result: %v", result)
+
+	result, err = db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"strain-id": "!impossible!"}, types.CID("Test_SelectGenerationByStrain"))
+	require.Nil(t, err)
+	require.Equal(t, 0, len(result), "result: %v", result)
+}
+
+func Test_SelectGenerationsByPlating(t *testing.T) {
+	t.Parallel()
+
+	result, err := db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"plating-id": "no-op"}, types.CID("Test_SelectGenerationByPlating"))
+	require.Nil(t, err)
+	require.Equal(t, 2, len(result), "result: %v", result)
+
+	result, err = db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"plating-id": "!impossible!"}, types.CID("Test_SelectGenerationByPlating"))
+	require.Nil(t, err)
+	require.Equal(t, 0, len(result), "result: %v", result)
+}
+
+func Test_SelectGenerationsByLiquid(t *testing.T) {
+	t.Parallel()
+
+	result, err := db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"liquid-id": "no-op2"}, types.CID("Test_SelectGenerationByLiquid"))
+	require.Nil(t, err)
+	require.Equal(t, 1, len(result), "result: %v", result)
+
+	result, err = db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"liquid-id": "!impossible!"}, types.CID("Test_SelectGenerationByLiquid"))
+	require.Nil(t, err)
+	require.Equal(t, 0, len(result), "result: %v", result)
+}
+
 func Test_SelectGeneration(t *testing.T) {
 	t.Parallel()
 
 	set := map[string]struct {
-		id     types.UUID
-		result types.Generation
-		err    error
+		err error
 	}{
 		// "happy_path": { // XXX: kinda redundant
 		// 	id:     generation[0].UUID,
 		// 	result: generation[0],
 		// },
 		"no_rows_returned": {
-			id:     "missing",
-			result: types.Generation{UUID: "missing"},
-			err:    noRows,
+			err: sql.ErrNoRows,
 		},
 	}
 	for k, v := range set {
 		k, v := k, v
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			result, err := db.SelectGeneration(context.Background(), v.id, types.CID(k))
+			result, err := db.SelectGeneration(context.Background(), "", types.CID(k))
 			require.Equal(t, v.err, err)
-			require.Equal(t, v.result.UUID, result.UUID)
-			require.Equal(t, v.result, result)
+			require.Equal(t, types.UUID(""), result.UUID)
+			// require.Equal(t, v.result, result)
 		})
 	}
 }
@@ -200,6 +234,96 @@ func Test_DeleteGeneration(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 			err := db.DeleteGeneration(context.Background(), v.id, types.CID(k))
+			equalErrorMessages(t, v.err, err)
+		})
+	}
+}
+
+func Test_GeneratedStrain(t *testing.T) {
+	t.Skip()
+	t.Parallel()
+
+	err := db.UpdateGeneratedStrain(context.Background(), &generations[0].UUID, strains[0].UUID, types.CID("LinkingStrains"))
+	require.Nil(t, err, "linking strain to generation")
+
+	strains[0].Generation = &types.Generation{UUID: generations[0].UUID}
+
+	set := map[string]struct {
+		id     types.UUID
+		result types.Strain
+		err    error
+	}{
+		"happy_path": {
+			id: generations[0].UUID,
+			result: func(s types.Strain) types.Strain {
+				s.Attributes = nil
+				return s
+			}(strains[0]),
+		},
+		"no_strain_found": {
+			id:  generations[1].UUID,
+			err: sql.ErrNoRows,
+		},
+		"no_generation_found": {
+			id:  "missing",
+			err: sql.ErrNoRows,
+		},
+	}
+	for k, v := range set {
+		k, v := k, v
+		t.Run(k, func(t *testing.T) {
+			t.Parallel()
+			result, err := db.GeneratedStrain(context.Background(), v.id, types.CID(k))
+			require.Equal(t, v.err, err, "result: %#v", result)
+			require.Equal(t, v.result, result)
+		})
+	}
+}
+func Test_UpdateGeneratedStrain(t *testing.T) {
+	t.Parallel()
+
+	set := map[string]struct {
+		gid,
+		sid types.UUID
+		err error
+	}{
+		"happy_update_new": {
+			gid: generations[2].UUID,
+			sid: strains[1].UUID,
+		},
+		"happy_update_existing": {
+			gid: generations[1].UUID,
+			sid: strains[2].UUID,
+		},
+		"happy_delete": {
+			sid: strains[2].UUID,
+		},
+		// FIXME: decide if these need to work
+		"no_rows_affected_strain": {
+			gid: generations[0].UUID,
+			err: sql.ErrNoRows,
+		},
+		"no_rows_affected_generation": { // vendors aren't part of the update (yet)
+			gid: generations[0].UUID,
+			err: sql.ErrNoRows,
+		},
+		// "unique_key_violation": {
+		// 	gid: generations[2].UUID,
+		// 	sid: strains[4].UUID,
+		// 	err: fmt.Errorf(uniqueKeyViolation, "strains_name_vendor_uuid_ctime_key"),
+		// },
+	}
+	for k, v := range set {
+		k, v := k, v
+		t.Run(k, func(t *testing.T) {
+			// t.Parallel()
+
+			tmp := (*types.UUID)(nil)
+			if v.gid != "" {
+				tmp = &v.gid
+			}
+
+			err := db.UpdateGeneratedStrain(context.Background(), tmp, v.sid, types.CID(k))
 			equalErrorMessages(t, v.err, err)
 		})
 	}

@@ -42,19 +42,17 @@ func (db *Conn) GetSources(ctx context.Context, g *types.Generation, cid types.C
 			&row.Strain.Vendor.Name,
 			&row.Strain.Vendor.Website,
 		); err != nil {
-			return err
+			break
 		}
 
 		if lcID != nil {
-			// row.Lifecycle = &types.Lifecycle{UUID: *lcID}
-			// FIXME: the following should work, retrofitting unit tests will be unpleasant
 			var lc types.Lifecycle
 			if lc, err = db.SelectLifecycle(ctx, *lcID, cid); err != nil {
-				return err
+				break
 			} else {
 				row.Lifecycle = &lc
 			}
-			db.logger.WithField("lifecycle", row.Lifecycle).Warn("is it a pointer thing?")
+
 			for _, e := range row.Lifecycle.Events {
 				if e.UUID == progenitor {
 					row.Lifecycle.Events = []types.Event{e}

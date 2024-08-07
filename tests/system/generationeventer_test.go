@@ -141,6 +141,7 @@ func Test_RemoveGenerationEvent(t *testing.T) {
 
 	g, err := db.SelectGeneration(context.Background(), "remove gen event", types.CID("Test_RemoveGenerationEvent"))
 	require.Nil(t, err)
+	require.Equal(t, 3, len(g.Events), "g: %v", g)
 
 	set := map[string]struct {
 		id     types.UUID

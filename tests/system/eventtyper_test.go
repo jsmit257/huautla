@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -56,7 +57,7 @@ func Test_SelectEventType(t *testing.T) {
 		"no_rows_returned": {
 			id:     "missing",
 			result: types.EventType{UUID: "missing"},
-			err:    noRows,
+			err:    sql.ErrNoRows,
 		},
 	}
 	for k, v := range set {

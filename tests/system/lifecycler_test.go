@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -9,14 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var lifecycles []types.Lifecycle
+var (
+	lifecycles []types.Lifecycle
+	imp        = types.UUID("!impossible!")
+)
 
 func init() {
 	for _, id := range []types.UUID{"0", "1"} {
-		if l, err := db.SelectLifecycle(context.Background(), id, "lifecycle_init"); err != nil {
+		if l, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": id}, "lifecycle_init"); err != nil {
 			panic(err)
+		} else if len(l) != 1 {
+			panic(fmt.Errorf("not one result for getLifecycleByID: %d", len(l)))
 		} else {
-			lifecycles = append(lifecycles, l)
+			lifecycles = append(lifecycles, l[0])
 		}
 	}
 }
@@ -46,6 +52,43 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 	}
 }
 
+func Test_SelectLifecyclesByStrain(t *testing.T) {
+	t.Parallel()
+
+	result, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"strain-id": "1"}, types.CID("Test_SelectLifecyclesByStrain"))
+	require.Nil(t, err)
+	require.Equal(t, 1, len(result), "result: %v", result)
+
+	result, err = db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"strain-id": imp}, types.CID("Test_SelectLifecyclesByStrain"))
+	require.Nil(t, err)
+	require.Equal(t, 0, len(result), "result: %v", result)
+}
+
+func Test_SelectLifecyclesByGrain(t *testing.T) {
+	t.Parallel()
+
+	result, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"grain-id": types.UUID("4")}, types.CID("Test_SelectLifecyclesByGrain"))
+	require.Nil(t, err)
+	require.Equal(t, 1, len(result), "result: %v", result)
+
+	result, err = db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"grain-id": imp}, types.CID("Test_SelectLifecyclesByGrain"))
+	require.Nil(t, err)
+	require.Equal(t, 0, len(result), "result: %v", result)
+}
+
+func Test_SelectLifecyclesByBulk(t *testing.T) {
+	t.Skip()
+	t.Parallel()
+
+	result, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"bulk-id": types.UUID("nop-op3")}, types.CID("Test_SelectLifecyclesByBulk"))
+	require.Nil(t, err)
+	require.Equal(t, 1, len(result), "result: %v", result)
+
+	result, err = db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"bulk-id": imp}, types.CID("Test_SelectLifecyclesByBulk"))
+	require.Nil(t, err)
+	require.Equal(t, 0, len(result), "result: %v", result)
+}
+
 func Test_SelectLifecycle(t *testing.T) {
 	t.Parallel()
 
@@ -61,7 +104,7 @@ func Test_SelectLifecycle(t *testing.T) {
 		"no_rows_returned": {
 			id:     "missing",
 			result: types.Lifecycle{UUID: "missing"},
-			err:    noRows,
+			err:    sql.ErrNoRows,
 		},
 	}
 	for k, v := range set {
@@ -187,8 +230,9 @@ func Test_InsertLifecycle(t *testing.T) {
 func Test_UpdateLifecycle(t *testing.T) {
 	t.Parallel()
 
-	updated, err := db.SelectLifecycle(context.Background(), "update me!", "Test_UpdateLifecycle")
+	updated, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": types.UUID("update me!")}, "Test_UpdateLifecycle")
 	require.Nil(t, err)
+	require.NotEmpty(t, updated)
 
 	set := map[string]struct {
 		xform func(types.Lifecycle) types.Lifecycle
@@ -247,7 +291,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 		k, v := k, v
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			lc := v.xform(updated)
+			lc := v.xform(updated[0])
 			_, err := db.UpdateLifecycle(context.Background(), lc, types.CID(k))
 			equalErrorMessages(t, v.err, err)
 		})

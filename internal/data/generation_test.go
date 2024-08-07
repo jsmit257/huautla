@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -14,11 +15,47 @@ import (
 	"github.com/jsmit257/huautla/types"
 )
 
+var (
+	genfieldnames = []string{
+		"uuid",
+		"platingsubstrate_uuid",
+		"platingsubstrate_name",
+		"platingsubstrate_type",
+		"platingsubstrate_vendor_uuid",
+		"platingsubstrate_vendor_name",
+		"platingsubstrate_vendor_website",
+		"liquidsubstrate_uuid",
+		"liquidsubstrate_name",
+		"liquidsubstrate_type",
+		"liquidsubstrate_vendor_uuid",
+		"liquidsubstrate_vendor_name",
+		"liquidsubstrate_vendor_website",
+		"mtime",
+		"ctime",
+	}
+
+	gentestrow = []driver.Value{
+		"uuid",
+		"platingsubstrate_uuid",
+		"platingsubstrate_name",
+		"platingsubstrate_type",
+		"platingsubstrate_vendor_uuid",
+		"platingsubstrate_vendor_name",
+		"platingsubstrate_vendor_website",
+		"liquidsubstrate_uuid",
+		"liquidsubstrate_name",
+		"liquidsubstrate_type",
+		"liquidsubstrate_vendor_uuid",
+		"liquidsubstrate_vendor_name",
+		"liquidsubstrate_vendor_website",
+		whenwillthenbenow,
+		whenwillthenbenow,
+	}
+)
+
 func Test_SelectGenerationIndex(t *testing.T) {
-	// t.Skip()
 	t.Parallel()
 
-	whenwillthenbenow := time.Now()
 	fields := [25]string{
 		"uuid",
 		"plating_id",
@@ -274,33 +311,270 @@ func Test_SelectGenerationIndex(t *testing.T) {
 	}
 }
 
-func Test_SelectGeneration(t *testing.T) {
+func Test_SelectGenerationsByStrain(t *testing.T) {
 	t.Parallel()
 
-	fieldnames := []string{
-		"platingsubstrate_uuid",
-		"platingsubstrate_name",
-		"platingsubstrate_type",
-		"platingsubstrate_vendor_uuid",
-		"platingsubstrate_vendor_name",
-		"platingsubstrate_vendor_website",
-		"liquidsubstrate_uuid",
-		"liquidsubstrate_name",
-		"liquidsubstrate_type",
-		"liquidsubstrate_vendor_uuid",
-		"liquidsubstrate_vendor_name",
-		"liquidsubstrate_vendor_website",
-		"mtime",
-		"ctime",
+	l := log.WithField("test", "SelectGenerationsByStrain")
+
+	tcs := map[string]struct {
+		db     getMockDB
+		result []types.Generation
+		err    error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows(genfieldnames[:]).
+						AddRow(gentestrow...))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name"}))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "name"}))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "has_photos", "has_notes"}))
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"uuid", "type", "pgid", "lcid", "strain_uuid", "strain_name", "species", "strain_ctime", "strain_vendor_uuid", "strain_vendor_name", "strain_vendor_website"}))
+
+				return db
+			},
+			result: []types.Generation{
+				{
+					UUID:  "uuid",
+					MTime: whenwillthenbenow,
+					CTime: whenwillthenbenow,
+					PlatingSubstrate: types.Substrate{
+						UUID:        "platingsubstrate_uuid",
+						Name:        "platingsubstrate_name",
+						Type:        "platingsubstrate_type",
+						Ingredients: []types.Ingredient{},
+						Vendor: types.Vendor{
+							UUID:    "platingsubstrate_vendor_uuid",
+							Name:    "platingsubstrate_vendor_name",
+							Website: "platingsubstrate_vendor_website",
+						},
+					},
+					LiquidSubstrate: types.Substrate{
+						UUID:        "liquidsubstrate_uuid",
+						Name:        "liquidsubstrate_name",
+						Type:        "liquidsubstrate_type",
+						Ingredients: []types.Ingredient{},
+						Vendor: types.Vendor{
+							UUID:    "liquidsubstrate_vendor_uuid",
+							Name:    "liquidsubstrate_vendor_name",
+							Website: "liquidsubstrate_vendor_website",
+						},
+					},
+					Events: []types.Event{},
+				},
+			},
+		},
+		"db_error": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectQuery("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
 	}
+
+	for k, v := range tcs {
+		k, v := k, v
+		t.Run(k, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := (&Conn{
+				query:        v.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", k),
+			}).SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"strain-id": "0"}, "Test_SelectGenerationsByStrain")
+
+			require.Equal(t, v.err, err)
+			require.Equal(t, v.result, result)
+		})
+	}
+}
+
+// func Test_SelectGenerationsByPlating(t *testing.T) {
+// 	t.Parallel()
+
+// 	l := log.WithField("test", "SelectGenerationsByPlating")
+
+// 	tcs := map[string]struct {
+// 		db     getMockDB
+// 		result []types.Generation
+// 		err    error
+// 	}{
+// 		"happy_path": {
+// 			db: func() *sql.DB {
+// 				db, mock, _ := sqlmock.New()
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows(genfieldnames[:]).
+// 						AddRow(gentestrow...))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"id", "name"}))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"id", "name"}))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "has_photos", "has_notes"}))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"uuid", "type", "pgid", "lcid", "strain_uuid", "strain_name", "species", "strain_ctime", "strain_vendor_uuid", "strain_vendor_name", "strain_vendor_website"}))
+
+// 				return db
+// 			},
+// 			result: []types.Generation{
+// 				{
+// 					UUID:  "uuid",
+// 					MTime: whenwillthenbenow,
+// 					CTime: whenwillthenbenow,
+// 					PlatingSubstrate: types.Substrate{
+// 						UUID:        "platingsubstrate_uuid",
+// 						Name:        "platingsubstrate_name",
+// 						Type:        "platingsubstrate_type",
+// 						Ingredients: []types.Ingredient{},
+// 						Vendor: types.Vendor{
+// 							UUID:    "platingsubstrate_vendor_uuid",
+// 							Name:    "platingsubstrate_vendor_name",
+// 							Website: "platingsubstrate_vendor_website",
+// 						},
+// 					},
+// 					LiquidSubstrate: types.Substrate{
+// 						UUID:        "liquidsubstrate_uuid",
+// 						Name:        "liquidsubstrate_name",
+// 						Type:        "liquidsubstrate_type",
+// 						Ingredients: []types.Ingredient{},
+// 						Vendor: types.Vendor{
+// 							UUID:    "liquidsubstrate_vendor_uuid",
+// 							Name:    "liquidsubstrate_vendor_name",
+// 							Website: "liquidsubstrate_vendor_website",
+// 						},
+// 					},
+// 					Events: []types.Event{},
+// 				},
+// 			},
+// 		},
+// 	}
+
+// 	for k, v := range tcs {
+// 		k, v := k, v
+// 		t.Run(k, func(t *testing.T) {
+// 			t.Parallel()
+
+// 			result, err := (&Conn{
+// 				query:        v.db(),
+// 				generateUUID: mockUUIDGen,
+// 				logger:       l.WithField("name", k),
+// 			}).SelectGenerationsByPlating(context.Background(), "0", "Test_SelectGenerationsByPlating")
+
+// 			require.Equal(t, v.err, err)
+// 			require.Equal(t, v.result, result)
+// 		})
+// 	}
+// }
+
+// func Test_SelectGenerationsByLiquid(t *testing.T) {
+// 	t.Parallel()
+
+// 	l := log.WithField("test", "SelectGenerationsByLiquid")
+
+// 	tcs := map[string]struct {
+// 		db     getMockDB
+// 		result []types.Generation
+// 		err    error
+// 	}{
+// 		"happy_path": {
+// 			db: func() *sql.DB {
+// 				db, mock, _ := sqlmock.New()
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows(genfieldnames[:]).
+// 						AddRow(gentestrow...))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"id", "name"}))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"id", "name"}))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "has_photos", "has_notes"}))
+// 				mock.ExpectQuery("").
+// 					WillReturnRows(sqlmock.
+// 						NewRows([]string{"uuid", "type", "pgid", "lcid", "strain_uuid", "strain_name", "species", "strain_ctime", "strain_vendor_uuid", "strain_vendor_name", "strain_vendor_website"}))
+
+// 				return db
+// 			},
+// 			result: []types.Generation{
+// 				{
+// 					UUID:  "uuid",
+// 					MTime: whenwillthenbenow,
+// 					CTime: whenwillthenbenow,
+// 					PlatingSubstrate: types.Substrate{
+// 						UUID:        "platingsubstrate_uuid",
+// 						Name:        "platingsubstrate_name",
+// 						Type:        "platingsubstrate_type",
+// 						Ingredients: []types.Ingredient{},
+// 						Vendor: types.Vendor{
+// 							UUID:    "platingsubstrate_vendor_uuid",
+// 							Name:    "platingsubstrate_vendor_name",
+// 							Website: "platingsubstrate_vendor_website",
+// 						},
+// 					},
+// 					LiquidSubstrate: types.Substrate{
+// 						UUID:        "liquidsubstrate_uuid",
+// 						Name:        "liquidsubstrate_name",
+// 						Type:        "liquidsubstrate_type",
+// 						Ingredients: []types.Ingredient{},
+// 						Vendor: types.Vendor{
+// 							UUID:    "liquidsubstrate_vendor_uuid",
+// 							Name:    "liquidsubstrate_vendor_name",
+// 							Website: "liquidsubstrate_vendor_website",
+// 						},
+// 					},
+// 					Events: []types.Event{},
+// 				},
+// 			},
+// 		},
+// 	}
+
+// 	for k, v := range tcs {
+// 		k, v := k, v
+// 		t.Run(k, func(t *testing.T) {
+// 			t.Parallel()
+
+// 			result, err := (&Conn{
+// 				query:        v.db(),
+// 				generateUUID: mockUUIDGen,
+// 				logger:       l.WithField("name", k),
+// 			}).SelectGenerationsByLiquid(context.Background(), "0", "Test_SelectGenerationsByLiquid")
+
+// 			require.Equal(t, v.err, err)
+// 			require.Equal(t, v.result, result)
+// 		})
+// 	}
+// }
+
+func Test_SelectGeneration(t *testing.T) {
+	t.Parallel()
 
 	e0, e1, e2 := types.Event{UUID: "0"},
 		types.Event{UUID: "1"},
 		types.Event{UUID: "2"}
 
-	whenwillthenbenow := time.Now() // time.Soon()
-
-	l := log.WithField("test", "SelectGenerationIndex")
+	l := log.WithField("test", "SelectGeneration")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -313,23 +587,8 @@ func Test_SelectGeneration(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows(fieldnames).
-						AddRow(
-							"platingsubstrate_uuid",
-							"platingsubstrate_name",
-							"platingsubstrate_type",
-							"platingsubstrate_vendor_uuid",
-							"platingsubstrate_vendor_name",
-							"platingsubstrate_vendor_website",
-							"liquidsubstrate_uuid",
-							"liquidsubstrate_name",
-							"liquidsubstrate_type",
-							"liquidsubstrate_vendor_uuid",
-							"liquidsubstrate_vendor_name",
-							"liquidsubstrate_vendor_website",
-							whenwillthenbenow,
-							whenwillthenbenow,
-						))
+						NewRows(genfieldnames).
+						AddRow(gentestrow...))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
@@ -427,23 +686,8 @@ func Test_SelectGeneration(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows(fieldnames).
-						AddRow(
-							"platingsubstrate_uuid",
-							"platingsubstrate_name",
-							"platingsubstrate_type",
-							"platingsubstrate_vendor_uuid",
-							"platingsubstrate_vendor_name",
-							"platingsubstrate_vendor_website",
-							"liquidsubstrate_uuid",
-							"liquidsubstrate_name",
-							"liquidsubstrate_type",
-							"liquidsubstrate_vendor_uuid",
-							"liquidsubstrate_vendor_name",
-							"liquidsubstrate_vendor_website",
-							whenwillthenbenow,
-							whenwillthenbenow,
-						))
+						NewRows(genfieldnames).
+						AddRow(gentestrow...))
 				mock.ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
 				return db
@@ -456,23 +700,8 @@ func Test_SelectGeneration(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows(fieldnames).
-						AddRow(
-							"platingsubstrate_uuid",
-							"platingsubstrate_name",
-							"platingsubstrate_type",
-							"platingsubstrate_vendor_uuid",
-							"platingsubstrate_vendor_name",
-							"platingsubstrate_vendor_website",
-							"liquidsubstrate_uuid",
-							"liquidsubstrate_name",
-							"liquidsubstrate_type",
-							"liquidsubstrate_vendor_uuid",
-							"liquidsubstrate_vendor_name",
-							"liquidsubstrate_vendor_website",
-							whenwillthenbenow,
-							whenwillthenbenow,
-						))
+						NewRows(genfieldnames).
+						AddRow(gentestrow...))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
@@ -491,23 +720,8 @@ func Test_SelectGeneration(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows(fieldnames).
-						AddRow(
-							"platingsubstrate_uuid",
-							"platingsubstrate_name",
-							"platingsubstrate_type",
-							"platingsubstrate_vendor_uuid",
-							"platingsubstrate_vendor_name",
-							"platingsubstrate_vendor_website",
-							"liquidsubstrate_uuid",
-							"liquidsubstrate_name",
-							"liquidsubstrate_type",
-							"liquidsubstrate_vendor_uuid",
-							"liquidsubstrate_vendor_name",
-							"liquidsubstrate_vendor_website",
-							whenwillthenbenow,
-							whenwillthenbenow,
-						))
+						NewRows(genfieldnames).
+						AddRow(gentestrow...))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
@@ -532,23 +746,8 @@ func Test_SelectGeneration(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows(fieldnames).
-						AddRow(
-							"platingsubstrate_uuid",
-							"platingsubstrate_name",
-							"platingsubstrate_type",
-							"platingsubstrate_vendor_uuid",
-							"platingsubstrate_vendor_name",
-							"platingsubstrate_vendor_website",
-							"liquidsubstrate_uuid",
-							"liquidsubstrate_name",
-							"liquidsubstrate_type",
-							"liquidsubstrate_vendor_uuid",
-							"liquidsubstrate_vendor_name",
-							"liquidsubstrate_vendor_website",
-							whenwillthenbenow,
-							whenwillthenbenow,
-						))
+						NewRows(genfieldnames).
+						AddRow(gentestrow...))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
@@ -574,6 +773,16 @@ func Test_SelectGeneration(t *testing.T) {
 			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
+		"no_rows": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows(genfieldnames))
+				return db
+			},
+			err: sql.ErrNoRows,
+		},
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
@@ -595,33 +804,16 @@ func Test_SelectGeneration(t *testing.T) {
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectGeneration(context.Background(), tc.id, "Test_SelectGenerationIndex")
+			}).SelectGeneration(context.Background(), tc.id, "Test_SelectGeneration")
 
 			require.Equal(t, tc.err, err)
-			// require.Equal(t, tc.result, result)
+			require.Equal(t, tc.result.UUID, types.UUID(""))
 		})
 	}
 }
 
 func Test_InsertGeneration(t *testing.T) {
 	t.Parallel()
-
-	fieldnames := []string{
-		"platingsubstrate_uuid",
-		"platingsubstrate_name",
-		"platingsubstrate_type",
-		"platingsubstrate_vendor_uuid",
-		"platingsubstrate_vendor_name",
-		"platingsubstrate_vendor_website",
-		"liquidsubstrate_uuid",
-		"liquidsubstrate_name",
-		"liquidsubstrate_type",
-		"liquidsubstrate_vendor_uuid",
-		"liquidsubstrate_vendor_name",
-		"liquidsubstrate_vendor_website",
-		"mtime",
-		"ctime",
-	}
 
 	e0, e1, e2 := types.Event{UUID: "0"},
 		types.Event{UUID: "1"},
@@ -643,23 +835,8 @@ func Test_InsertGeneration(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows(fieldnames).
-						AddRow(
-							"platingsubstrate_uuid",
-							"platingsubstrate_name",
-							"platingsubstrate_type",
-							"platingsubstrate_vendor_uuid",
-							"platingsubstrate_vendor_name",
-							"platingsubstrate_vendor_website",
-							"liquidsubstrate_uuid",
-							"liquidsubstrate_name",
-							"liquidsubstrate_type",
-							"liquidsubstrate_vendor_uuid",
-							"liquidsubstrate_vendor_name",
-							"liquidsubstrate_vendor_website",
-							whenwillthenbenow,
-							whenwillthenbenow,
-						))
+						NewRows(genfieldnames).
+						AddRow(append([]driver.Value{mockUUIDGen().String()}, gentestrow[1:]...)...))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name"}).
@@ -757,7 +934,7 @@ func Test_InsertGeneration(t *testing.T) {
 				"Test_InsertGeneration")
 
 			require.Equal(t, tc.err, err)
-			require.Equal(t, g.UUID, types.UUID(mockUUIDGen().String()))
+			require.Equal(t, types.UUID(mockUUIDGen().String()), g.UUID)
 		})
 	}
 }

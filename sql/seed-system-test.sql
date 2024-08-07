@@ -19,9 +19,11 @@ values('update me!', 'update me!'),
 insert into substrates(uuid, name, type, vendor_uuid)
 values('0', 'Rye', 'Grain', 'localhost'),
       ('1', 'Cedar chips', 'Bulk', 'localhost'),
+      ('no-op3', 'n/a', 'Bulk', 'localhost'),
       ('2', 'Agar', 'Agar', 'localhost'),
       ('3', 'Liquid', 'Liquid', 'localhost'),
       ('4', 'Millet', 'Grain', 'localhost'),
+      ('no-op2', 'Liquid2', 'Liquid', 'localhost'),
       ('update generation', 'Update generation', 'Liquid', 'localhost'),
       ('add ingredient', 'add ingredient', 'Bulk', 'localhost'),
       ('change ingredient', 'change ingredient', 'Grain', 'localhost'),
@@ -72,7 +74,7 @@ values('update me!', 'update me!', 'Info', '1'),
       ('delete me!', 'delete me!', 'Info', '1');
 
 insert into lifecycles(uuid, location, strain_cost, grain_cost, bulk_cost, yield, headcount, gross, strain_uuid, grainsubstrate_uuid, bulksubstrate_uuid)
-values('0', 'reference implementation', 8, 1, 2, 3, 4, 5, '0', '0', '2'),
+values('0', 'reference implementation', 8, 1, 2, 3, 4, 5, '1', '4', 'no-op3'),
       ('1', 'reference implementation 2', 7, 0, 0, 0, 0, 0, '0', '0', '2'),
       ('spore', 'spore', 1.1, 0, 0, 0, 0, 0, '0', '0', '2'),
       ('spore 2', 'spore 2', 1.2, 0, 0, 0, 0, 0, '0', '0', '2'),
@@ -110,7 +112,9 @@ values('0', '2', '3'),
       ('photo', '2', '3'),
       ('add photo', '2', '3'),
       ('update me!', '2', '3'),
-      ('delete me!', '2', '3');
+      ('delete me!', '2', '3'),
+      ('by-plating', 'no-op', '3'),
+      ('by-liquid', 'no-op', 'no-op2');
 
 insert into events(uuid, temperature, humidity, observable_uuid, eventtype_uuid)
 values('0', 2, 1, '0', '1'),

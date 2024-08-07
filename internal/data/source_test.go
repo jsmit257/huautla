@@ -253,8 +253,8 @@ func Test_AddStrainSource(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
-						AddRow("X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website", nil))
+						NewRows([]string{"species", "name", "ctime", "mtime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
+						AddRow("X.species", "strain 0", whenwillthenbenow, nil, "0", "vendor 0", "website", nil))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -396,8 +396,8 @@ func Test_AddEventSource(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
-						AddRow("X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website", nil))
+						NewRows([]string{"species", "name", "ctime", "mtime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
+						AddRow("X.species", "strain 0", whenwillthenbenow, nil, "0", "vendor 0", "website", nil))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).

@@ -1,9 +1,5 @@
 package test
 
-// yeah, all these things could be tested in the lifecycler tests,
-// but it's easy to separate them this way, and ignore these details
-// in livecycler_test
-
 import (
 	"context"
 	"fmt"
@@ -51,8 +47,10 @@ func Test_GetLifecycleEvents(t *testing.T) {
 func Test_AddLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lc, err := db.SelectLifecycle(context.Background(), "add event", types.CID("Test_AddLifecycleEvent"))
+	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": "add event"}, types.CID("Test_AddLifecycleEvent"))
 	require.Nil(t, err)
+	require.NotEmpty(t, lcs)
+	lc := lcs[0]
 
 	set := map[string]struct {
 		e     types.Event
@@ -84,8 +82,10 @@ func Test_AddLifecycleEvent(t *testing.T) {
 func Test_ChangeLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lc, err := db.SelectLifecycle(context.Background(), "change event", types.CID("Test_ChangeLifecycleEvent"))
+	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": "change event"}, types.CID("Test_ChangeLifecycleEvent"))
 	require.Nil(t, err)
+	require.NotEmpty(t, lcs)
+	lc := lcs[0]
 
 	set := map[string]struct {
 		e      types.Event
@@ -122,8 +122,10 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 func Test_RemoveLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lc, err := db.SelectLifecycle(context.Background(), "remove event", types.CID("Test_RemoveLifecycleEvent"))
+	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": "remove event"}, types.CID("Test_RemoveLifecycleEvent"))
 	require.Nil(t, err)
+	require.NotEmpty(t, lcs)
+	lc := lcs[0]
 
 	set := map[string]struct {
 		id     types.UUID

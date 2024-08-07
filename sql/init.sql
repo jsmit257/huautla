@@ -4,7 +4,8 @@ begin; /** base table creation */
   create table uuids (
     uuid  varchar(40) not null primary key,
     mtime timestamp   not null default current_timestamp,
-    ctime timestamp   not null default current_timestamp
+    ctime timestamp   not null default current_timestamp,
+    dtime timestamp   null default null
   );
 
   -- anything that donates DNA to a generation
@@ -302,9 +303,9 @@ begin; /** source constraints */
     elsif exists (
       select  1
         from  sources s
-      where  s.generation_uuid = new.generation_uuid
-        and  s.type != new.type
-        and  s.uuid != new.uuid
+       where  s.generation_uuid = new.generation_uuid
+         and  s.type != new.type
+         and  s.uuid != new.uuid
     ) then
       raise exception 'source types can''t be mixed';
     elsif exists (
@@ -318,9 +319,9 @@ begin; /** source constraints */
                         'Clone'
               ) limits
           on  s.type = limits.type
-      where  s.generation_uuid = new.generation_uuid
-        and  s.uuid != new.uuid
-      group
+       where  s.generation_uuid = new.generation_uuid
+         and  s.uuid != new.uuid
+       group
           by  limits.cap
       having  limits.cap = count(s.uuid)
     ) then
@@ -330,8 +331,8 @@ begin; /** source constraints */
         from  events e
         join  event_types t
           on  e.eventtype_uuid = t.uuid
-      where  e.uuid = new.progenitor_uuid
-        and  t.severity != 'Generation'
+       where  e.uuid = new.progenitor_uuid
+         and  t.severity != 'Generation'
     ) then
       raise exception 'event is not a generation type';
     end if;

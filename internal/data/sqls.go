@@ -79,27 +79,6 @@ var psqls = sqlMap{
 		"remove": `delete from events where uuid = $1`,
 	},
 
-	"photo": {
-		"get": `
-      select  p.uuid,
-              p.filename,
-              p.mtime,
-              p.ctime
-        from  photos p
-       where  p.photoable_uuid = $1
-       order
-          by  p.mtime desc`,
-		"add": `
-      insert into photos(uuid, filename, photoable_uuid, mtime, ctime)
-      values ($1, $2, $3, $4, $5)`,
-		"change": `
-      update  photos
-         set  filename = $1,
-              mtime = $2
-       where  uuid = $3`,
-		"remove": `delete from photos where uuid = $1`,
-	},
-
 	"eventtype": {
 		"select-all": `
       select  e.uuid,
@@ -191,7 +170,26 @@ var psqls = sqlMap{
        order
           by  g.uuid`,
 		"select": `
-      select  ps.uuid as plating_id,
+      with strain_sources as (
+        select  so.generation_uuid,
+                st.uuid as strain_uuid
+          from  sources so
+          join  strains st
+            on  so.progenitor_uuid = st.uuid
+         union
+        select  so.generation_uuid,
+                st.uuid
+          from  sources so
+          join  events ev
+            on  so.progenitor_uuid = ev.uuid
+          join  lifecycles lc
+            on  ev.observable_uuid = lc.uuid
+          join  strains st
+            on  lc.strain_uuid = st.uuid
+      )
+      select  
+    distinct  g.uuid,
+              ps.uuid as plating_id,
               ps.name as plating_name,
               ps.type as plating_type,
               psv.uuid as plating_vendor_uuid,
@@ -214,7 +212,13 @@ var psqls = sqlMap{
           on  g.liquidsubstrate_uuid = ls.uuid
         join  vendors lsv
           on  ls.vendor_uuid = lsv.uuid
-       where  g.uuid = $1`,
+        left
+        join  strain_sources ss
+          on  g.uuid = ss.generation_uuid
+         and  ss.strain_uuid = coalesce($2, ss.strain_uuid)
+       where  g.uuid = coalesce($1, g.uuid)
+         and  ps.uuid = coalesce($3, ps.uuid)
+         and  ls.uuid = coalesce($4, ls.uuid)`,
 		"insert": `
       insert  into generations(uuid, platingsubstrate_uuid, liquidsubstrate_uuid, mtime, ctime)
       select  $1,
@@ -232,7 +236,7 @@ var psqls = sqlMap{
       update  generations g
          set  platingsubstrate_uuid = ps.uuid,
               liquidsubstrate_uuid = ls.uuid,
-              mtime = current_timestamp
+              mtime = $4
         from  substrates ps,
               substrates ls
        where  ps.type = 'Agar'
@@ -262,7 +266,8 @@ var psqls = sqlMap{
       order
          by  mtime desc`,
 		"select": `
-      select  lc.location,
+      select  lc.uuid,
+              lc.location,
               lc.strain_cost,
               lc.grain_cost,
               lc.bulk_cost,
@@ -274,6 +279,7 @@ var psqls = sqlMap{
               s.uuid as strain_uuid,
               s.species as strain_species,
               s.name as strain_name,
+              s.generation_uuid,
               s.ctime as strain_ctime,
               sv.uuid as strain_vendor_uuid,
               sv.name as strain_vendor_name,
@@ -303,7 +309,10 @@ var psqls = sqlMap{
           on  lc.bulksubstrate_uuid = bs.uuid 
         join  vendors bv
           on  bs.vendor_uuid = bv.uuid
-       where  lc.uuid = $1`,
+       where  lc.uuid = coalesce($1, lc.uuid)
+         and  s.uuid = coalesce($2, s.uuid)
+         and  gs.uuid = coalesce($3, gs.uuid)
+         and  bs.uuid = coalesce($4, bs.uuid)`,
 		"insert": `
       insert
         into lifecycles(
@@ -391,6 +400,27 @@ var psqls = sqlMap{
 		"remove": `delete from notes where uuid = $1`,
 	},
 
+	"photo": {
+		"get": `
+      select  p.uuid,
+              p.filename,
+              p.mtime,
+              p.ctime
+        from  photos p
+       where  p.photoable_uuid = $1
+       order
+          by  p.mtime desc`,
+		"add": `
+      insert into photos(uuid, filename, photoable_uuid, mtime, ctime)
+      values ($1, $2, $3, $4, $5)`,
+		"change": `
+      update  photos
+         set  filename = $1,
+              mtime = $2
+       where  uuid = $3`,
+		"remove": `delete from photos where uuid = $1`,
+	},
+
 	"source": {
 		"get": `
       select  s.uuid,
@@ -461,6 +491,7 @@ var psqls = sqlMap{
               s.species,
               s.name,
               s.ctime,
+              s.dtime,
               v.uuid as vendor_uuid,
               v.name as vendor_name,
               v.website as vendor_website,
@@ -474,6 +505,7 @@ var psqls = sqlMap{
       select  s.species,
               s.name,
               s.ctime,
+              s.dtime,
               v.uuid as vendor_uuid,
               v.name as vendor_name,
               v.website as vendor_website,
@@ -494,7 +526,26 @@ var psqls = sqlMap{
               name = $2,
               vendor_uuid = $3
        where  uuid = $4`,
-		"delete": `delete from strains where uuid = $1`,
+		"delete": `update strains set dtime = current_timestamp where uuid = $1`,
+		// "delete": `delete from strains where uuid = $1`,
+		"generated-strain": `
+      select  s.uuid,
+              s.species,
+              s.name,
+              v.uuid as vendor_uuid,
+              v.name as vendor_name,
+              v.website as vendor_website,
+              s.ctime
+        from  strains s 
+        join  vendors v
+          on  s.vendor_uuid = v.uuid
+       where  s.generation_uuid = $1
+       order
+          by  s.name, s.ctime`,
+		"update-gen-strain": `
+      update  strains
+         set  generation_uuid = $1
+       where  uuid = $2`,
 	},
 
 	"strainattribute": {

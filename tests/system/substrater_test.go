@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -63,7 +64,7 @@ func Test_SelectSubstrate(t *testing.T) {
 		"no_rows_returned": {
 			id:     "missing",
 			result: types.Substrate{UUID: "missing"},
-			err:    noRows,
+			err:    sql.ErrNoRows,
 		},
 	}
 	for k, v := range set {

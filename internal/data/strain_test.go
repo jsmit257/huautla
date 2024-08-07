@@ -31,10 +31,10 @@ func Test_SelectAllStrains(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
-						AddRow("0", "X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website", nil).
-						AddRow("1", "X.species", "strain 1", whenwillthenbenow, "1", "vendor 1", "website", nil).
-						AddRow("2", "X.species", "strain 2", whenwillthenbenow, "1", "vendor 1", "website", "0"))
+						NewRows([]string{"id", "species", "name", "ctime", "dtime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
+						AddRow("0", "X.species", "strain 0", whenwillthenbenow, nil, "0", "vendor 0", "website", nil).
+						AddRow("1", "X.species", "strain 1", whenwillthenbenow, nil, "1", "vendor 1", "website", nil).
+						AddRow("2", "X.species", "strain 2", whenwillthenbenow, nil, "1", "vendor 1", "website", "0"))
 				return db
 			},
 			result: []types.Strain{
@@ -103,8 +103,8 @@ func Test_SelectStrain(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
-						AddRow("X.species", "strain 0", whenwillthenbenow, "0", "vendor 0", "website", nil))
+						NewRows([]string{"species", "name", "ctime", "dtime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}).
+						AddRow("X.species", "strain 0", whenwillthenbenow, nil, "0", "vendor 0", "website", "nil"))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -118,7 +118,9 @@ func Test_SelectStrain(t *testing.T) {
 				{UUID: "0", Name: "name 0", Value: "value 0"},
 				{UUID: "1", Name: "name 1", Value: "value 1"},
 				{UUID: "2", Name: "name 2", Value: "value 2"},
-			}},
+			},
+				Generation: &types.Generation{UUID: "nil"},
+			},
 		},
 		"no_results_found": {
 			db: func() *sql.DB {
@@ -388,6 +390,152 @@ func Test_DeleteStrain(t *testing.T) {
 				context.Background(),
 				tc.id,
 				"Test_DeleteStrain")
+
+			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func Test_GeneratedStrain(t *testing.T) {
+	t.Parallel()
+
+	whenwillthenbenow := time.Now() // time.Soon()
+
+	l := log.WithField("test", "GeneratedStrain")
+
+	tcs := map[string]struct {
+		db     getMockDB
+		id     types.UUID
+		result types.Strain
+		err    error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"uuid", "species", "name", "vendor_uuid", "vendor_name", "vendor_website", "ctime"}).
+						AddRow("0", "X.species", "strain 0", "0", "vendor 0", "website", whenwillthenbenow))
+				return db
+			},
+			id:     "0",
+			result: types.Strain{UUID: "0", Species: "X.species", Name: "strain 0", CTime: whenwillthenbenow, Vendor: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website"}},
+		},
+		"no_results_found": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows([]string{"species", "name", "ctime", "vendor_uuid", "vendor_name", "vendor_website", "generation_uuid"}))
+				return db
+			},
+			id:     "0",
+			result: types.Strain{},
+			err:    sql.ErrNoRows,
+		},
+		"query_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectQuery("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := (&Conn{
+				query:        tc.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).GeneratedStrain(context.Background(), tc.id, "Test_GeneratedStrain")
+
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, result)
+		})
+	}
+}
+
+func Test_UpdateGeneratedStrain(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "UpdateGeneratedStrain")
+
+	tcs := map[string]struct {
+		db getMockDB
+		gid,
+		sid types.UUID
+		err error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				return db
+			},
+			gid: "0",
+			sid: "0",
+		},
+		"no_rows_affected": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			gid: "0",
+			sid: "0",
+			err: sql.ErrNoRows,
+		},
+		"query_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			gid: "0",
+			sid: "0",
+			err: fmt.Errorf("some error"),
+		},
+		"result_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.
+					ExpectExec("").
+					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				return db
+			},
+			gid: "0",
+			sid: "0",
+			err: fmt.Errorf("some error"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := (&Conn{
+				query:        tc.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).UpdateGeneratedStrain(
+				context.Background(),
+				&tc.gid,
+				tc.sid,
+				"Test_UpdateStrains")
 
 			require.Equal(t, tc.err, err)
 		})
