@@ -17,19 +17,19 @@ values('update me!', 'update me!'),
       ('delete me!', 'delete me!');
 
 insert into substrates(uuid, name, type, vendor_uuid)
-values('0', 'Rye', 'Grain', 'localhost'),
-      ('1', 'Cedar chips', 'Bulk', 'localhost'),
-      ('no-op3', 'n/a', 'Bulk', 'localhost'),
-      ('2', 'Agar', 'Agar', 'localhost'),
-      ('3', 'Liquid', 'Liquid', 'localhost'),
-      ('4', 'Millet', 'Grain', 'localhost'),
-      ('no-op2', 'Liquid2', 'Liquid', 'localhost'),
-      ('update generation', 'Update generation', 'Liquid', 'localhost'),
-      ('add ingredient', 'add ingredient', 'Bulk', 'localhost'),
-      ('change ingredient', 'change ingredient', 'Grain', 'localhost'),
-      ('remove ingredient', 'remove ingredient', 'Bulk', 'localhost'),
-      ('update me!', 'update me!', 'Grain', 'localhost'),
-      ('delete me!', 'delete me!', 'Grain', 'localhost');
+values('0', 'Rye', 'grain', 'localhost'),
+      ('1', 'Cedar chips', 'bulk', 'localhost'),
+      ('no-op3', 'n/a', 'bulk', 'localhost'),
+      ('2', 'Agar', 'plating', 'localhost'),
+      ('3', 'Liquid', 'liquid', 'localhost'),
+      ('4', 'Millet', 'grain', 'localhost'),
+      ('no-op2', 'Liquid2', 'liquid', 'localhost'),
+      ('update generation', 'Update generation', 'liquid', 'localhost'),
+      ('add ingredient', 'add ingredient', 'bulk', 'localhost'),
+      ('change ingredient', 'change ingredient', 'grain', 'localhost'),
+      ('remove ingredient', 'remove ingredient', 'bulk', 'localhost'),
+      ('update me!', 'update me!', 'grain', 'localhost'),
+      ('delete me!', 'delete me!', 'grain', 'localhost');
 
 insert into substrate_ingredients(uuid, substrate_uuid, ingredient_uuid)
 values('0', '4', '2'),

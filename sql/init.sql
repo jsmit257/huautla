@@ -73,7 +73,7 @@ create table vendors (
 create table substrates (
   uuid        varchar(40)  not null primary key,
   name        varchar(512) not null,
-  type        varchar(25)  not null check (type in ('Agar', 'Liquid', 'Grain', 'Bulk')),
+  type        varchar(25)  not null check (type in ('plating', 'liquid', 'grain', 'bulk')),
   vendor_uuid varchar(40)  not null references vendors(uuid),
   unique(name, vendor_uuid)
 ) inherits(uuids);

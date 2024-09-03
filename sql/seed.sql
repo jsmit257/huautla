@@ -33,7 +33,7 @@ values('0', 'Vermiculite'),
       ('15', 'Diammonium phosphate');
 
 insert into substrates(uuid, name, type, vendor_uuid)
-values('no-op', 'N/A', 'Agar', 'localhost');
+values('no-op', 'N/A', 'plating', 'localhost');
 
 insert into event_types(uuid, name, severity, stage_uuid)
 values('0', 'Agar sampling', 'Begin', '0'),
@@ -41,6 +41,7 @@ values('0', 'Agar sampling', 'Begin', '0'),
       ('1', '50% colonization', 'Info', '4'),
       ('2', '100% colonization', 'Info', '4'),
       ('3', 'Mold', 'Error', '4'),
+      ('yeast', 'Yeast', 'Error', '0'),
       ('4', 'Agar bacteria', 'Error', '0'), -- this may be recoverable
       ('5', 'Liquid innoculation', 'Begin', '0'),
       ('9', 'Innoculation', 'Begin', '1'),

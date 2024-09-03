@@ -86,7 +86,7 @@ func Test_InsertSubstrate(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			s: types.Substrate{Name: "Honey Solution", Type: "Bulk", Vendor: vendors["localhost"]},
+			s: types.Substrate{Name: "Honey Solution", Type: types.BulkType, Vendor: vendors["localhost"]},
 		},
 		"unique_key_violation": {
 			s:   substrates[types.BulkType][0],
