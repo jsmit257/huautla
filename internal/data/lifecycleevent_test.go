@@ -56,10 +56,10 @@ func Test_GetLifecycleEvents(t *testing.T) {
 						AddRow("photos", e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, 1, 0))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "filename", "mtime", "ctime"}).
-						AddRow("id-0", "photo 0", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-1", "photo 1", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-2", "photo 2", whenwillthenbenow, whenwillthenbenow))
+						NewRows([]string{"id", "filename", "mtime", "ctime", "note_uuid", "note", "note_mtime", "note_ctime"}).
+						AddRow("id-0", "photo 0", whenwillthenbenow, whenwillthenbenow, nil, nil, nil, nil).
+						AddRow("id-1", "photo 1", whenwillthenbenow, whenwillthenbenow, nil, nil, nil, nil).
+						AddRow("id-2", "photo 2", whenwillthenbenow, whenwillthenbenow, nil, nil, nil, nil))
 
 				return db
 			},

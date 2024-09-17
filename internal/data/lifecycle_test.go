@@ -164,14 +164,178 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"uuid", "location", "mtime", "ctime"}).
-						AddRow("0", "happy_path", whenwillthenbenow, whenwillthenbenow).
-						AddRow("1", "happy_path 2", whenwillthenbenow, whenwillthenbenow))
+						NewRows([]string{
+							"uuid",
+							"location",
+							"mtime",
+							"ctime",
+							"strain_uuid",
+							"strain_species",
+							"strain_name",
+							"strain_ctime",
+							"vendor_uuid",
+							"vendor_name",
+							"vendor_website",
+							"event_uuid",
+							"temp",
+							"humidity",
+							"event_mtime",
+							"event_ctime",
+							"et_uuid",
+							"et_name",
+							"et_sev",
+							"stage_uuid",
+							"stage_name"}).
+						AddRow(
+							"0",
+							"happy_path",
+							whenwillthenbenow,
+							whenwillthenbenow,
+							"strain 0",
+							"strain 0",
+							"strain 0",
+							whenwillthenbenow,
+							"vendor 0",
+							"vendor 0",
+							"vendor 0",
+							"event 0",
+							0,
+							0,
+							whenwillthenbenow,
+							whenwillthenbenow,
+							"type 0",
+							"type 0",
+							"type 0",
+							"stage 0",
+							"stage 0",
+						).
+						AddRow(
+							"1",
+							"happy_path 2",
+							whenwillthenbenow,
+							whenwillthenbenow,
+							"strain 0",
+							"strain 0",
+							"strain 0",
+							whenwillthenbenow,
+							"vendor 0",
+							"vendor 0",
+							"vendor 0",
+							"event 0",
+							0,
+							0,
+							whenwillthenbenow,
+							whenwillthenbenow,
+							"type 0",
+							"type 0",
+							"type 0",
+							"stage 0",
+							"stage 0",
+						).
+						AddRow(
+							"1",
+							"happy_path 2",
+							whenwillthenbenow,
+							whenwillthenbenow,
+							"strain 0",
+							"strain 0",
+							"strain 0",
+							whenwillthenbenow,
+							"vendor 0",
+							"vendor 0",
+							"vendor 0",
+							"event 1",
+							0,
+							0,
+							whenwillthenbenow,
+							whenwillthenbenow,
+							"type 0",
+							"type 0",
+							"type 0",
+							"stage 0",
+							"stage 0",
+						))
 				return db
 			},
 			result: []types.Lifecycle{
-				{UUID: "0", Location: "happy_path", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-				{UUID: "1", Location: "happy_path 2", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
+				{
+					UUID:     "0",
+					Location: "happy_path",
+					MTime:    whenwillthenbenow,
+					CTime:    whenwillthenbenow,
+					Strain: types.Strain{
+						UUID:    "strain 0",
+						Name:    "strain 0",
+						Species: "strain 0",
+						CTime:   whenwillthenbenow,
+						Vendor: types.Vendor{
+							UUID:    "vendor 0",
+							Name:    "vendor 0",
+							Website: "vendor 0",
+						},
+					},
+					Events: []types.Event{{
+						UUID:  "event 0",
+						MTime: whenwillthenbenow,
+						CTime: whenwillthenbenow,
+						EventType: types.EventType{
+							UUID:     "type 0",
+							Name:     "type 0",
+							Severity: "type 0",
+							Stage: types.Stage{
+								UUID: "stage 0",
+								Name: "stage 0",
+							},
+						},
+					}},
+				},
+				{
+					UUID:     "1",
+					Location: "happy_path 2",
+					MTime:    whenwillthenbenow,
+					CTime:    whenwillthenbenow,
+					Strain: types.Strain{
+						UUID:    "strain 0",
+						Name:    "strain 0",
+						Species: "strain 0",
+						CTime:   whenwillthenbenow,
+						Vendor: types.Vendor{
+							UUID:    "vendor 0",
+							Name:    "vendor 0",
+							Website: "vendor 0",
+						},
+					},
+					Events: []types.Event{
+						{
+							UUID:  "event 0",
+							MTime: whenwillthenbenow,
+							CTime: whenwillthenbenow,
+							EventType: types.EventType{
+								UUID:     "type 0",
+								Name:     "type 0",
+								Severity: "type 0",
+								Stage: types.Stage{
+									UUID: "stage 0",
+									Name: "stage 0",
+								},
+							},
+						},
+						{
+							UUID:  "event 1",
+							MTime: whenwillthenbenow,
+							CTime: whenwillthenbenow,
+							EventType: types.EventType{
+								UUID:     "type 0",
+								Name:     "type 0",
+								Severity: "type 0",
+								Stage: types.Stage{
+									UUID: "stage 0",
+									Name: "stage 0",
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 		"db_error": {
@@ -442,6 +606,7 @@ func Test_SelectLifecycle(t *testing.T) {
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
+			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 	}

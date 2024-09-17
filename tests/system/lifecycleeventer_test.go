@@ -47,7 +47,7 @@ func Test_GetLifecycleEvents(t *testing.T) {
 func Test_AddLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": "add event"}, types.CID("Test_AddLifecycleEvent"))
+	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "add event"}, types.CID("Test_AddLifecycleEvent"))
 	require.Nil(t, err)
 	require.NotEmpty(t, lcs)
 	lc := lcs[0]
@@ -82,7 +82,7 @@ func Test_AddLifecycleEvent(t *testing.T) {
 func Test_ChangeLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": "change event"}, types.CID("Test_ChangeLifecycleEvent"))
+	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "change event"}, types.CID("Test_ChangeLifecycleEvent"))
 	require.Nil(t, err)
 	require.NotEmpty(t, lcs)
 	lc := lcs[0]
@@ -122,7 +122,7 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 func Test_RemoveLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": "remove event"}, types.CID("Test_RemoveLifecycleEvent"))
+	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "remove event"}, types.CID("Test_RemoveLifecycleEvent"))
 	require.Nil(t, err)
 	require.NotEmpty(t, lcs)
 	lc := lcs[0]

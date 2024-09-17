@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"testing"
@@ -60,4 +61,24 @@ func equalErrorMessages(t *testing.T, expected, actual error) {
 	} else if expected != nil || actual != nil {
 		require.Equal(t, expected, actual)
 	}
+}
+
+type testAttrs map[string]string
+
+func (ta testAttrs) Get(name string) *types.UUID {
+	result, ok := ta[name]
+	if !ok {
+		return nil
+	}
+	temp := types.UUID(result)
+	return &temp
+}
+func (ta testAttrs) Contains(names ...string) bool {
+	return true
+}
+func (ta testAttrs) Map(m url.Values) (err error) {
+	return nil
+}
+func (ta testAttrs) Set(name string, value string) error {
+	return nil
 }

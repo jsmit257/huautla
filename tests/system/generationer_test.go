@@ -15,7 +15,7 @@ var generations []types.Generation
 func init() {
 	for _, id := range []types.UUID{"0", "1", "2", "3", "4"} {
 		if g, err := db.SelectGeneration(context.Background(), id, "generation_init"); err != nil {
-			panic(fmt.Errorf("also full of shit: %v, %w", id, err))
+			panic(fmt.Errorf("select error: %v, %w", id, err))
 		} else {
 			generations = append(generations, g)
 		}
@@ -34,11 +34,11 @@ func Test_SelectGenerationsByStrain(t *testing.T) {
 	t.Skip()
 	t.Parallel()
 
-	result, err := db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"strain-id": "no-op"}, types.CID("Test_SelectGenerationByStrain"))
+	result, err := db.SelectGenerationsByAttrs(context.Background(), testAttrs{"strain-id": "no-op"}, types.CID("Test_SelectGenerationByStrain"))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(result), "result: %v", result)
 
-	result, err = db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"strain-id": "!impossible!"}, types.CID("Test_SelectGenerationByStrain"))
+	result, err = db.SelectGenerationsByAttrs(context.Background(), testAttrs{"strain-id": "!impossible!"}, types.CID("Test_SelectGenerationByStrain"))
 	require.Nil(t, err)
 	require.Equal(t, 0, len(result), "result: %v", result)
 }
@@ -46,11 +46,11 @@ func Test_SelectGenerationsByStrain(t *testing.T) {
 func Test_SelectGenerationsByPlating(t *testing.T) {
 	t.Parallel()
 
-	result, err := db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"plating-id": "no-op"}, types.CID("Test_SelectGenerationByPlating"))
+	result, err := db.SelectGenerationsByAttrs(context.Background(), testAttrs{"plating-id": "no-op"}, types.CID("Test_SelectGenerationByPlating"))
 	require.Nil(t, err)
 	require.Equal(t, 2, len(result), "result: %v", result)
 
-	result, err = db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"plating-id": "!impossible!"}, types.CID("Test_SelectGenerationByPlating"))
+	result, err = db.SelectGenerationsByAttrs(context.Background(), testAttrs{"plating-id": "!impossible!"}, types.CID("Test_SelectGenerationByPlating"))
 	require.Nil(t, err)
 	require.Equal(t, 0, len(result), "result: %v", result)
 }
@@ -58,11 +58,11 @@ func Test_SelectGenerationsByPlating(t *testing.T) {
 func Test_SelectGenerationsByLiquid(t *testing.T) {
 	t.Parallel()
 
-	result, err := db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"liquid-id": "no-op2"}, types.CID("Test_SelectGenerationByLiquid"))
+	result, err := db.SelectGenerationsByAttrs(context.Background(), testAttrs{"liquid-id": "no-op2"}, types.CID("Test_SelectGenerationByLiquid"))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(result), "result: %v", result)
 
-	result, err = db.SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"liquid-id": "!impossible!"}, types.CID("Test_SelectGenerationByLiquid"))
+	result, err = db.SelectGenerationsByAttrs(context.Background(), testAttrs{"liquid-id": "!impossible!"}, types.CID("Test_SelectGenerationByLiquid"))
 	require.Nil(t, err)
 	require.Equal(t, 0, len(result), "result: %v", result)
 }
@@ -85,7 +85,7 @@ func Test_SelectGeneration(t *testing.T) {
 		k, v := k, v
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			result, err := db.SelectGeneration(context.Background(), "", types.CID(k))
+			result, err := db.SelectGeneration(context.Background(), "abc", types.CID(k))
 			require.Equal(t, v.err, err)
 			require.Equal(t, types.UUID(""), result.UUID)
 			// require.Equal(t, v.result, result)

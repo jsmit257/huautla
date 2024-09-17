@@ -391,11 +391,13 @@ func Test_SelectGenerationsByStrain(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
 
+			p, _ := types.NewReportAttrs(map[string][]string{"strain-id": {"0"}})
+
 			result, err := (&Conn{
 				query:        v.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", k),
-			}).SelectGenerationsByAttrs(context.Background(), types.ReportAttrs{"strain-id": "0"}, "Test_SelectGenerationsByStrain")
+			}).SelectGenerationsByAttrs(context.Background(), p, "Test_SelectGenerationsByStrain")
 
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result, result)
@@ -781,6 +783,7 @@ func Test_SelectGeneration(t *testing.T) {
 						NewRows(genfieldnames))
 				return db
 			},
+			id:  "0",
 			err: sql.ErrNoRows,
 		},
 		"query_fails": {
@@ -791,6 +794,7 @@ func Test_SelectGeneration(t *testing.T) {
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
+			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 	}

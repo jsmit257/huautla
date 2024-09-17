@@ -12,13 +12,14 @@ import (
 
 var (
 	lifecycles []types.Lifecycle
-	imp        = types.UUID("!impossible!")
+	imp        = "!impossible!"
 )
 
 func init() {
-	for _, id := range []types.UUID{"0", "1"} {
-		if l, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": id}, "lifecycle_init"); err != nil {
-			panic(err)
+	for _, id := range []string{"0", "1"} {
+		p, _ := types.NewReportAttrs(map[string][]string{"lifecycle-id": {id}})
+		if l, err := db.SelectLifecyclesByAttrs(context.Background(), p, "lifecycle_init"); err != nil {
+			panic(fmt.Errorf("failed with err: %v", err))
 		} else if len(l) != 1 {
 			panic(fmt.Errorf("not one result for getLifecycleByID: %d", len(l)))
 		} else {
@@ -55,11 +56,11 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 func Test_SelectLifecyclesByStrain(t *testing.T) {
 	t.Parallel()
 
-	result, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"strain-id": "1"}, types.CID("Test_SelectLifecyclesByStrain"))
+	result, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"strain-id": "1"}, types.CID("Test_SelectLifecyclesByStrain"))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(result), "result: %v", result)
 
-	result, err = db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"strain-id": imp}, types.CID("Test_SelectLifecyclesByStrain"))
+	result, err = db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"strain-id": imp}, types.CID("Test_SelectLifecyclesByStrain"))
 	require.Nil(t, err)
 	require.Equal(t, 0, len(result), "result: %v", result)
 }
@@ -67,11 +68,11 @@ func Test_SelectLifecyclesByStrain(t *testing.T) {
 func Test_SelectLifecyclesByGrain(t *testing.T) {
 	t.Parallel()
 
-	result, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"grain-id": types.UUID("4")}, types.CID("Test_SelectLifecyclesByGrain"))
+	result, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"grain-id": "4"}, types.CID("Test_SelectLifecyclesByGrain"))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(result), "result: %v", result)
 
-	result, err = db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"grain-id": imp}, types.CID("Test_SelectLifecyclesByGrain"))
+	result, err = db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"grain-id": imp}, types.CID("Test_SelectLifecyclesByGrain"))
 	require.Nil(t, err)
 	require.Equal(t, 0, len(result), "result: %v", result)
 }
@@ -80,11 +81,11 @@ func Test_SelectLifecyclesByBulk(t *testing.T) {
 	t.Skip()
 	t.Parallel()
 
-	result, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"bulk-id": types.UUID("nop-op3")}, types.CID("Test_SelectLifecyclesByBulk"))
+	result, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"bulk-id": "nop-op3"}, types.CID("Test_SelectLifecyclesByBulk"))
 	require.Nil(t, err)
 	require.Equal(t, 1, len(result), "result: %v", result)
 
-	result, err = db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"bulk-id": imp}, types.CID("Test_SelectLifecyclesByBulk"))
+	result, err = db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"bulk-id": imp}, types.CID("Test_SelectLifecyclesByBulk"))
 	require.Nil(t, err)
 	require.Equal(t, 0, len(result), "result: %v", result)
 }
@@ -230,7 +231,7 @@ func Test_InsertLifecycle(t *testing.T) {
 func Test_UpdateLifecycle(t *testing.T) {
 	t.Parallel()
 
-	updated, err := db.SelectLifecyclesByAttrs(context.Background(), types.ReportAttrs{"lifecycle-id": types.UUID("update me!")}, "Test_UpdateLifecycle")
+	updated, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "update me!"}, "Test_UpdateLifecycle")
 	require.Nil(t, err)
 	require.NotEmpty(t, updated)
 
