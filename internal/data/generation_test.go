@@ -32,6 +32,7 @@ var (
 		"liquidsubstrate_vendor_website",
 		"mtime",
 		"ctime",
+		"dtime",
 	}
 
 	gentestrow = []driver.Value{
@@ -50,13 +51,14 @@ var (
 		"liquidsubstrate_vendor_website",
 		whenwillthenbenow,
 		whenwillthenbenow,
+		nil,
 	}
 )
 
 func Test_SelectGenerationIndex(t *testing.T) {
 	t.Parallel()
 
-	fields := [25]string{
+	fields := [26]string{
 		"uuid",
 		"plating_id",
 		"plating_name",
@@ -82,6 +84,7 @@ func Test_SelectGenerationIndex(t *testing.T) {
 		"strain_vendor_website",
 		"generation_mtime",
 		"generation_ctime",
+		"generation_dtime",
 	}
 
 	l := log.WithField("test", "SelectGenerationIndex")
@@ -122,7 +125,8 @@ func Test_SelectGenerationIndex(t *testing.T) {
 							"strain_vendor_name",
 							"strain_vendor_website",
 							whenwillthenbenow,
-							whenwillthenbenow).
+							whenwillthenbenow,
+							nil).
 						AddRow(
 							"happy_path",
 							"plating_id",
@@ -148,7 +152,8 @@ func Test_SelectGenerationIndex(t *testing.T) {
 							"strain_vendor_name",
 							"strain_vendor_website",
 							whenwillthenbenow,
-							whenwillthenbenow).
+							whenwillthenbenow,
+							nil).
 						AddRow(
 							"happy_path 2",
 							"plating_id",
@@ -174,7 +179,8 @@ func Test_SelectGenerationIndex(t *testing.T) {
 							"strain_vendor_name",
 							"strain_vendor_website",
 							whenwillthenbenow,
-							whenwillthenbenow))
+							whenwillthenbenow,
+							nil))
 				return db
 			},
 			result: []types.Generation{

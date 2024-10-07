@@ -224,10 +224,6 @@ func Test_DeleteGeneration(t *testing.T) {
 			id:  "missing",
 			err: fmt.Errorf("generation could not be deleted: 'missing'"),
 		},
-		"referential_violation": {
-			id:  "0",
-			err: fmt.Errorf("pq: foreign key violation"),
-		},
 	}
 	for k, v := range set {
 		k, v := k, v
