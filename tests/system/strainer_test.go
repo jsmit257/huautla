@@ -74,7 +74,7 @@ func Test_SelectStrain(t *testing.T) {
 		},
 		"no_results_found": {
 			id:     "missing",
-			result: types.Strain{UUID: "missing"},
+			result: types.Strain{},
 			err:    sql.ErrNoRows,
 		},
 	}

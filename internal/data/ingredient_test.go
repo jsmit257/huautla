@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 
 	// "fmt"
@@ -15,6 +16,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/jsmit257/huautla/types"
+)
+
+var (
+	_ingredients = []ingredient{
+		{UUID: "0", Name: "ingredient 0"},
+		{UUID: "1", Name: "ingredient 1"},
+		{UUID: "2", Name: "ingredient 2"},
+	}
+	ingFields = row{"id", "name"}
+	ingValues = [][]driver.Value{
+		{_ingredients[0].UUID, _ingredients[0].Name},
+		{_ingredients[1].UUID, _ingredients[1].Name},
+		{_ingredients[2].UUID, _ingredients[2].Name},
+	}
 )
 
 func Test_SelectAllIngredients(t *testing.T) {

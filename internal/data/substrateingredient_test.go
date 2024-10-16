@@ -43,13 +43,10 @@ func Test_GetAllIngredients(t *testing.T) {
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			result: []types.Ingredient{},
-			err:    fmt.Errorf("some error"),
+			err: fmt.Errorf("some error"),
 		},
 	}
 

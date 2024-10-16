@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -12,6 +13,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/jsmit257/huautla/types"
+)
+
+var (
+	_notes = []note{
+		{UUID: "noteuuid 0", Note: "notenote 0", MTime: wwtbn, CTime: wwtbn},
+		{UUID: "noteuuid 1", Note: "notenote 1", MTime: wwtbn, CTime: wwtbn},
+		{UUID: "noteuuid 2", Note: "notenote 2", MTime: wwtbn, CTime: wwtbn},
+	}
+	noteFields = row{"id", "note", "mtime", "ctime"}
+	noteValues = [][]driver.Value{
+		{_notes[0].UUID, _notes[0].Note, _notes[0].MTime, _notes[0].CTime},
+		{_notes[1].UUID, _notes[1].Note, _notes[1].MTime, _notes[1].CTime},
+		{_notes[2].UUID, _notes[2].Note, _notes[2].MTime, _notes[2].CTime},
+	}
 )
 
 func Test_GetNotes(t *testing.T) {

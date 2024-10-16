@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 
@@ -10,6 +11,20 @@ import (
 	"github.com/jsmit257/huautla/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	_attrs = []attr{
+		{UUID: "attruuid 0", Name: "attrname 0", Value: "attrvalue 0"},
+		{UUID: "attruuid 1", Name: "attrname 1", Value: "attrvalue 1"},
+		{UUID: "attruuid 2", Name: "attrname 2", Value: "attrvalue 2"},
+	}
+	attrFields = row{"uuid", "name", "value"}
+	attrValues = [][]driver.Value{
+		{_attrs[0].UUID, _attrs[0].Name, _attrs[0].Value},
+		{_attrs[1].UUID, _attrs[1].Name, _attrs[1].Value},
+		{_attrs[2].UUID, _attrs[2].Name, _attrs[2].Value},
+	}
 )
 
 func Test_KnownAttributeNames(t *testing.T) {
@@ -106,7 +121,6 @@ func Test_GetAllAttributes(t *testing.T) {
 			result: []types.StrainAttribute{},
 			err:    fmt.Errorf("some error"),
 		},
-		// "query_result_nil": {}, // FIXME: how to mock?
 	}
 
 	for name, tc := range tcs {
@@ -258,9 +272,7 @@ func Test_ChangeAttribute(t *testing.T) {
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			n:   "Yield",
@@ -270,9 +282,7 @@ func Test_ChangeAttribute(t *testing.T) {
 		"result_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			n:   "Yield",

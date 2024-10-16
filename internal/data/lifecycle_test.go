@@ -11,7 +11,6 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/jsmit257/huautla/types"
 	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +19,40 @@ var (
 		types.Event{UUID: "1"},
 		types.Event{UUID: "2"}
 
-	lcfieldnames = []string{
+	_lc = Lifecycle{
+		UUID:       "30313233-3435-3637-3839-616263646566",
+		Location:   "location",
+		StrainCost: 0,
+		GrainCost:  0,
+		BulkCost:   0,
+		Yield:      0,
+		Count:      0,
+		Gross:      0,
+		MTime:      wwtbn,
+		CTime:      wwtbn,
+		Strain:     types.Strain(_strain),
+		GrainSubstrate: types.Substrate{
+			UUID: "gs",
+			Name: "gs",
+			Type: types.GrainType,
+			Vendor: types.Vendor{
+				UUID:    "1",
+				Name:    "vendor 1",
+				Website: "website",
+			},
+		},
+		BulkSubstrate: types.Substrate{
+			UUID: "bs",
+			Name: "bs",
+			Type: types.BulkType,
+			Vendor: types.Vendor{
+				UUID:    "2",
+				Name:    "vendor 2",
+				Website: "website",
+			},
+		},
+	}
+	lcFields = row{
 		"uuid",
 		"location",
 		"straincost",
@@ -36,6 +68,7 @@ var (
 		"strain_name",
 		"generation_uuid",
 		"strain_ctime",
+		"strain_dtime",
 		"strain_vendor_uuid",
 		"strain_vendor_name",
 		"strain_vendor_website",
@@ -52,100 +85,38 @@ var (
 		"bulk_vendor_name",
 		"bulk_vendor_website",
 	}
-
-	lctestrow = []driver.Value{
-		"30313233-3435-3637-3839-616263646566",
-		"location",
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		whenwillthenbenow,
-		whenwillthenbenow,
-		"0",
-		"X.species",
-		"strain 0",
-		"nil",
-		whenwillthenbenow,
-		"x",
-		"vendor x",
-		"website",
-		"gs",
-		"gs",
-		types.GrainType,
-		"1",
-		"vendor 1",
-		"website",
-		"bs",
-		"bs",
-		types.BulkType,
-		"2",
-		"vendor 2",
-		"website",
-	}
-
-	lchappyresults = []types.Lifecycle{
-		{
-			UUID:       "0",
-			Location:   "location",
-			StrainCost: 0,
-			GrainCost:  0,
-			BulkCost:   0,
-			Yield:      0,
-			Count:      0,
-			Gross:      0,
-			MTime:      whenwillthenbenow,
-			CTime:      whenwillthenbenow,
-			Strain: types.Strain{
-				UUID:    "0",
-				Species: "X.species",
-				Name:    "strain 0",
-				CTime:   whenwillthenbenow,
-				Vendor: types.Vendor{
-					UUID:    "x",
-					Name:    "vendor x",
-					Website: "website",
-				},
-				Attributes: []types.StrainAttribute{
-					{UUID: "0", Name: "name 0", Value: "value 0"},
-					{UUID: "1", Name: "name 1", Value: "value 1"},
-					{UUID: "2", Name: "name 2", Value: "value 2"},
-				},
-			},
-			GrainSubstrate: types.Substrate{
-				UUID: "gs",
-				Name: "gs",
-				Type: types.GrainType,
-				Vendor: types.Vendor{
-					UUID:    "1",
-					Name:    "vendor 1",
-					Website: "website",
-				},
-				Ingredients: []types.Ingredient{
-					{UUID: "0", Name: "ingredient 0"},
-					{UUID: "1", Name: "ingredient 1"},
-					{UUID: "2", Name: "ingredient 2"},
-				},
-			},
-			BulkSubstrate: types.Substrate{
-				UUID: "bs",
-				Name: "bs",
-				Type: types.BulkType,
-				Vendor: types.Vendor{
-					UUID:    "2",
-					Name:    "vendor 2",
-					Website: "website",
-				},
-				Ingredients: []types.Ingredient{
-					{UUID: "0", Name: "ingredient 0"},
-					{UUID: "1", Name: "ingredient 1"},
-					{UUID: "2", Name: "ingredient 2"},
-				},
-			},
-			Events: []types.Event{e0, e1, e2},
-		},
+	lcValues = []driver.Value{
+		_lc.UUID,
+		_lc.Location,
+		_lc.StrainCost,
+		_lc.GrainCost,
+		_lc.BulkCost,
+		_lc.Yield,
+		_lc.Count,
+		_lc.Gross,
+		_lc.MTime,
+		_lc.CTime,
+		_lc.Strain.UUID,
+		_lc.Strain.Species,
+		_lc.Strain.Name,
+		nil,
+		_lc.Strain.CTime,
+		_lc.Strain.DTime,
+		_lc.Strain.Vendor.UUID,
+		_lc.Strain.Vendor.Name,
+		_lc.Strain.Vendor.Website,
+		_lc.GrainSubstrate.UUID,
+		_lc.GrainSubstrate.Name,
+		_lc.GrainSubstrate.Type,
+		_lc.GrainSubstrate.Vendor.UUID,
+		_lc.GrainSubstrate.Vendor.Name,
+		_lc.GrainSubstrate.Vendor.Website,
+		_lc.BulkSubstrate.UUID,
+		_lc.BulkSubstrate.Name,
+		_lc.BulkSubstrate.Type,
+		_lc.BulkSubstrate.Vendor.UUID,
+		_lc.BulkSubstrate.Vendor.Name,
+		_lc.BulkSubstrate.Vendor.Website,
 	}
 )
 
@@ -189,20 +160,20 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 						AddRow(
 							"0",
 							"happy_path",
-							whenwillthenbenow,
-							whenwillthenbenow,
+							wwtbn,
+							wwtbn,
 							"strain 0",
 							"strain 0",
 							"strain 0",
-							whenwillthenbenow,
+							wwtbn,
 							"vendor 0",
 							"vendor 0",
 							"vendor 0",
 							"event 0",
 							0,
 							0,
-							whenwillthenbenow,
-							whenwillthenbenow,
+							wwtbn,
+							wwtbn,
 							"type 0",
 							"type 0",
 							"type 0",
@@ -212,20 +183,20 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 						AddRow(
 							"1",
 							"happy_path 2",
-							whenwillthenbenow,
-							whenwillthenbenow,
+							wwtbn,
+							wwtbn,
 							"strain 0",
 							"strain 0",
 							"strain 0",
-							whenwillthenbenow,
+							wwtbn,
 							"vendor 0",
 							"vendor 0",
 							"vendor 0",
 							"event 0",
 							0,
 							0,
-							whenwillthenbenow,
-							whenwillthenbenow,
+							wwtbn,
+							wwtbn,
 							"type 0",
 							"type 0",
 							"type 0",
@@ -235,20 +206,20 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 						AddRow(
 							"1",
 							"happy_path 2",
-							whenwillthenbenow,
-							whenwillthenbenow,
+							wwtbn,
+							wwtbn,
 							"strain 0",
 							"strain 0",
 							"strain 0",
-							whenwillthenbenow,
+							wwtbn,
 							"vendor 0",
 							"vendor 0",
 							"vendor 0",
 							"event 1",
 							0,
 							0,
-							whenwillthenbenow,
-							whenwillthenbenow,
+							wwtbn,
+							wwtbn,
 							"type 0",
 							"type 0",
 							"type 0",
@@ -261,13 +232,13 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 				{
 					UUID:     "0",
 					Location: "happy_path",
-					MTime:    whenwillthenbenow,
-					CTime:    whenwillthenbenow,
+					MTime:    wwtbn,
+					CTime:    wwtbn,
 					Strain: types.Strain{
 						UUID:    "strain 0",
 						Name:    "strain 0",
 						Species: "strain 0",
-						CTime:   whenwillthenbenow,
+						CTime:   wwtbn,
 						Vendor: types.Vendor{
 							UUID:    "vendor 0",
 							Name:    "vendor 0",
@@ -276,8 +247,8 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 					},
 					Events: []types.Event{{
 						UUID:  "event 0",
-						MTime: whenwillthenbenow,
-						CTime: whenwillthenbenow,
+						MTime: wwtbn,
+						CTime: wwtbn,
 						EventType: types.EventType{
 							UUID:     "type 0",
 							Name:     "type 0",
@@ -292,13 +263,13 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 				{
 					UUID:     "1",
 					Location: "happy_path 2",
-					MTime:    whenwillthenbenow,
-					CTime:    whenwillthenbenow,
+					MTime:    wwtbn,
+					CTime:    wwtbn,
 					Strain: types.Strain{
 						UUID:    "strain 0",
 						Name:    "strain 0",
 						Species: "strain 0",
-						CTime:   whenwillthenbenow,
+						CTime:   wwtbn,
 						Vendor: types.Vendor{
 							UUID:    "vendor 0",
 							Name:    "vendor 0",
@@ -308,8 +279,8 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 					Events: []types.Event{
 						{
 							UUID:  "event 0",
-							MTime: whenwillthenbenow,
-							CTime: whenwillthenbenow,
+							MTime: wwtbn,
+							CTime: wwtbn,
 							EventType: types.EventType{
 								UUID:     "type 0",
 								Name:     "type 0",
@@ -322,8 +293,8 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 						},
 						{
 							UUID:  "event 1",
-							MTime: whenwillthenbenow,
-							CTime: whenwillthenbenow,
+							MTime: wwtbn,
+							CTime: wwtbn,
 							EventType: types.EventType{
 								UUID:     "type 0",
 								Name:     "type 0",
@@ -382,231 +353,58 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 func Test_SelectLifecycle(t *testing.T) {
 	t.Parallel()
 
-	e0, e1, e2 := types.Event{UUID: "0"},
-		types.Event{UUID: "1"},
-		types.Event{UUID: "2"}
-
 	l := log.WithField("test", "SelectLifecycle")
 
 	tcs := map[string]struct {
 		db     getMockDB
-		id     types.UUID
 		result types.Lifecycle
 		err    error
 	}{
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcfieldnames).
-						AddRow(lctestrow...))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "value"}).
-						AddRow("0", "name 0", "value 0").
-						AddRow("1", "name 1", "value 1").
-						AddRow("2", "name 2", "value 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "ingredient 0").
-						AddRow("1", "ingredient 1").
-						AddRow("2", "ingredient 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "ingredient 0").
-						AddRow("1", "ingredient 1").
-						AddRow("2", "ingredient 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "has_photos", "has_notes"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, 0, 0).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, 0, 0))
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
 
 				return db
 			},
-			id:     "0",
-			result: lchappyresults[0],
+			result: func(lc Lifecycle) types.Lifecycle {
+				lc.Events = []types.Event{
+					types.Event(_events[0]),
+					types.Event(_events[1]),
+					types.Event(_events[2]),
+				}
+
+				return types.Lifecycle(lc)
+			}(_lc),
 		},
 		"get_events_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcfieldnames).
-						AddRow(lctestrow...))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "value"}).
-						AddRow("0", "name 0", "value 0").
-						AddRow("1", "name 1", "value 1").
-						AddRow("2", "name 2", "value 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "ingredient 0").
-						AddRow("1", "ingredient 1").
-						AddRow("2", "ingredient 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "ingredient 0").
-						AddRow("1", "ingredient 1").
-						AddRow("2", "ingredient 2"))
-				mock.ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+
+				lcFields.mock(mock, lcValues)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 
 				return db
 			},
-			id: "0",
-			result: types.Lifecycle{
-				UUID:       "0",
-				Location:   "location",
-				StrainCost: 0,
-				GrainCost:  0,
-				BulkCost:   0,
-				Yield:      0,
-				Count:      0,
-				Gross:      0,
-				MTime:      whenwillthenbenow,
-				CTime:      whenwillthenbenow,
-				Strain: types.Strain{
-					UUID:    "0",
-					Species: "X.species",
-					Name:    "strain 0",
-					CTime:   whenwillthenbenow,
-					Vendor: types.Vendor{
-						UUID:    "x",
-						Name:    "vendor x",
-						Website: "website",
-					},
-					Attributes: []types.StrainAttribute{
-						{UUID: "0", Name: "name 0", Value: "value 0"},
-						{UUID: "1", Name: "name 1", Value: "value 1"},
-						{UUID: "2", Name: "name 2", Value: "value 2"},
-					},
-				},
-				GrainSubstrate: types.Substrate{
-					UUID: "gs",
-					Name: "gs",
-					Type: types.GrainType,
-					Vendor: types.Vendor{
-						UUID:    "1",
-						Name:    "vendor 1",
-						Website: "website",
-					},
-					Ingredients: []types.Ingredient{
-						{UUID: "0", Name: "ingredient 0"},
-						{UUID: "1", Name: "ingredient 1"},
-						{UUID: "2", Name: "ingredient 2"},
-					},
-				},
-				BulkSubstrate: types.Substrate{
-					UUID: "bs",
-					Name: "bs",
-					Type: types.BulkType,
-					Vendor: types.Vendor{
-						UUID:    "2",
-						Name:    "vendor 2",
-						Website: "website",
-					},
-					Ingredients: []types.Ingredient{
-						{UUID: "0", Name: "ingredient 0"},
-						{UUID: "1", Name: "ingredient 1"},
-						{UUID: "2", Name: "ingredient 2"},
-					},
-				},
-				Events: []types.Event{e0, e1, e2},
-			},
-			err: fmt.Errorf("some error"),
-		},
-		"all_attrs_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcfieldnames).
-						AddRow(lctestrow...))
-				mock.ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
-
-				return db
-			},
-			id:  "0",
-			err: fmt.Errorf("some error"),
-		},
-		"get_grain_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcfieldnames).
-						AddRow(lctestrow...))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "value"}).
-						AddRow("0", "name 0", "value 0").
-						AddRow("1", "name 1", "value 1").
-						AddRow("2", "name 2", "value 2"))
-				mock.ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
-
-				return db
-			},
-			id:  "0",
-			err: fmt.Errorf("some error"),
-		},
-		"get_bulk_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcfieldnames).
-						AddRow(lctestrow...))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "value"}).
-						AddRow("0", "name 0", "value 0").
-						AddRow("1", "name 1", "value 1").
-						AddRow("2", "name 2", "value 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "ingredient 0").
-						AddRow("1", "ingredient 1").
-						AddRow("2", "ingredient 2"))
-				mock.ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
-
-				return db
-			},
-			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 		"no_rows": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcfieldnames))
+				lcFields.mock(mock)
 				return db
 			},
-			id:  "0",
 			err: sql.ErrNoRows,
 		},
-
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 	}
@@ -616,16 +414,14 @@ func Test_SelectLifecycle(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := (&Conn{
+			result, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectLifecycle(context.Background(), tc.id, "Test_SelectLifecycle")
+			}).SelectLifecycle(context.Background(), "tc.id", "Test_SelectLifecycle")
 
-			if !assert.Equal(t, tc.err, err) {
-				panic(err)
-			}
-			// require.Equal(t, tc.result, result)
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, result)
 		})
 	}
 }
@@ -647,32 +443,14 @@ func Test_InsertLifecycle(t *testing.T) {
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows(lcfieldnames).
-						AddRow(lctestrow...))
+						NewRows(lcFields).
+						AddRow(lcValues...))
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name", "value"}).
-						AddRow("0", "name 0", "value 0").
-						AddRow("1", "name 1", "value 1").
-						AddRow("2", "name 2", "value 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "ingredient 0").
-						AddRow("1", "ingredient 1").
-						AddRow("2", "ingredient 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "name"}).
-						AddRow("0", "ingredient 0").
-						AddRow("1", "ingredient 1").
-						AddRow("2", "ingredient 2"))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name", "has_photos", "has_notes"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name, 0, 0).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name, 0, 0).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name, 0, 0))
+						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name"}).
+						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
+						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
+						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
 
 				return db
 			},
@@ -939,6 +717,213 @@ func Test_DeleteLifecycle(t *testing.T) {
 				context.Background(),
 				tc.id,
 				"Test_DeleteLifecycle")
+
+			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func Test_LifecycleReport(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "LifecycleReport")
+
+	tcs := map[string]struct {
+		db     getMockDB
+		result types.Entity
+		err    error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+				ingFields.mock(mock, ingValues...)
+				ingFields.mock(mock, ingValues...)
+				napFields.mock(mock)
+				noteFields.mock(mock, noteValues...)
+				photoFields.mock(mock)
+
+				return db
+			},
+		},
+		"happy_photo_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+				ingFields.mock(mock, ingValues...)
+				ingFields.mock(mock, ingValues...)
+				napFields.mock(mock)
+				noteFields.mock(mock, noteValues...)
+				photoFields.mock(mock, photoValues...)
+
+				return db
+			},
+		},
+		"photo_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+				ingFields.mock(mock, ingValues...)
+				ingFields.mock(mock, ingValues...)
+				napFields.mock(mock)
+				noteFields.mock(mock, noteValues...)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"notes_fail": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+				ingFields.mock(mock, ingValues...)
+				ingFields.mock(mock, ingValues...)
+				napFields.mock(mock)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"notes_empty": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+				ingFields.mock(mock, ingValues...)
+				ingFields.mock(mock, ingValues...)
+				napFields.mock(mock)
+				noteFields.mock(mock)
+				photoFields.mock(mock)
+
+				return db
+			},
+		},
+		"get_events_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"notes_and_photos_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+				ingFields.mock(mock, ingValues...)
+				ingFields.mock(mock, ingValues...)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"all_attrs_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"get_grain_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"get_bulk_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues)
+				eventFields.mock(mock, eventValues...)
+				attrFields.mock(mock, attrValues...)
+				ingFields.mock(mock, ingValues...)
+
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"no_rows": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				lcFields.mock(mock)
+				return db
+			},
+			err: sql.ErrNoRows,
+		},
+		// "no_id": {
+		// 	db: func() *sql.DB {
+		// 		db, mock, _ := sqlmock.New()
+		// 		mock.ExpectQuery("").
+		// 			WillReturnRows(sqlmock.
+		// 				NewRows(lcFields))
+		// 		return db
+		// 	},
+		// 	err: fmt.Errorf("failed to find param values in the following fields: [lifecycle-id]"),
+		// },
+		"query_fails": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := (&Conn{
+				query:        tc.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).LifecycleReport(context.Background(), "tc.id", "Test_LifecycleReport")
 
 			require.Equal(t, tc.err, err)
 		})

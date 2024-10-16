@@ -17,7 +17,7 @@ func init() {
 		if s, err := db.SelectSubstrate(context.Background(), id, "substrate_init"); err != nil {
 			panic(err)
 		} else {
-			substrates[types.SubstrateType(s.Type)] = append(substrates[types.SubstrateType(s.Type)], s)
+			substrates[s.Type] = append(substrates[s.Type], s)
 		}
 	}
 }
@@ -63,7 +63,7 @@ func Test_SelectSubstrate(t *testing.T) {
 		},
 		"no_rows_returned": {
 			id:     "missing",
-			result: types.Substrate{UUID: "missing"},
+			result: types.Substrate{},
 			err:    sql.ErrNoRows,
 		},
 	}

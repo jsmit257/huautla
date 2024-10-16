@@ -10,4 +10,4 @@ func mockUUIDGen() uuid.UUID {
 	return uuid.Must(uuid.FromBytes([]byte("0123456789abcdef")))
 }
 
-var whenwillthenbenow = time.Now() // time.Soon()
+var wwtbn = time.Now() // time.Soon()

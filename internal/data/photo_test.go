@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -12,6 +13,33 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/jsmit257/huautla/types"
+)
+
+var (
+	_photos = []photo{
+		{UUID: "id-0", Filename: "photo 0", MTime: wwtbn, CTime: wwtbn},
+		{UUID: "id-1", Filename: "photo 1", MTime: wwtbn, CTime: wwtbn, Notes: []types.Note{
+			types.Note(_notes[0]),
+			types.Note(_notes[2]),
+		}},
+		{UUID: "id-2", Filename: "photo 2", MTime: wwtbn, CTime: wwtbn},
+	}
+	photoFields = row{
+		"id",
+		"filename",
+		"mtime",
+		"ctime",
+		"note_uuid",
+		"note",
+		"note_mtime",
+		"note_ctime",
+	}
+	photoValues = [][]driver.Value{
+		{_photos[0].UUID, _photos[0].Filename, _photos[0].MTime, _photos[0].CTime, nil, nil, nil, nil},
+		{_photos[1].UUID, _photos[1].Filename, _photos[1].MTime, _photos[1].CTime, _photos[1].Notes[0].UUID, _photos[1].Notes[0].Note, _photos[1].Notes[0].MTime, _photos[1].Notes[0].CTime},
+		{_photos[1].UUID, _photos[1].Filename, _photos[1].MTime, _photos[1].CTime, _photos[1].Notes[1].UUID, _photos[1].Notes[1].Note, _photos[1].Notes[1].MTime, _photos[1].Notes[1].CTime},
+		{_photos[2].UUID, _photos[2].Filename, _photos[2].MTime, _photos[2].CTime, nil, nil, nil, nil},
+	}
 )
 
 func Test_GetPhotos(t *testing.T) {

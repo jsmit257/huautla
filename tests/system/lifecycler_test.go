@@ -74,7 +74,7 @@ func Test_SelectLifecyclesByGrain(t *testing.T) {
 
 	result, err = db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"grain-id": imp}, types.CID("Test_SelectLifecyclesByGrain"))
 	require.Nil(t, err)
-	require.Equal(t, 0, len(result), "result: %v", result)
+	require.Zero(t, len(result), "result: %v", result)
 }
 
 func Test_SelectLifecyclesByBulk(t *testing.T) {
