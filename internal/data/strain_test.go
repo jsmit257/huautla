@@ -591,29 +591,13 @@ func Test_StrainReport(t *testing.T) {
 	t.Parallel()
 
 	var (
-		attrs = []interface{}{
-			mustObject(_attrs[0]),
-			mustObject(_attrs[1]),
-			mustObject(_attrs[2]),
-		}
-		album = []types.Entity{
-			mustObject(_photos[0]),
-			mustObject(_photos[1]),
-			mustObject(_photos[2]),
-		}
-		ings = []interface{}{
-			mustObject(_ingredients[0]),
-			mustObject(_ingredients[1]),
-			mustObject(_ingredients[2]),
-		}
-
 		l = log.WithField("test", "StrainReport")
 	)
 
 	tcs := map[string]struct {
-		db                       getMockDB
-		result, expected, actual types.Entity
-		err                      error
+		db     getMockDB
+		result types.Entity
+		err    error
 	}{
 		"happy_path_with_photos": {
 			db: func() *sql.DB {
@@ -635,64 +619,49 @@ func Test_StrainReport(t *testing.T) {
 		"photos_report_error": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock)
-				lcFields.mock(mock)
 
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					strainFields.set(strainValues),
+					attrFields.set(attrValues...),
+					genFields.set(),
+					lcFields.set(),
+					photoFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: photoFields.err(),
 		},
 		"happy_lifecycles_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock)
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				photoFields.mock(mock)
-				photoFields.mock(mock)
+				newBuilder(mock,
+					strainFields.set(strainValues),
+					attrFields.set(attrValues...),
+					genFields.set(),
+					lcFields.set(lcValues),
+					eventFields.set(eventValues...),
+					attrFields.set(attrValues...),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					photoFields.set(),
+					photoFields.set())
 
 				return db
 			},
 			result: func(s types.Entity) types.Entity {
 				s["attributes"] = attrs
 
-				s["lifecycles"] = []types.Entity{mustEntity(_lc)}
-
-				lc := s["lifecycles"].([]types.Entity)[0]
-
-				lc["strain"].(map[string]interface{})["attributes"] = []interface{}{
-					mustObject(_attrs[0]),
-					mustObject(_attrs[1]),
-					mustObject(_attrs[2]),
-				}
-
+				lc := mustEntity(_lc)
+				lc["strain"].(map[string]interface{})["attributes"] = attrs
 				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ings
-
 				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["events"] = events
+				lc["notes"] = notes
 
-				lc["events"] = []interface{}{
-					mustObject(_events[0]),
-					mustObject(_events[1]),
-					mustObject(_events[2]),
-				}
-
-				lc["notes"] = []types.Entity{
-					mustEntity(_notes[0]),
-					mustEntity(_notes[1]),
-					mustEntity(_notes[2]),
-				}
+				s["lifecycles"] = []types.Entity{lc}
 
 				return s
 			}(mustEntity(_strain)),
@@ -701,15 +670,15 @@ func Test_StrainReport(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					strainFields.set(strainValues),
+					attrFields.set(),
+					genFields.set(),
+					lcFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: lcFields.err(),
 		},
 		"happy_generations_path": {
 			db: func() *sql.DB {
@@ -763,161 +732,39 @@ func Test_StrainReport(t *testing.T) {
 
 				return s
 			}(mustEntity(_strain)),
-			expected: map[string]interface{}{
-				"attributes": []interface{}{
-					map[string]interface{}{"id": "attruuid 0", "name": "attrname 0", "value": "attrvalue 0"},
-					map[string]interface{}{"id": "attruuid 1", "name": "attrname 1", "value": "attrvalue 1"},
-					map[string]interface{}{"id": "attruuid 2", "name": "attrname 2", "value": "attrvalue 2"},
-				},
-				"ctime": wwtbn.Format(time.RFC3339Nano),
-				"generation": map[string]interface{}{
-					"ctime": wwtbn.Format(time.RFC3339Nano),
-					"events": []interface{}{
-						map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "0", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0},
-						map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "1", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0},
-						map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "2", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0},
-					},
-					"id": "uuid",
-					"liquid_substrate": map[string]interface{}{
-						"id": "liquidsubstrate_uuid",
-						"ingredients": []interface{}{
-							map[string]interface{}{"id": "0", "name": "ingredient 0"},
-							map[string]interface{}{"id": "1", "name": "ingredient 1"},
-							map[string]interface{}{"id": "2", "name": "ingredient 2"},
-						},
-						"name":   "liquidsubstrate_name",
-						"type":   "liquidsubstrate_type",
-						"vendor": map[string]interface{}{"id": "liquidsubstrate_vendor_uuid", "name": "liquidsubstrate_vendor_name", "website": "liquidsubstrate_vendor_website"},
-					},
-					"mtime": wwtbn.Format(time.RFC3339Nano),
-					"notes": []interface{}{
-						map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "id": "noteuuid 0", "mtime": wwtbn.Format(time.RFC3339Nano), "note": "notenote 0"},
-						map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "id": "noteuuid 1", "mtime": wwtbn.Format(time.RFC3339Nano), "note": "notenote 1"},
-						map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "id": "noteuuid 2", "mtime": wwtbn.Format(time.RFC3339Nano), "note": "notenote 2"},
-					},
-					"plating_substrate": map[string]interface{}{
-						"id": "platingsubstrate_uuid",
-						"ingredients": []interface{}{
-							map[string]interface{}{"id": "0", "name": "ingredient 0"},
-							map[string]interface{}{"id": "1", "name": "ingredient 1"},
-							map[string]interface{}{"id": "2", "name": "ingredient 2"},
-						},
-						"name":   "platingsubstrate_name",
-						"type":   "platingsubstrate_type",
-						"vendor": map[string]interface{}{"id": "platingsubstrate_vendor_uuid", "name": "platingsubstrate_vendor_name", "website": "platingsubstrate_vendor_website"},
-					},
-					"sources": []interface{}{
-						map[string]interface{}{
-							"id": "sourceuuid",
-							"strain": map[string]interface{}{
-								"ctime":   wwtbn.Format(time.RFC3339Nano),
-								"id":      "strainuuid 0",
-								"name":    "strainname 0",
-								"species": "X.species",
-								"vendor":  map[string]interface{}{"id": "vendoruuid 0", "name": "vendorname 0", "website": "vendorwebsite 0"}},
-							"type": "sourcetype"},
-					},
-				},
-				"id":      "strainuuid 0",
-				"name":    "strainname 0",
-				"species": "X.species",
-				"vendor":  map[string]interface{}{"id": "vendoruuid 0", "name": "vendorname 0", "website": "vendorwebsite 0"},
-			},
-			actual: map[string]interface{}{
-				"attributes": []interface{}{
-					map[string]interface{}{"id": "attruuid 0", "name": "attrname 0", "value": "attrvalue 0"},
-					map[string]interface{}{"id": "attruuid 1", "name": "attrname 1", "value": "attrvalue 1"},
-					map[string]interface{}{"id": "attruuid 2", "name": "attrname 2", "value": "attrvalue 2"},
-				},
-				"ctime": wwtbn.Format(time.RFC3339Nano),
-				"generations": []interface{}{
-					map[string]interface{}{
-						"ctime": wwtbn.Format(time.RFC3339Nano),
-						"events": []interface{}{
-							map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "0", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0},
-							map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "1", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0},
-							map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "2", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0},
-						},
-						"id": "uuid",
-						"liquid_substrate": map[string]interface{}{
-							"id": "liquidsubstrate_uuid",
-							"ingredients": []interface{}{
-								map[string]interface{}{"id": "0", "name": "ingredient 0"},
-								map[string]interface{}{"id": "1", "name": "ingredient 1"},
-								map[string]interface{}{"id": "2", "name": "ingredient 2"},
-							},
-							"name":   "liquidsubstrate_name",
-							"type":   "liquidsubstrate_type",
-							"vendor": map[string]interface{}{"id": "liquidsubstrate_vendor_uuid", "name": "liquidsubstrate_vendor_name", "website": "liquidsubstrate_vendor_website"},
-						},
-						"mtime": wwtbn.Format(time.RFC3339Nano),
-						"notes": []interface{}{
-							map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "id": "noteuuid 0", "mtime": wwtbn.Format(time.RFC3339Nano), "note": "notenote 0"},
-							map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "id": "noteuuid 1", "mtime": wwtbn.Format(time.RFC3339Nano), "note": "notenote 1"},
-							map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "id": "noteuuid 2", "mtime": wwtbn.Format(time.RFC3339Nano), "note": "notenote 2"},
-						},
-						"plating_substrate": map[string]interface{}{
-							"id": "platingsubstrate_uuid",
-							"ingredients": []interface{}{
-								map[string]interface{}{"id": "0", "name": "ingredient 0"},
-								map[string]interface{}{"id": "1", "name": "ingredient 1"},
-								map[string]interface{}{"id": "2", "name": "ingredient 2"},
-							},
-							"name":   "platingsubstrate_name",
-							"type":   "platingsubstrate_type",
-							"vendor": map[string]interface{}{"id": "platingsubstrate_vendor_uuid", "name": "platingsubstrate_vendor_name", "website": "platingsubstrate_vendor_website"},
-						},
-						"sources": []interface{}{
-							map[string]interface{}{
-								"id": "sourceuuid",
-								"strain": map[string]interface{}{
-									"ctime":   wwtbn.Format(time.RFC3339Nano),
-									"id":      "strainuuid 0",
-									"name":    "strainname 0",
-									"species": "X.species",
-									"vendor":  map[string]interface{}{"id": "vendoruuid 0", "name": "vendorname 0", "website": "vendorwebsite 0"},
-								},
-								"type": "sourcetype"},
-						},
-					},
-				},
-				"id":      "strainuuid 0",
-				"name":    "strainname 0",
-				"species": "X.species",
-				"vendor":  map[string]interface{}{"id": "vendoruuid 0", "name": "vendorname 0", "website": "vendorwebsite 0"},
-			},
 		},
 		"generation_report_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					strainFields.set(strainValues),
+					attrFields.set(attrValues...),
+					genFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: genFields.err(),
 		},
 		"happy_progenitor_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				strainFields.mock(mock, xformer(strainValues).replace(xform{8: "not-nil"}))
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock)
-				lcFields.mock(mock)
-				photoFields.mock(mock)
-				// BEGIN: progenitor
-				genFields.mock(mock, genValues)
-				eventFields.mock(mock, eventValues...)
-				srcFields.mock(mock, srcValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				strainFields.mock(mock)
+				newBuilder(mock,
+					strainFields.set(xformer(strainValues).replace(xform{8: "not-nil"})),
+					attrFields.set(attrValues...),
+					genFields.set(),
+					lcFields.set(),
+					photoFields.set(),
+					// BEGIN: progenitor
+					genFields.set(genValues),
+					eventFields.set(eventValues...),
+					srcFields.set(srcValues...),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					strainFields.set())
 
 				return db
 			},

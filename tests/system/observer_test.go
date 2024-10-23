@@ -60,8 +60,6 @@ func Test_SelectByEventType(t *testing.T) {
 				require.Nil(t, err)
 				require.Equal(t, event.Temperature, actual.Temperature)
 				require.Equal(t, event.Humidity, actual.Humidity)
-				// require.Equalf(t, event.MTime.UnixMilli(), actual.MTime.UnixMilli(), "expected\n'%#v'\nactual\n'%#v'", event.MTime.String(), actual.MTime.String()) // get fucked!
-				// require.Truef(t, event.CTime == actual.CTime, "expected\n'%#q'\nactual\n'%#q'", event.CTime, actual.CTime)
 				require.Equal(t, event.EventType, actual.EventType)
 			}
 		})
@@ -94,8 +92,6 @@ func Test_SelectEvent(t *testing.T) {
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result.Temperature, result.Temperature)
 			require.Equal(t, v.result.Humidity, result.Humidity)
-			// require.Truef(t, v.result.MTime.String() == result.MTime.String(), "expected\n'%#v'\nactual\n'%#v'", v.result.MTime.String(), result.MTime.String()) // get fucked!
-			// require.Truef(t, v.result.CTime == result.CTime, "expected\n'%#q'\nactual\n'%#q'", v.result.CTime, result.CTime)
 			require.Equal(t, v.result.EventType, result.EventType)
 		})
 	}

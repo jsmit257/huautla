@@ -58,8 +58,6 @@ func Test_GetGenerationEvents(t *testing.T) {
 				require.Nil(t, err)
 				require.Equal(t, event.Temperature, actual.Temperature)
 				require.Equal(t, event.Humidity, actual.Humidity)
-				// require.Truef(t, event.MTime.String() == actual.MTime.String(), "expected\n'%#v'\nactual\n'%#v'", event.MTime.String(), actual.MTime.String()) // get fucked!
-				// require.Truef(t, event.CTime == actual.CTime, "expected\n'%#q'\nactual\n'%#q'", event.CTime, actual.CTime)
 				require.Equal(t, event.EventType, actual.EventType)
 			}
 		})

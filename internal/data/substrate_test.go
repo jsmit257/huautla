@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	_subs = []Substrate{
+	_subs = []substrate{
 		{UUID: "0", Name: "substrate 0", Type: types.PlatingType, Vendor: types.Vendor{UUID: "0", Name: "vendor 0", Website: "website 0"}, Ingredients: []types.Ingredient{}},
 		{UUID: "1", Name: "substrate 1", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website 1"}, Ingredients: []types.Ingredient{}},
 		{UUID: "2", Name: "substrate 2", Type: types.GrainType, Vendor: types.Vendor{UUID: "1", Name: "vendor 1", Website: "website 1"}, Ingredients: []types.Ingredient{}},
@@ -47,10 +47,11 @@ func Test_SelectAllSubstrates(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				subFields.mock(mock, subValues...)
-				for range subValues {
-					ingFields.mock(mock)
-				}
+				newBuilder(mock,
+					subFields.set(subValues...),
+					ingFields.set(),
+					ingFields.set(),
+					ingFields.set())
 
 				return db
 			},
@@ -94,6 +95,7 @@ func Test_SelectSubstrate(t *testing.T) {
 
 	tcs := map[string]struct {
 		db     getMockDB
+		noid   bool
 		result types.Substrate
 		err    error
 	}{
@@ -101,8 +103,9 @@ func Test_SelectSubstrate(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				subFields.mock(mock, subValues[0])
-				ingFields.mock(mock, ingValues...)
+				newBuilder(mock,
+					subFields.set(subValues[0]),
+					ingFields.set(ingValues...))
 
 				return db
 			},
@@ -116,6 +119,35 @@ func Test_SelectSubstrate(t *testing.T) {
 					types.Ingredient(_ingredients[1]),
 					types.Ingredient(_ingredients[2]),
 				}},
+		},
+		"ingredients_fail": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				newBuilder(mock,
+					subFields.set(subValues[0]),
+					ingFields.fail())
+
+				return db
+			},
+			err: ingFields.err(),
+		},
+		"subs_empty": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				newBuilder(mock, subFields.set())
+				return db
+			},
+			err: sql.ErrNoRows,
+		},
+		"missing_id": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				newBuilder(mock, subFields.set())
+				return db
+			},
+			noid: true,
+			err:  fmt.Errorf("failed to find param values in the following fields: [substrate-id]"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {
@@ -134,11 +166,16 @@ func Test_SelectSubstrate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			var id types.UUID
+			if !tc.noid {
+				id = "0"
+			}
+
 			result, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectSubstrate(context.Background(), "tc.id", "Test_SelectSubstrate")
+			}).SelectSubstrate(context.Background(), id, "Test_SelectSubstrate")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, result)
@@ -371,24 +408,26 @@ func Test_SubstrateReport(t *testing.T) {
 	l := log.WithField("test", "SubstrateReport")
 
 	tcs := map[string]struct {
-		db                      getMockDB
-		result, other, expected types.Entity
-		err                     error
+		db     getMockDB
+		noid   bool
+		result types.Entity
+		err    error
 	}{
 		"happy_generation_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				subFields.mock(mock, subValues[0])
-				ingFields.mock(mock, ingValues...)
-				genFields.mock(mock, genValues)
-				eventFields.mock(mock, eventValues...)
-				srcFields.mock(mock, srcValues[0])
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				strainFields.mock(mock)
+				newBuilder(mock,
+					subFields.set(subValues[0]),
+					ingFields.set(ingValues...),
+					genFields.set(genValues),
+					eventFields.set(eventValues...),
+					srcFields.set(srcValues[0]),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					strainFields.set())
 
 				return db
 			},
@@ -439,178 +478,91 @@ func Test_SubstrateReport(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				subFields.mock(mock, subValues[0])
-				ingFields.mock(mock, ingValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					subFields.set(subValues[0]),
+					ingFields.set(ingValues...),
+					genFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: genFields.err(),
 		},
 		"happy_lifecycle_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				subFields.mock(mock, subValues[1])
-				ingFields.mock(mock, ingValues...)
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				genFields.mock(mock)
+				newBuilder(mock,
+					subFields.set(subValues[1]),
+					ingFields.set(),
+					lcFields.set(lcValues),
+					eventFields.set(),
+					attrFields.set(),
+					ingFields.set(),
+					ingFields.set(),
+					napFields.set(),
+					noteFields.set(),
+					genFields.set())
 
 				return db
 			},
-			result: types.Entity{
-				"id": _subs[1].UUID,
-				"ingredients": []interface{}{
-					mustObject(_ingredients[0]),
-					mustObject(_ingredients[1]),
-					mustObject(_ingredients[2]),
-				},
-				"lifecycles": []types.Entity{{
-					"bulk_substrate": map[string]interface{}{
-						"id": "bs",
-						"ingredients": []interface{}{
-							mustObject(_ingredients[0]),
-							mustObject(_ingredients[1]),
-							mustObject(_ingredients[2]),
-						},
-						"name":   "bs",
-						"type":   "bulk",
-						"vendor": mustObject(_lc.BulkSubstrate.Vendor),
-					},
-					"ctime": wwtbn.Format(time.RFC3339Nano),
-					"events": []interface{}{
-						map[string]interface{}{
-							"ctime": wwtbn.Format(time.RFC3339Nano),
-							"event_type": map[string]interface{}{
-								"id":       "",
-								"name":     "",
-								"severity": "",
-								"stage": map[string]interface{}{
-									"id":   "",
-									"name": "",
-								},
-							},
-							"id":          "0",
-							"mtime":       wwtbn.Format(time.RFC3339Nano),
-							"temperature": 0.0,
-						},
-						map[string]interface{}{
-							"ctime": wwtbn.Format(time.RFC3339Nano),
-							"event_type": map[string]interface{}{
-								"id":       "",
-								"name":     "",
-								"severity": "",
-								"stage": map[string]interface{}{
-									"id":   "",
-									"name": "",
-								},
-							},
-							"id":          "1",
-							"mtime":       wwtbn.Format(time.RFC3339Nano),
-							"temperature": 0.0},
-						map[string]interface{}{
-							"ctime": wwtbn.Format(time.RFC3339Nano),
-							"event_type": map[string]interface{}{
-								"id":       "",
-								"name":     "",
-								"severity": "",
-								"stage": map[string]interface{}{
-									"id":   "",
-									"name": "",
-								},
-							},
-							"id":          "2",
-							"mtime":       wwtbn.Format(time.RFC3339Nano),
-							"temperature": 0.0},
-					},
-					"grain_substrate": map[string]interface{}{
-						"id": "gs",
-						"ingredients": []interface{}{
-							mustObject(_ingredients[0]),
-							mustObject(_ingredients[1]),
-							mustObject(_ingredients[2]),
-						},
-						"name":   "gs",
-						"type":   "grain",
-						"vendor": mustObject(_lc.GrainSubstrate.Vendor),
-					},
-					"id":       "30313233-3435-3637-3839-616263646566",
-					"location": "location",
-					"mtime":    wwtbn.Format(time.RFC3339Nano),
-					"notes": []types.Entity{
-						mustEntity(_notes[0]),
-						mustEntity(_notes[1]),
-						mustEntity(_notes[2]),
-					},
-					"strain": map[string]interface{}{
-						"attributes": []interface{}{
-							mustObject(_attrs[0]),
-							mustObject(_attrs[1]),
-							mustObject(_attrs[2]),
-						},
-						"ctime":   wwtbn.Format(time.RFC3339Nano),
-						"id":      "strainuuid 0",
-						"name":    "strainname 0",
-						"species": "X.species",
-						"vendor":  mustObject(_lc.Strain.Vendor),
-					},
-				}},
-				"name":   _subs[1].Name,
-				"type":   _subs[1].Type,
-				"vendor": mustObject(_subs[1].Vendor),
-			},
+			result: func(s types.Entity) types.Entity {
+				s["lifecycles"] = []types.Entity{mustEntity(_lc)}
+				return s
+			}(mustEntity(_subs[1])),
 		},
 		"lifecycle_path_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				subFields.mock(mock, subValues[1])
-				ingFields.mock(mock, ingValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					subFields.set(subValues[1]),
+					ingFields.set(),
+					lcFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: lcFields.err(),
 		},
 		"happy_path_no_children": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				subFields.mock(mock, subValues[0])
-				ingFields.mock(mock, ingValues...)
-				genFields.mock(mock)
+
+				newBuilder(mock,
+					subFields.set(subValues[0]),
+					ingFields.set(ingValues...),
+					genFields.set())
 
 				return db
 			},
-			result: types.Entity{
-				"id":   "0",
-				"name": "substrate 0",
-				"type": string(types.PlatingType),
-				"vendor": map[string]interface{}{
-					"id":      "0",
-					"name":    "vendor 0",
-					"website": "website 0",
-				},
-				"ingredients": []interface{}{
-					map[string]interface{}{"id": "0", "name": "ingredient 0"},
-					map[string]interface{}{"id": "1", "name": "ingredient 1"},
-					map[string]interface{}{"id": "2", "name": "ingredient 2"},
-				}},
+			result: func(s types.Entity) types.Entity {
+				s["ingredients"] = ings
+				return s
+			}(mustEntity(_subs[0])),
+		},
+		"no_rows": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				newBuilder(mock, subFields.set())
+				return db
+			},
+			err: sql.ErrNoRows,
+		},
+		"missing_id": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				newBuilder(mock, subFields.set())
+				return db
+			},
+			noid: true,
+			err:  fmt.Errorf("failed to find param values in the following fields: [substrate-id]"),
 		},
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock, subFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: subFields.err(),
 		},
 	}
 
@@ -619,11 +571,16 @@ func Test_SubstrateReport(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			var id types.UUID
+			if !tc.noid {
+				id = "0"
+			}
+
 			result, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SubstrateReport(context.Background(), "tc.id", "Test_SubstrateReport")
+			}).SubstrateReport(context.Background(), id, "Test_SubstrateReport")
 
 			js, _ := json.Marshal(result)
 

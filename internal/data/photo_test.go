@@ -6,7 +6,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"testing"
-	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	log "github.com/sirupsen/logrus"
@@ -47,50 +46,27 @@ func Test_GetPhotos(t *testing.T) {
 
 	l := log.WithField("test", "Test_GetPhotos")
 
-	whenwillthenbenow := time.Now().UTC()
-
 	set := map[string]struct {
-		db     func() *sql.DB
-		result []types.Photo
-		err    error
+		db                       func() *sql.DB
+		result, actual, expected []types.Photo
+		err                      error
 	}{
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "filename", "mtime", "ctime", "note_uuid", "note", "note_mtime", "note_ctime"}).
-						AddRow("id-0", "photo 0", whenwillthenbenow, whenwillthenbenow, nil, nil, nil, nil).
-						AddRow("id-1", "photo 1", whenwillthenbenow, whenwillthenbenow, "note1", "nil", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-1", "photo 1", whenwillthenbenow, whenwillthenbenow, "note2", "nil", whenwillthenbenow, whenwillthenbenow).
-						AddRow("id-2", "photo 2", whenwillthenbenow, whenwillthenbenow, nil, nil, nil, nil))
+				photoFields.mock(mock, photoValues...)
 				return db
 			},
 			result: []types.Photo{
-				{UUID: "id-0", Filename: "photo 0", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
-				{UUID: "id-1", Filename: "photo 1", MTime: whenwillthenbenow, CTime: whenwillthenbenow, Notes: []types.Note{
-					{
-						UUID:  "note1",
-						Note:  "nil",
-						MTime: whenwillthenbenow,
-						CTime: whenwillthenbenow,
-					},
-					{
-						UUID:  "note2",
-						Note:  "nil",
-						MTime: whenwillthenbenow,
-						CTime: whenwillthenbenow,
-					},
-				}},
-				{UUID: "id-2", Filename: "photo 2", MTime: whenwillthenbenow, CTime: whenwillthenbenow},
+				types.Photo(_photos[0]),
+				types.Photo(_photos[1]),
+				types.Photo(_photos[2]),
 			},
 		},
 		"db_error": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -128,9 +104,7 @@ func Test_AddPhoto(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			result: 1,
@@ -138,9 +112,7 @@ func Test_AddPhoto(t *testing.T) {
 		"no_rows_affected": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("photo was not added"),
@@ -148,9 +120,7 @@ func Test_AddPhoto(t *testing.T) {
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -159,8 +129,7 @@ func Test_AddPhoto(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+					ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -198,9 +167,7 @@ func Test_ChangePhoto(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			p: types.Photo{UUID: "0", Filename: "photo"},
@@ -208,9 +175,7 @@ func Test_ChangePhoto(t *testing.T) {
 		"no_rows_affected": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("photo was not changed"),
@@ -218,9 +183,7 @@ func Test_ChangePhoto(t *testing.T) {
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -228,9 +191,7 @@ func Test_ChangePhoto(t *testing.T) {
 		"result_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -274,9 +235,7 @@ func Test_RemovePhoto(t *testing.T) {
 		"happy_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			result: []types.Photo{{UUID: "1"}},
@@ -284,9 +243,7 @@ func Test_RemovePhoto(t *testing.T) {
 		"no_rows_affected": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			result: []types.Photo{
@@ -298,9 +255,7 @@ func Test_RemovePhoto(t *testing.T) {
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			result: []types.Photo{
@@ -313,8 +268,7 @@ func Test_RemovePhoto(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+					ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			result: []types.Photo{

@@ -380,7 +380,7 @@ func Test_SelectGenerationsByStrain(t *testing.T) {
 				query:        v.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", k),
-			}).SelectGenerationsByAttrs(context.Background(), p, "Test_SelectGenerationsByStrain")
+			}).selectGenerations(context.Background(), p, "Test_SelectGenerationsByStrain")
 
 			require.Equal(t, v.err, err)
 			require.Equal(t, v.result, result)
@@ -780,14 +780,15 @@ func Test_GenerationReport(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				genFields.mock(mock, genValues)
-				eventFields.mock(mock, eventValues...)
-				srcFields.mock(mock, srcValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				strainFields.mock(mock)
+				newBuilder(mock,
+					genFields.set(genValues),
+					eventFields.set(eventValues...),
+					srcFields.set(srcValues...),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					strainFields.set())
 
 				return db
 			},

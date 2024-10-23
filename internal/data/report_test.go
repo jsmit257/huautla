@@ -52,7 +52,7 @@ func Test_newRpt(t *testing.T) {
 				return db
 			},
 			data: struct{}{},
-			err:  fmt.Errorf("couldn't determine entity type: '{}'"),
+			err:  fmt.Errorf("couldn't determine entity type: '{}' 'struct {}'"),
 		},
 	}
 

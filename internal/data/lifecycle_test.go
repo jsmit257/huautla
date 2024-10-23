@@ -19,7 +19,7 @@ var (
 		types.Event{UUID: "1"},
 		types.Event{UUID: "2"}
 
-	_lc = Lifecycle{
+	_lc = lifecycle{
 		UUID:       "30313233-3435-3637-3839-616263646566",
 		Location:   "location",
 		StrainCost: 0,
@@ -357,6 +357,7 @@ func Test_SelectLifecycle(t *testing.T) {
 
 	tcs := map[string]struct {
 		db     getMockDB
+		noid   bool
 		result types.Lifecycle
 		err    error
 	}{
@@ -369,7 +370,7 @@ func Test_SelectLifecycle(t *testing.T) {
 
 				return db
 			},
-			result: func(lc Lifecycle) types.Lifecycle {
+			result: func(lc lifecycle) types.Lifecycle {
 				lc.Events = []types.Event{
 					types.Event(_events[0]),
 					types.Event(_events[1]),
@@ -378,6 +379,18 @@ func Test_SelectLifecycle(t *testing.T) {
 
 				return types.Lifecycle(lc)
 			}(_lc),
+		},
+		"too_much_of_a_good_thing": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+
+				lcFields.mock(mock, lcValues, lcValues)
+				eventFields.mock(mock, eventValues...)
+				eventFields.mock(mock, eventValues...)
+
+				return db
+			},
+			err: fmt.Errorf("too many rows returned for SelectLifecycle"),
 		},
 		"get_events_fails": {
 			db: func() *sql.DB {
@@ -399,6 +412,14 @@ func Test_SelectLifecycle(t *testing.T) {
 			},
 			err: sql.ErrNoRows,
 		},
+		"missing_id": {
+			db: func() *sql.DB {
+				db, _, _ := sqlmock.New()
+				return db
+			},
+			noid: true,
+			err:  fmt.Errorf("request doesn't contain at least 1 required field"),
+		},
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
@@ -414,11 +435,16 @@ func Test_SelectLifecycle(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			var id types.UUID
+			if !tc.noid {
+				id = "0"
+			}
+
 			result, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectLifecycle(context.Background(), "tc.id", "Test_SelectLifecycle")
+			}).SelectLifecycle(context.Background(), id, "Test_SelectLifecycle")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, result)
@@ -730,6 +756,7 @@ func Test_LifecycleReport(t *testing.T) {
 
 	tcs := map[string]struct {
 		db     getMockDB
+		noid   bool
 		result types.Entity
 		err    error
 	}{
@@ -737,180 +764,184 @@ func Test_LifecycleReport(t *testing.T) {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				photoFields.mock(mock)
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(eventValues...),
+					attrFields.set(attrValues...),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					photoFields.set())
 
 				return db
 			},
+			result: func(lc types.Entity) types.Entity {
+				lc["strain"].(map[string]interface{})["attributes"] = attrs
+				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["events"] = events
+				lc["notes"] = notes
+
+				return lc
+			}(mustEntity(_lc)),
 		},
 		"happy_photo_path": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				photoFields.mock(mock, photoValues...)
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(eventValues...),
+					attrFields.set(attrValues...),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					photoFields.set(photoValues...))
 
 				return db
 			},
+			result: func(lc types.Entity) types.Entity {
+				strain := lc["strain"].(map[string]interface{})
+				strain["attributes"] = attrs
+				strain["photos"] = album
+
+				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["events"] = events
+				lc["notes"] = notes
+
+				return lc
+			}(mustEntity(_lc)),
 		},
 		"photo_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(eventValues...),
+					attrFields.set(attrValues...),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					photoFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: photoFields.err(),
 		},
 		"notes_fail": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
-
-				return db
-			},
-			err: fmt.Errorf("some error"),
-		},
-		"notes_empty": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock)
-				photoFields.mock(mock)
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(),
+					attrFields.set(),
+					ingFields.set(),
+					ingFields.set(),
+					napFields.set(),
+					noteFields.fail())
 
 				return db
 			},
+			err: noteFields.err(),
 		},
 		"get_events_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-
-				lcFields.mock(mock, lcValues)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
-
+				newBuilder(mock, lcFields.set(lcValues), eventFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: eventFields.err(),
 		},
 		"notes_and_photos_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(),
+					attrFields.set(),
+					ingFields.set(),
+					ingFields.set(),
+					napFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: napFields.err(),
 		},
 		"all_attrs_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(),
+					attrFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: attrFields.err(),
 		},
 		"get_grain_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(),
+					attrFields.set(),
+					ingFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: ingFields.err(),
 		},
 		"get_bulk_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
 
-				lcFields.mock(mock, lcValues)
-				eventFields.mock(mock, eventValues...)
-				attrFields.mock(mock, attrValues...)
-				ingFields.mock(mock, ingValues...)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.set(),
+					attrFields.set(),
+					ingFields.set(),
+					ingFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: ingFields.err(),
 		},
 		"no_rows": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				lcFields.mock(mock)
+				newBuilder(mock, lcFields.set())
 				return db
 			},
 			err: sql.ErrNoRows,
 		},
-		// "no_id": {
-		// 	db: func() *sql.DB {
-		// 		db, mock, _ := sqlmock.New()
-		// 		mock.ExpectQuery("").
-		// 			WillReturnRows(sqlmock.
-		// 				NewRows(lcFields))
-		// 		return db
-		// 	},
-		// 	err: fmt.Errorf("failed to find param values in the following fields: [lifecycle-id]"),
-		// },
+		"no_id": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").
+					WillReturnRows(sqlmock.
+						NewRows(lcFields))
+				return db
+			},
+			noid: true,
+			err:  fmt.Errorf("failed to find param values in the following fields: [lifecycle-id]"),
+		},
 		"query_fails": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				newBuilder(mock, lcFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: lcFields.err(),
 		},
 	}
 
@@ -919,13 +950,19 @@ func Test_LifecycleReport(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := (&Conn{
+			var id types.UUID
+			if !tc.noid {
+				id = "0"
+			}
+
+			result, err := (&Conn{
 				query:        tc.db(),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).LifecycleReport(context.Background(), "tc.id", "Test_LifecycleReport")
+			}).LifecycleReport(context.Background(), id, "Test_LifecycleReport")
 
 			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, result)
 		})
 	}
 }

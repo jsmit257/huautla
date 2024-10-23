@@ -56,7 +56,7 @@ func Test_SelectEventType(t *testing.T) {
 		},
 		"no_rows_returned": {
 			id:     "missing",
-			result: types.EventType{UUID: "missing"},
+			result: types.EventType{},
 			err:    sql.ErrNoRows,
 		},
 	}

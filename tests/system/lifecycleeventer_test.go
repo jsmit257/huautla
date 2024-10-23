@@ -36,8 +36,6 @@ func Test_GetLifecycleEvents(t *testing.T) {
 				require.Nil(t, err)
 				require.Equal(t, event.Temperature, actual.Temperature)
 				require.Equal(t, event.Humidity, actual.Humidity)
-				// require.Truef(t, event.MTime.String() == actual.MTime.String(), "expected\n'%#v'\nactual\n'%#v'", event.MTime.String(), actual.MTime.String()) // get fucked!
-				// require.Truef(t, event.CTime == actual.CTime, "expected\n'%#q'\nactual\n'%#q'", event.CTime, actual.CTime)
 				require.Equal(t, event.EventType, actual.EventType)
 			}
 		})
@@ -47,10 +45,8 @@ func Test_GetLifecycleEvents(t *testing.T) {
 func Test_AddLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "add event"}, types.CID("Test_AddLifecycleEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "add event", types.CID("Test_AddLifecycleEvent"))
 	require.Nil(t, err)
-	require.NotEmpty(t, lcs)
-	lc := lcs[0]
 
 	set := map[string]struct {
 		e     types.Event
@@ -82,10 +78,8 @@ func Test_AddLifecycleEvent(t *testing.T) {
 func Test_ChangeLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "change event"}, types.CID("Test_ChangeLifecycleEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "change event", types.CID("Test_ChangeLifecycleEvent"))
 	require.Nil(t, err)
-	require.NotEmpty(t, lcs)
-	lc := lcs[0]
 
 	set := map[string]struct {
 		e      types.Event
@@ -122,10 +116,8 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 func Test_RemoveLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lcs, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "remove event"}, types.CID("Test_RemoveLifecycleEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "remove event", types.CID("Test_RemoveLifecycleEvent"))
 	require.Nil(t, err)
-	require.NotEmpty(t, lcs)
-	lc := lcs[0]
 
 	set := map[string]struct {
 		id     types.UUID

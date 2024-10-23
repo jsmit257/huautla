@@ -30,43 +30,6 @@ func Test_SelectGenerationIndex(t *testing.T) {
 	require.LessOrEqual(t, 5, len(result))
 }
 
-func Test_SelectGenerationsByStrain(t *testing.T) {
-	t.Skip()
-	t.Parallel()
-
-	result, err := db.SelectGenerationsByAttrs(context.Background(), testAttrs{"strain-id": "no-op"}, types.CID("Test_SelectGenerationByStrain"))
-	require.Nil(t, err)
-	require.Equal(t, 1, len(result), "result: %v", result)
-
-	result, err = db.SelectGenerationsByAttrs(context.Background(), testAttrs{"strain-id": "!impossible!"}, types.CID("Test_SelectGenerationByStrain"))
-	require.Nil(t, err)
-	require.Equal(t, 0, len(result), "result: %v", result)
-}
-
-func Test_SelectGenerationsByPlating(t *testing.T) {
-	t.Parallel()
-
-	result, err := db.SelectGenerationsByAttrs(context.Background(), testAttrs{"plating-id": "no-op"}, types.CID("Test_SelectGenerationByPlating"))
-	require.Nil(t, err)
-	require.Equal(t, 2, len(result), "result: %v", result)
-
-	result, err = db.SelectGenerationsByAttrs(context.Background(), testAttrs{"plating-id": "!impossible!"}, types.CID("Test_SelectGenerationByPlating"))
-	require.Nil(t, err)
-	require.Equal(t, 0, len(result), "result: %v", result)
-}
-
-func Test_SelectGenerationsByLiquid(t *testing.T) {
-	t.Parallel()
-
-	result, err := db.SelectGenerationsByAttrs(context.Background(), testAttrs{"liquid-id": "no-op2"}, types.CID("Test_SelectGenerationByLiquid"))
-	require.Nil(t, err)
-	require.Equal(t, 1, len(result), "result: %v", result)
-
-	result, err = db.SelectGenerationsByAttrs(context.Background(), testAttrs{"liquid-id": "!impossible!"}, types.CID("Test_SelectGenerationByLiquid"))
-	require.Nil(t, err)
-	require.Equal(t, 0, len(result), "result: %v", result)
-}
-
 func Test_SelectGeneration(t *testing.T) {
 	t.Parallel()
 

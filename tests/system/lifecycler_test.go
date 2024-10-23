@@ -12,18 +12,15 @@ import (
 
 var (
 	lifecycles []types.Lifecycle
-	imp        = "!impossible!"
+	// imp        = "!impossible!"
 )
 
 func init() {
 	for _, id := range []string{"0", "1"} {
-		p, _ := types.NewReportAttrs(map[string][]string{"lifecycle-id": {id}})
-		if l, err := db.SelectLifecyclesByAttrs(context.Background(), p, "lifecycle_init"); err != nil {
+		if l, err := db.SelectLifecycle(context.Background(), types.UUID(id), "lifecycle_init"); err != nil {
 			panic(fmt.Errorf("failed with err: %v", err))
-		} else if len(l) != 1 {
-			panic(fmt.Errorf("not one result for getLifecycleByID: %d", len(l)))
 		} else {
-			lifecycles = append(lifecycles, l[0])
+			lifecycles = append(lifecycles, l)
 		}
 	}
 }
@@ -51,43 +48,6 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 			require.LessOrEqual(t, 2, len(result))
 		})
 	}
-}
-
-func Test_SelectLifecyclesByStrain(t *testing.T) {
-	t.Parallel()
-
-	result, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"strain-id": "1"}, types.CID("Test_SelectLifecyclesByStrain"))
-	require.Nil(t, err)
-	require.Equal(t, 1, len(result), "result: %v", result)
-
-	result, err = db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"strain-id": imp}, types.CID("Test_SelectLifecyclesByStrain"))
-	require.Nil(t, err)
-	require.Equal(t, 0, len(result), "result: %v", result)
-}
-
-func Test_SelectLifecyclesByGrain(t *testing.T) {
-	t.Parallel()
-
-	result, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"grain-id": "4"}, types.CID("Test_SelectLifecyclesByGrain"))
-	require.Nil(t, err)
-	require.Equal(t, 1, len(result), "result: %v", result)
-
-	result, err = db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"grain-id": imp}, types.CID("Test_SelectLifecyclesByGrain"))
-	require.Nil(t, err)
-	require.Zero(t, len(result), "result: %v", result)
-}
-
-func Test_SelectLifecyclesByBulk(t *testing.T) {
-	t.Skip()
-	t.Parallel()
-
-	result, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"bulk-id": "nop-op3"}, types.CID("Test_SelectLifecyclesByBulk"))
-	require.Nil(t, err)
-	require.Equal(t, 1, len(result), "result: %v", result)
-
-	result, err = db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"bulk-id": imp}, types.CID("Test_SelectLifecyclesByBulk"))
-	require.Nil(t, err)
-	require.Equal(t, 0, len(result), "result: %v", result)
 }
 
 func Test_SelectLifecycle(t *testing.T) {
@@ -202,18 +162,6 @@ func Test_InsertLifecycle(t *testing.T) {
 			// result: types.Lifecycle{Name: "failed insert"},
 			err: fmt.Errorf("lifecycle was not added: 0"),
 		},
-		// // can't really test this anymore since the unique index changed to include
-		// // ctime; just leaving it here so nobody tries to reimplement it
-		// "unique_key_violation": {
-		// 	lc: types.Lifecycle{
-		// 		Location:       "reference implementation",
-		// 		Strain:         strains[0],
-		// 		GrainSubstrate: substrates[1],
-		// 		BulkSubstrate:  substrates[2],
-		// 	},
-		// 	// result: types.Lifecycle{Name: "failed insert"},
-		// 	err: fmt.Errorf(uniqueKeyViolation, "lifecycles_name_key"),
-		// },
 	}
 	for k, v := range set {
 		k, v := k, v
@@ -231,9 +179,8 @@ func Test_InsertLifecycle(t *testing.T) {
 func Test_UpdateLifecycle(t *testing.T) {
 	t.Parallel()
 
-	updated, err := db.SelectLifecyclesByAttrs(context.Background(), testAttrs{"lifecycle-id": "update me!"}, "Test_UpdateLifecycle")
+	lc, err := db.SelectLifecycle(context.Background(), "update me!", "Test_UpdateLifecycle")
 	require.Nil(t, err)
-	require.NotEmpty(t, updated)
 
 	set := map[string]struct {
 		xform func(types.Lifecycle) types.Lifecycle
@@ -292,7 +239,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 		k, v := k, v
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
-			lc := v.xform(updated[0])
+			lc := v.xform(lc)
 			_, err := db.UpdateLifecycle(context.Background(), lc, types.CID(k))
 			equalErrorMessages(t, v.err, err)
 		})

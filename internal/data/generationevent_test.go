@@ -92,10 +92,7 @@ func Test_AddGenerationEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
@@ -111,10 +108,7 @@ func Test_AddGenerationEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.
 					ExpectExec("").
 					WillReturnError(fmt.Errorf("some error"))
@@ -216,10 +210,7 @@ func Test_ChangeGenerationEvent(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectExec("").
@@ -236,10 +227,7 @@ func Test_ChangeGenerationEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.
 					ExpectExec("").
 					WillReturnError(fmt.Errorf("couldn't update Generation.mtime"))

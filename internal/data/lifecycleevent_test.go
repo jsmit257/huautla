@@ -120,10 +120,7 @@ func Test_AddLifecycleEvent(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
@@ -137,10 +134,7 @@ func Test_AddLifecycleEvent(t *testing.T) {
 				db, mock, _ := sqlmock.New()
 				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.ExpectExec("").
 					WillReturnError(fmt.Errorf("couldn't update Lifecycle.mtime"))
 				return db
@@ -242,10 +236,7 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
@@ -260,10 +251,7 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"name", "severity", "stage_uuid", "stage_name"}).
-						AddRow("type 0", "Info", "0", "stage 0"))
+				etFields.mock(mock, etValues[0])
 				mock.
 					ExpectExec("").
 					WillReturnError(fmt.Errorf("couldn't update Lifecycle.mtime"))
