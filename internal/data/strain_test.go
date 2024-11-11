@@ -64,9 +64,7 @@ func Test_SelectAllStrains(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				strainFields.mock(mock,
 					[]driver.Value{"0", "X.species", "strain 0", whenwillthenbenow, nil, "0", "vendor 0", "website", nil},
 					[]driver.Value{"1", "X.species", "strain 1", whenwillthenbenow, nil, "1", "vendor 1", "website", nil},
@@ -93,14 +91,11 @@ func Test_SelectAllStrains(t *testing.T) {
 		// 	err: fmt.Errorf("some error"),
 		// },
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, strainFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: strainFields.err(),
 		},
 	}
 
@@ -110,7 +105,7 @@ func Test_SelectAllStrains(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectAllStrains(context.Background(), "Test_SelectAllStrains")
@@ -132,9 +127,7 @@ func Test_SelectStrain(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				strainFields.mock(mock, strainValues)
 				attrFields.mock(mock, attrValues...)
 
@@ -170,8 +163,7 @@ func Test_SelectStrain(t *testing.T) {
 			},
 		},
 		"no_results_found": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				strainFields.mock(mock)
 				return db
 			},
@@ -179,11 +171,8 @@ func Test_SelectStrain(t *testing.T) {
 			err:    fmt.Errorf("sql: no rows in result set"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -196,7 +185,7 @@ func Test_SelectStrain(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectStrain(context.Background(), "tc.id", "Test_SelectStrain")
@@ -221,23 +210,16 @@ func Test_InsertStrain(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id:     "0",
 			result: types.Strain{UUID: "30313233-3435-3637-3839-616263646566", Name: "strain 0", Vendor: types.Vendor{}, Attributes: nil},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			id:     "0",
@@ -245,11 +227,8 @@ func Test_InsertStrain(t *testing.T) {
 			err:    fmt.Errorf("strain was not added"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			id:     "0",
@@ -257,8 +236,7 @@ func Test_InsertStrain(t *testing.T) {
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
@@ -277,7 +255,7 @@ func Test_InsertStrain(t *testing.T) {
 			t.Parallel()
 
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).InsertStrain(
@@ -302,43 +280,31 @@ func Test_UpdateStrain(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("strain was not updated: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			id:  "0",
@@ -352,7 +318,7 @@ func Test_UpdateStrain(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateStrain(
@@ -377,43 +343,23 @@ func Test_DeleteStrain(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("strain could not be deleted: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
-				return db
-			},
-			id:  "0",
-			err: fmt.Errorf("some error"),
-		},
-		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			id:  "0",
@@ -427,7 +373,7 @@ func Test_DeleteStrain(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).DeleteStrain(
@@ -452,27 +398,15 @@ func Test_GeneratedStrain(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				strainFields[0:8].mock(mock, strainValues[0:8])
 				return db
 			},
-			id: "0",
-			result: types.Strain{
-				UUID:    "strainuuid 0",
-				Species: "X.species",
-				Name:    "strainname 0",
-				Vendor: types.Vendor{
-					UUID:    "vendoruuid 0",
-					Name:    "vendorname 0",
-					Website: "vendorwebsite 0",
-				},
-				CTime: wwtbn,
-			},
+			id:     "0",
+			result: types.Strain(_strain),
 		},
 		"no_results_found": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				strainFields.mock(mock)
 				return db
 			},
@@ -481,12 +415,11 @@ func Test_GeneratedStrain(t *testing.T) {
 			err:    sql.ErrNoRows,
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, strainFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: strainFields.err(),
 		},
 	}
 
@@ -496,7 +429,7 @@ func Test_GeneratedStrain(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).GeneratedStrain(context.Background(), tc.id, "Test_GeneratedStrain")
@@ -519,22 +452,16 @@ func Test_UpdateGeneratedStrain(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			gid: "0",
 			sid: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			gid: "0",
@@ -542,11 +469,8 @@ func Test_UpdateGeneratedStrain(t *testing.T) {
 			err: sql.ErrNoRows,
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			gid: "0",
@@ -554,11 +478,8 @@ func Test_UpdateGeneratedStrain(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			gid: "0",
@@ -573,7 +494,7 @@ func Test_UpdateGeneratedStrain(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateGeneratedStrain(
@@ -600,8 +521,7 @@ func Test_StrainReport(t *testing.T) {
 		err    error
 	}{
 		"happy_path_with_photos": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				strainFields.mock(mock, strainValues)
 				attrFields.mock(mock, attrValues...)
 				genFields.mock(mock)
@@ -611,15 +531,13 @@ func Test_StrainReport(t *testing.T) {
 				return db
 			},
 			result: func(s types.Entity) types.Entity {
-				s["attributes"] = attrs
+				s["attributes"] = attributes
 				s["photos"] = album
 				return s
 			}(mustEntity(_strain)),
 		},
 		"photos_report_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					strainFields.set(strainValues),
 					attrFields.set(attrValues...),
@@ -632,9 +550,7 @@ func Test_StrainReport(t *testing.T) {
 			err: photoFields.err(),
 		},
 		"happy_lifecycles_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					strainFields.set(strainValues),
 					attrFields.set(attrValues...),
@@ -652,12 +568,12 @@ func Test_StrainReport(t *testing.T) {
 				return db
 			},
 			result: func(s types.Entity) types.Entity {
-				s["attributes"] = attrs
+				s["attributes"] = attributes
 
 				lc := mustEntity(_lc)
-				lc["strain"].(map[string]interface{})["attributes"] = attrs
-				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ings
-				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["strain"].(map[string]interface{})["attributes"] = attributes
+				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ingredients
+				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ingredients
 				lc["events"] = events
 				lc["notes"] = notes
 
@@ -667,9 +583,7 @@ func Test_StrainReport(t *testing.T) {
 			}(mustEntity(_strain)),
 		},
 		"lifecycles_report_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					strainFields.set(strainValues),
 					attrFields.set(),
@@ -681,33 +595,28 @@ func Test_StrainReport(t *testing.T) {
 			err: lcFields.err(),
 		},
 		"happy_generations_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock, genValues)
-				eventFields.mock(mock, eventValues...)
-				srcFields.mock(mock, srcValues...)
-				ingFields.mock(mock, ingValues...)
-				ingFields.mock(mock, ingValues...)
-				napFields.mock(mock)
-				noteFields.mock(mock, noteValues...)
-				strainFields.mock(mock)
-				lcFields.mock(mock)
-				photoFields.mock(mock)
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					strainFields.set(strainValues),
+					attrFields.set(attrValues...),
+					genFields.set(genValues),
+					eventFields.set(eventValues...),
+					srcFields.set(srcValues...),
+					ingFields.set(ingValues...),
+					ingFields.set(ingValues...),
+					napFields.set(),
+					noteFields.set(noteValues...),
+					strainFields.set(),
+					lcFields.set(),
+					photoFields.set())
 
 				return db
 			},
 			result: func(s types.Entity) types.Entity {
-				s["attributes"] = attrs
+				gen := mustEntity(_gen)
 
-				s["generations"] = []types.Entity{mustEntity(_gen)}
-
-				gen := s["generations"].([]types.Entity)[0]
-
-				gen["plating_substrate"].(map[string]interface{})["ingredients"] = ings
-
-				gen["liquid_substrate"].(map[string]interface{})["ingredients"] = ings
+				gen["plating_substrate"].(map[string]interface{})["ingredients"] = ingredients
+				gen["liquid_substrate"].(map[string]interface{})["ingredients"] = ingredients
 
 				gen["events"] = []interface{}{
 					mustObject(_events[0]),
@@ -730,13 +639,14 @@ func Test_StrainReport(t *testing.T) {
 					}),
 				}
 
+				s["generations"] = []types.Entity{gen}
+				s["attributes"] = attributes
+
 				return s
 			}(mustEntity(_strain)),
 		},
 		"generation_report_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					strainFields.set(strainValues),
 					attrFields.set(attrValues...),
@@ -747,9 +657,7 @@ func Test_StrainReport(t *testing.T) {
 			err: genFields.err(),
 		},
 		"happy_progenitor_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					strainFields.set(xformer(strainValues).replace(xform{8: "not-nil"})),
 					attrFields.set(attrValues...),
@@ -769,15 +677,15 @@ func Test_StrainReport(t *testing.T) {
 				return db
 			},
 			result: func(s types.Entity) types.Entity {
-				s["attributes"] = attrs
+				s["attributes"] = attributes
 
 				s["generation"] = mustEntity(_gen)
 
 				gen := s["generation"].(types.Entity)
 
-				gen["plating_substrate"].(map[string]interface{})["ingredients"] = ings
+				gen["plating_substrate"].(map[string]interface{})["ingredients"] = ingredients
 
-				gen["liquid_substrate"].(map[string]interface{})["ingredients"] = ings
+				gen["liquid_substrate"].(map[string]interface{})["ingredients"] = ingredients
 
 				gen["events"] = []interface{}{
 					mustObject(_events[0]),
@@ -804,9 +712,7 @@ func Test_StrainReport(t *testing.T) {
 			}(mustEntity(_strain)),
 		},
 		"missing_progen_id": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				strainFields.mock(mock, xformer(strainValues).replace(xform{8: ""}))
 				attrFields.mock(mock, attrValues...)
 				genFields.mock(mock)
@@ -818,14 +724,13 @@ func Test_StrainReport(t *testing.T) {
 			err: fmt.Errorf("failed to find param values in the following fields: [generation-id]"),
 		},
 		"progen_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				strainFields.mock(mock, xformer(strainValues).replace(xform{8: "not-nil"}))
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock)
-				lcFields.mock(mock)
-				photoFields.mock(mock)
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					strainFields.set(xformer(strainValues).replace(xform{8: "not-nil"})),
+					attrFields.set(attrValues...),
+					genFields.set(),
+					lcFields.set(),
+					photoFields.set())
 
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 
@@ -834,52 +739,46 @@ func Test_StrainReport(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"progen_empty": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				strainFields.mock(mock, xformer(strainValues).replace(xform{8: "not-nil"}))
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock)
-				lcFields.mock(mock)
-				photoFields.mock(mock)
-				genFields.mock(mock)
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					strainFields.set(xformer(strainValues).replace(xform{8: "not-nil"})),
+					attrFields.set(attrValues...),
+					genFields.set(),
+					lcFields.set(),
+					photoFields.set(),
+					genFields.set())
 
 				return db
 			},
 			err: fmt.Errorf("how does 'not-nil' not identify a generation?"),
 		},
 		"happy_path_no_children": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-				genFields.mock(mock)
-				lcFields.mock(mock)
-				photoFields.mock(mock)
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					strainFields.set(strainValues),
+					attrFields.set(attrValues...),
+					genFields.set(),
+					lcFields.set(),
+					photoFields.set())
 
 				return db
 			},
 			result: func() types.Entity {
 				s := mustEntity(_strain)
-				s["attributes"] = attrs
+				s["attributes"] = attributes
 				return s
 			}(),
 		},
 		"no_results_found": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				strainFields.mock(mock)
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, strainFields.set())
 				return db
 			},
 			err: fmt.Errorf("sql: no rows in result set"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -892,7 +791,7 @@ func Test_StrainReport(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).StrainReport(context.Background(), "tc.id", "Test_StrainReport")

@@ -39,8 +39,7 @@ func Test_KnownAttributeNames(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"name"}).
@@ -52,17 +51,12 @@ func Test_KnownAttributeNames(t *testing.T) {
 			result: []string{"name 0", "name 1", "name 2"},
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			result: []string{},
-			err:    fmt.Errorf("some error"),
+			err: fmt.Errorf("some error"),
 		},
-		// "query_result_nil": {}, // FIXME: how to mock?
 	}
 
 	for name, tc := range tcs {
@@ -71,7 +65,7 @@ func Test_KnownAttributeNames(t *testing.T) {
 			t.Parallel()
 
 			s, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).KnownAttributeNames(context.Background(), "Test_KnownAttributeNames")
@@ -94,8 +88,7 @@ func Test_GetAllAttributes(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{"id", "name", "value"}).
@@ -111,15 +104,11 @@ func Test_GetAllAttributes(t *testing.T) {
 			},
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			result: []types.StrainAttribute{},
-			err:    fmt.Errorf("some error"),
+			err: fmt.Errorf("some error"),
 		},
 	}
 
@@ -131,7 +120,7 @@ func Test_GetAllAttributes(t *testing.T) {
 			s := &types.Strain{UUID: tc.id}
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).GetAllAttributes(context.Background(), s, "Test_GetAllAttributes")
@@ -143,7 +132,6 @@ func Test_GetAllAttributes(t *testing.T) {
 }
 
 func Test_AddAttribute(t *testing.T) {
-	//ctx context.Context, s *Strain, sa StrainAttribute, cid CID) error
 	t.Parallel()
 
 	l := log.WithField("test", "InsertStrain")
@@ -156,11 +144,8 @@ func Test_AddAttribute(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
@@ -169,33 +154,24 @@ func Test_AddAttribute(t *testing.T) {
 			},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("attribute was not added"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			id:  "0",
@@ -212,7 +188,7 @@ func Test_AddAttribute(t *testing.T) {
 			s := &types.Strain{}
 
 			a, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).AddAttribute(
@@ -242,11 +218,8 @@ func Test_ChangeAttribute(t *testing.T) {
 		err   error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			attrs: []types.StrainAttribute{
@@ -258,11 +231,8 @@ func Test_ChangeAttribute(t *testing.T) {
 			v:  "Lots!!",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			n:   "Yield",
@@ -270,8 +240,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			err: fmt.Errorf("attribute was not changed"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -280,8 +249,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -299,7 +267,7 @@ func Test_ChangeAttribute(t *testing.T) {
 			s := &types.Strain{UUID: "0", Attributes: tc.attrs}
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).ChangeAttribute(
@@ -326,11 +294,8 @@ func Test_RemoveAttribute(t *testing.T) {
 		err   error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			attrs: []types.StrainAttribute{
@@ -340,33 +305,24 @@ func Test_RemoveAttribute(t *testing.T) {
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("attribute was not removed"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			id:  "0",
@@ -382,7 +338,7 @@ func Test_RemoveAttribute(t *testing.T) {
 			s := &types.Strain{Attributes: tc.attrs}
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).RemoveAttribute(

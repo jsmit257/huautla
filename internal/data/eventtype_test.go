@@ -39,8 +39,7 @@ func Test_SelectAllEventTypes(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				etFields.mock(mock, etValues...)
 				return db
 			},
@@ -51,14 +50,11 @@ func Test_SelectAllEventTypes(t *testing.T) {
 			},
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, eventFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: eventFields.err(),
 		},
 	}
 
@@ -68,7 +64,7 @@ func Test_SelectAllEventTypes(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectAllEventTypes(context.Background(), "Test_SelectAllEventTypes")
@@ -91,8 +87,7 @@ func Test_SelectEventType(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				etFields.mock(mock, etValues[0])
 				return db
 			},
@@ -100,12 +95,11 @@ func Test_SelectEventType(t *testing.T) {
 			result: types.EventType(_ets[0]),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, etFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: etFields.err(),
 		},
 	}
 
@@ -115,7 +109,7 @@ func Test_SelectEventType(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectEventType(context.Background(), tc.id, "Test_EventType")
@@ -137,16 +131,14 @@ func Test_InsertEventType(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			result: types.EventType{UUID: "30313233-3435-3637-3839-616263646566", Name: "eventtype 0", Stage: types.Stage{}},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -154,8 +146,7 @@ func Test_InsertEventType(t *testing.T) {
 			err:    fmt.Errorf("eventtype was not added"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -163,8 +154,7 @@ func Test_InsertEventType(t *testing.T) {
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -180,7 +170,7 @@ func Test_InsertEventType(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).InsertEventType(
@@ -205,16 +195,14 @@ func Test_UpdateEventType(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -222,8 +210,7 @@ func Test_UpdateEventType(t *testing.T) {
 			err: fmt.Errorf("eventtype was not updated: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -231,8 +218,7 @@ func Test_UpdateEventType(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -247,7 +233,7 @@ func Test_UpdateEventType(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateEventType(
@@ -272,16 +258,14 @@ func Test_DeleteEventType(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -289,8 +273,7 @@ func Test_DeleteEventType(t *testing.T) {
 			err: fmt.Errorf("eventtype could not be deleted: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -298,8 +281,7 @@ func Test_DeleteEventType(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -314,7 +296,7 @@ func Test_DeleteEventType(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).DeleteEventType(
@@ -338,9 +320,7 @@ func Test_EventTypeReport(t *testing.T) {
 		err                      error
 	}{
 		"happy_lifecycle_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					etFields.set(etValues[0]),
 					lcFields.set(lcValues),
@@ -362,21 +342,15 @@ func Test_EventTypeReport(t *testing.T) {
 			}(mustEntity(_ets[0])),
 		},
 		"lifecycle_path_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				newBuilder(mock,
-					etFields.set(etValues[0]),
-					lcFields.fail())
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, etFields.set(etValues[0]), lcFields.fail())
 
 				return db
 			},
 			err: lcFields.err(),
 		},
 		"happy_generation_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					etFields.set(etValues[0]),
 					lcFields.set(),
@@ -398,9 +372,7 @@ func Test_EventTypeReport(t *testing.T) {
 			}(mustEntity(_ets[0])),
 		},
 		"generation_path_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					etFields.set(etValues[0]),
 					lcFields.set(),
@@ -411,9 +383,7 @@ func Test_EventTypeReport(t *testing.T) {
 			err: genFields.err(),
 		},
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					etFields.set(etValues[0]),
 					lcFields.set(),
@@ -426,8 +396,7 @@ func Test_EventTypeReport(t *testing.T) {
 			}(mustEntity(_ets[0])),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -441,7 +410,7 @@ func Test_EventTypeReport(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).EventTypeReport(context.Background(), "tc.id", "Test_EventType")

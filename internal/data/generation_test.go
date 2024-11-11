@@ -82,7 +82,7 @@ var (
 func Test_SelectGenerationIndex(t *testing.T) {
 	t.Parallel()
 
-	fields := [26]string{
+	fields := row{
 		"uuid",
 		"plating_id",
 		"plating_name",
@@ -119,91 +119,12 @@ func Test_SelectGenerationIndex(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnRows(sqlmock.
-					NewRows(fields[:]).
-					AddRow(
-						"happy_path",
-						"plating_id",
-						"plating_name",
-						"plating_type",
-						"plating_vendor_id",
-						"plating_vendor_name",
-						"plating_vendor_website",
-						"liquid_id",
-						"liquid_name",
-						"liquid_type",
-						"liquid_vendor_id",
-						"liquid_vendor_name",
-						"liquid_vendor_website",
-						"source_uuid 0",
-						"spore",
-						"lifecycle_uuid",
-						"strain_uuid",
-						"strain_name",
-						"strain_species",
-						wwtbn,
-						"strain_vendor_id",
-						"strain_vendor_name",
-						"strain_vendor_website",
-						wwtbn,
-						wwtbn,
-						nil).
-					AddRow(
-						"happy_path",
-						"plating_id",
-						"plating_name",
-						"plating_type",
-						"plating_vendor_id",
-						"plating_vendor_name",
-						"plating_vendor_website",
-						"liquid_id",
-						"liquid_name",
-						"liquid_type",
-						"liquid_vendor_id",
-						"liquid_vendor_name",
-						"liquid_vendor_website",
-						"source_uuid 1",
-						"spore",
-						"lifecycle_uuid",
-						"strain_uuid",
-						"strain_name",
-						"strain_species",
-						wwtbn,
-						"strain_vendor_id",
-						"strain_vendor_name",
-						"strain_vendor_website",
-						wwtbn,
-						wwtbn,
-						nil).
-					AddRow(
-						"happy_path 2",
-						"plating_id",
-						"plating_name",
-						"plating_type",
-						"plating_vendor_id",
-						"plating_vendor_name",
-						"plating_vendor_website",
-						"liquid_id",
-						"liquid_name",
-						"liquid_type",
-						"liquid_vendor_id",
-						"liquid_vendor_name",
-						"liquid_vendor_website",
-						"source_uuid 0",
-						"spore",
-						"lifecycle_uuid",
-						"strain_uuid",
-						"strain_name",
-						"strain_species",
-						wwtbn,
-						"strain_vendor_id",
-						"strain_vendor_name",
-						"strain_vendor_website",
-						wwtbn,
-						wwtbn,
-						nil))
+					NewRows(fields).
+					AddRow("happy_path", "plating_id", "plating_name", "plating_type", "plating_vendor_id", "plating_vendor_name", "plating_vendor_website", "liquid_id", "liquid_name", "liquid_type", "liquid_vendor_id", "liquid_vendor_name", "liquid_vendor_website", "source_uuid 0", "spore", "lifecycle_uuid", "strain_uuid", "strain_name", "strain_species", wwtbn, "strain_vendor_id", "strain_vendor_name", "strain_vendor_website", wwtbn, wwtbn, nil).
+					AddRow("happy_path", "plating_id", "plating_name", "plating_type", "plating_vendor_id", "plating_vendor_name", "plating_vendor_website", "liquid_id", "liquid_name", "liquid_type", "liquid_vendor_id", "liquid_vendor_name", "liquid_vendor_website", "source_uuid 1", "spore", "lifecycle_uuid", "strain_uuid", "strain_name", "strain_species", wwtbn, "strain_vendor_id", "strain_vendor_name", "strain_vendor_website", wwtbn, wwtbn, nil).
+					AddRow("happy_path 2", "plating_id", "plating_name", "plating_type", "plating_vendor_id", "plating_vendor_name", "plating_vendor_website", "liquid_id", "liquid_name", "liquid_type", "liquid_vendor_id", "liquid_vendor_name", "liquid_vendor_website", "source_uuid 0", "spore", "lifecycle_uuid", "strain_uuid", "strain_name", "strain_species", wwtbn, "strain_vendor_id", "strain_vendor_name", "strain_vendor_website", wwtbn, wwtbn, nil))
 				return db
 			},
 			result: []types.Generation{
@@ -282,12 +203,11 @@ func Test_SelectGenerationIndex(t *testing.T) {
 			},
 		},
 		"db_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, genFields.fail()) // not really what we're sleecting, but it throws an error, so...
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: genFields.err(),
 		},
 	}
 
@@ -297,7 +217,7 @@ func Test_SelectGenerationIndex(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        v.db(),
+				query:        v.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", k),
 			}).SelectGenerationIndex(context.Background(), "Test_SelectGenerationIndex")
@@ -319,14 +239,13 @@ func Test_SelectGenerationsByStrain(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				genFields.mock(mock, genValues)
-				ingFields.mock(mock)
-				ingFields.mock(mock)
-				eventFields.mock(mock)
-				srcFields.mock(mock)
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					genFields.set(genValues),
+					ingFields.set(),
+					ingFields.set(),
+					eventFields.set(),
+					srcFields.set())
 
 				return db
 			},
@@ -360,12 +279,11 @@ func Test_SelectGenerationsByStrain(t *testing.T) {
 			},
 		},
 		"db_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, genFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: genFields.err(),
 		},
 	}
 
@@ -377,7 +295,7 @@ func Test_SelectGenerationsByStrain(t *testing.T) {
 			p, _ := types.NewReportAttrs(map[string][]string{"strain-id": {"0"}})
 
 			result, err := (&Conn{
-				query:        v.db(),
+				query:        v.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", k),
 			}).selectGenerations(context.Background(), p, "Test_SelectGenerationsByStrain")
@@ -400,12 +318,11 @@ func Test_SelectGeneration(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				genFields.mock(mock, genValues)
-				eventFields.mock(mock, eventValues...)
-				srcFields.mock(mock, srcValues...)
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					genFields.set(genValues),
+					eventFields.set(eventValues...),
+					srcFields.set(srcValues...))
 
 				return db
 			},
@@ -448,22 +365,18 @@ func Test_SelectGeneration(t *testing.T) {
 			},
 		},
 		"events_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				genFields.mock(mock, genValues)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					genFields.set(genValues),
+					eventFields.fail())
 
 				return db
 			},
 			id:  "0",
-			err: fmt.Errorf("some error"),
+			err: eventFields.err(),
 		},
 		"source_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 				eventFields.mock(mock, eventValues...)
 
@@ -475,22 +388,26 @@ func Test_SelectGeneration(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"no_rows": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock)
 				return db
 			},
 			id:  "0",
 			err: sql.ErrNoRows,
 		},
+		"missing_id": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				return db
+			},
+			err: fmt.Errorf("failed to find param values in the following fields: [generation-id]"),
+		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, genFields.fail())
 				return db
 			},
 			id:  "0",
-			err: fmt.Errorf("some error"),
+			err: genFields.err(),
 		},
 	}
 
@@ -500,7 +417,7 @@ func Test_SelectGeneration(t *testing.T) {
 			t.Parallel()
 
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectGeneration(context.Background(), tc.id, "Test_SelectGeneration")
@@ -521,12 +438,9 @@ func Test_InsertGeneration(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
 				genFields.mock(mock, append([]driver.Value{mockUUIDGen().String()}, genValues[1:]...))
 				eventFields.mock(mock, eventValues...)
 				srcFields.mock(mock, srcValues...)
@@ -535,24 +449,21 @@ func Test_InsertGeneration(t *testing.T) {
 			},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("generation was not added: 0"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -567,7 +478,7 @@ func Test_InsertGeneration(t *testing.T) {
 			t.Parallel()
 
 			g, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).InsertGeneration(
@@ -591,31 +502,27 @@ func Test_UpdateGeneration(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("generation was not updated"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -630,7 +537,7 @@ func Test_UpdateGeneration(t *testing.T) {
 			t.Parallel()
 
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateGeneration(context.Background(), types.Generation{}, "Test_UpdateGeneration")
@@ -653,32 +560,28 @@ func Test_UpdateGenerationMTime(t *testing.T) {
 		err      error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			modified: now,
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("mtime was not updated"),
 		},
 		"row_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
 		"db_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -693,7 +596,7 @@ func Test_UpdateGenerationMTime(t *testing.T) {
 			t.Parallel()
 
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateGenerationMTime(context.Background(), &types.Generation{}, time.Now(), "Test_UpdateGeneration")
@@ -714,32 +617,27 @@ func Test_DeleteGeneration(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			// id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("generation could not be deleted: 'tc.id'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -753,7 +651,7 @@ func Test_DeleteGeneration(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).DeleteGeneration(
@@ -777,9 +675,7 @@ func Test_GenerationReport(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					genFields.set(genValues),
 					eventFields.set(eventValues...),
@@ -794,9 +690,7 @@ func Test_GenerationReport(t *testing.T) {
 			},
 		},
 		"progeny_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 				eventFields.mock(mock, eventValues...)
 				// also used different values, like above
@@ -813,8 +707,7 @@ func Test_GenerationReport(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"notes_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 				eventFields.mock(mock, eventValues...)
 				srcFields.mock(mock, srcValues...)
@@ -829,8 +722,7 @@ func Test_GenerationReport(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"plating_ingredient_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 				eventFields.mock(mock, eventValues...)
 				srcFields.mock(mock, srcValues...)
@@ -842,9 +734,7 @@ func Test_GenerationReport(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"liquid_ingredient_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 				eventFields.mock(mock, eventValues...)
 				srcFields.mock(mock, srcValues...)
@@ -857,9 +747,7 @@ func Test_GenerationReport(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"notes_and_photos_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 				eventFields.mock(mock, eventValues...)
 				srcFields.mock(mock, srcValues...)
@@ -872,17 +760,8 @@ func Test_GenerationReport(t *testing.T) {
 			},
 			err: fmt.Errorf("some error"),
 		},
-		// "no_id": {
-		// 	db: func() *sql.DB {
-		// 		db, _, _ := sqlmock.New()
-		// 		return db
-		// 	},
-		// 	err: fmt.Errorf("failed to find param values in the following fields: [generation-id]"),
-		// },
 		"events_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
@@ -892,9 +771,7 @@ func Test_GenerationReport(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"source_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock, genValues)
 				eventFields.mock(mock, eventValues...)
 
@@ -904,16 +781,14 @@ func Test_GenerationReport(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"no_rows": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				genFields.mock(mock)
 				return db
 			},
 			err: sql.ErrNoRows,
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -927,7 +802,7 @@ func Test_GenerationReport(t *testing.T) {
 			t.Parallel()
 
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).GenerationReport(context.Background(), "tc.id", "Test_GenerationReport")

@@ -15,10 +15,6 @@ import (
 )
 
 var (
-	e0, e1, e2 = types.Event{UUID: "0"},
-		types.Event{UUID: "1"},
-		types.Event{UUID: "2"}
-
 	_lc = lifecycle{
 		UUID:       "30313233-3435-3637-3839-616263646566",
 		Location:   "location",
@@ -131,8 +127,7 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").
 					WillReturnRows(sqlmock.
 						NewRows([]string{
@@ -310,28 +305,12 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 			},
 		},
 		"db_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
-		// "row_error": {
-		// 	db: func() *sql.DB {
-		// 		db, mock, _ := sqlmock.New()
-		// 		mock.
-		// 			ExpectQuery("").
-		// 			WillReturnRows(sqlmock.
-		// 				NewRows([]string{"uuid", "location", "ctime"}).
-		// 				AddRow("0", "row_error", whenwillthenbenow).
-		// 				RowError(1, fmt.Errorf("some error")))
-		// 		return db
-		// 	},
-		// 	err:    fmt.Errorf("some error"),
-		// },
 	}
 
 	for name, tc := range tcs {
@@ -339,7 +318,7 @@ func Test_SelectLifecycleIndex(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectLifecycleIndex(context.Background(), "Test_SelectLifecycleIndex")
@@ -362,9 +341,7 @@ func Test_SelectLifecycle(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				lcFields.mock(mock, lcValues)
 				eventFields.mock(mock, eventValues...)
 
@@ -381,9 +358,7 @@ func Test_SelectLifecycle(t *testing.T) {
 			}(_lc),
 		},
 		"too_much_of_a_good_thing": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				lcFields.mock(mock, lcValues, lcValues)
 				eventFields.mock(mock, eventValues...)
 				eventFields.mock(mock, eventValues...)
@@ -393,36 +368,31 @@ func Test_SelectLifecycle(t *testing.T) {
 			err: fmt.Errorf("too many rows returned for SelectLifecycle"),
 		},
 		"get_events_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
-				lcFields.mock(mock, lcValues)
-
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock,
+					lcFields.set(lcValues),
+					eventFields.fail())
 
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: eventFields.err(),
 		},
 		"no_rows": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				lcFields.mock(mock)
 				return db
 			},
 			err: sql.ErrNoRows,
 		},
 		"missing_id": {
-			db: func() *sql.DB {
-				db, _, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				return db
 			},
 			noid: true,
 			err:  fmt.Errorf("request doesn't contain at least 1 required field"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -441,7 +411,7 @@ func Test_SelectLifecycle(t *testing.T) {
 			}
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectLifecycle(context.Background(), id, "Test_SelectLifecycle")
@@ -462,51 +432,30 @@ func Test_InsertLifecycle(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcFields).
-						AddRow(lcValues...))
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				newBuilder(mock, lcFields.set(lcValues), eventFields.set(eventValues...))
 
 				return db
 			},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("lifecycle was not added: 0"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -520,7 +469,7 @@ func Test_InsertLifecycle(t *testing.T) {
 			t.Parallel()
 
 			lc, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).InsertLifecycle(
@@ -544,40 +493,28 @@ func Test_UpdateLifecycle(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("lifecycle was not updated"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -593,7 +530,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 			// there's no good way to test the returned lifecycle, to start, the
 			// timestamps are non-deterministic; system tests will vet the rest
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateLifecycle(context.Background(), types.Lifecycle{}, "Test_UpdateLifecycle")
@@ -616,41 +553,29 @@ func Test_UpdateLifecycleMTime(t *testing.T) {
 		err      error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			modified: now,
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			err: fmt.Errorf("mtime was not updated"),
 		},
 		"row_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			err: fmt.Errorf("some error"),
 		},
 		"db_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			err: fmt.Errorf("some error"),
@@ -664,7 +589,7 @@ func Test_UpdateLifecycleMTime(t *testing.T) {
 			t.Parallel()
 
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateLifecycleMTime(context.Background(), &types.Lifecycle{}, time.Now(), "Test_UpdateLifecycle")
@@ -686,43 +611,31 @@ func Test_DeleteLifecycle(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("lifecycle could not be deleted: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
 			id:  "0",
@@ -736,7 +649,7 @@ func Test_DeleteLifecycle(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).DeleteLifecycle(
@@ -761,9 +674,7 @@ func Test_LifecycleReport(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(eventValues...),
@@ -777,9 +688,9 @@ func Test_LifecycleReport(t *testing.T) {
 				return db
 			},
 			result: func(lc types.Entity) types.Entity {
-				lc["strain"].(map[string]interface{})["attributes"] = attrs
-				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ings
-				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["strain"].(map[string]interface{})["attributes"] = attributes
+				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ingredients
+				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ingredients
 				lc["events"] = events
 				lc["notes"] = notes
 
@@ -787,9 +698,7 @@ func Test_LifecycleReport(t *testing.T) {
 			}(mustEntity(_lc)),
 		},
 		"happy_photo_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(eventValues...),
@@ -804,11 +713,11 @@ func Test_LifecycleReport(t *testing.T) {
 			},
 			result: func(lc types.Entity) types.Entity {
 				strain := lc["strain"].(map[string]interface{})
-				strain["attributes"] = attrs
+				strain["attributes"] = attributes
 				strain["photos"] = album
 
-				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ings
-				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ings
+				lc["grain_substrate"].(map[string]interface{})["ingredients"] = ingredients
+				lc["bulk_substrate"].(map[string]interface{})["ingredients"] = ingredients
 				lc["events"] = events
 				lc["notes"] = notes
 
@@ -816,9 +725,7 @@ func Test_LifecycleReport(t *testing.T) {
 			}(mustEntity(_lc)),
 		},
 		"photo_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(eventValues...),
@@ -834,9 +741,7 @@ func Test_LifecycleReport(t *testing.T) {
 			err: photoFields.err(),
 		},
 		"notes_fail": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(),
@@ -851,17 +756,14 @@ func Test_LifecycleReport(t *testing.T) {
 			err: noteFields.err(),
 		},
 		"get_events_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, lcFields.set(lcValues), eventFields.fail())
 				return db
 			},
 			err: eventFields.err(),
 		},
 		"notes_and_photos_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(),
@@ -875,9 +777,7 @@ func Test_LifecycleReport(t *testing.T) {
 			err: napFields.err(),
 		},
 		"all_attrs_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(),
@@ -888,9 +788,7 @@ func Test_LifecycleReport(t *testing.T) {
 			err: attrFields.err(),
 		},
 		"get_grain_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(),
@@ -902,9 +800,7 @@ func Test_LifecycleReport(t *testing.T) {
 			err: ingFields.err(),
 		},
 		"get_bulk_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					lcFields.set(lcValues),
 					eventFields.set(),
@@ -917,27 +813,22 @@ func Test_LifecycleReport(t *testing.T) {
 			err: ingFields.err(),
 		},
 		"no_rows": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, lcFields.set())
 				return db
 			},
 			err: sql.ErrNoRows,
 		},
 		"no_id": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows(lcFields))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				lcFields.mock(mock)
 				return db
 			},
 			noid: true,
 			err:  fmt.Errorf("failed to find param values in the following fields: [lifecycle-id]"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, lcFields.fail())
 				return db
 			},
@@ -956,7 +847,7 @@ func Test_LifecycleReport(t *testing.T) {
 			}
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).LifecycleReport(context.Background(), id, "Test_LifecycleReport")

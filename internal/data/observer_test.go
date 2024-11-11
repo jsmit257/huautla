@@ -16,9 +16,9 @@ import (
 
 var (
 	_events = []event{
-		{UUID: e0.UUID, Temperature: e0.Temperature, Humidity: e0.Humidity, MTime: wwtbn, CTime: wwtbn, EventType: types.EventType{UUID: e0.EventType.UUID, Name: e0.EventType.Name, Severity: e0.EventType.Severity, Stage: types.Stage{UUID: e0.EventType.Stage.UUID, Name: e0.EventType.Stage.Name}}},
-		{UUID: e1.UUID, Temperature: e1.Temperature, Humidity: e1.Humidity, MTime: wwtbn, CTime: wwtbn, EventType: types.EventType{UUID: e1.EventType.UUID, Name: e1.EventType.Name, Severity: e1.EventType.Severity, Stage: types.Stage{UUID: e1.EventType.Stage.UUID, Name: e1.EventType.Stage.Name}}},
-		{UUID: e2.UUID, Temperature: e2.Temperature, Humidity: e2.Humidity, MTime: wwtbn, CTime: wwtbn, EventType: types.EventType{UUID: e2.EventType.UUID, Name: e2.EventType.Name, Severity: e2.EventType.Severity, Stage: types.Stage{UUID: e2.EventType.Stage.UUID, Name: e2.EventType.Stage.Name}}},
+		{UUID: "eventuuid 0", Temperature: -40.0, Humidity: 0, MTime: wwtbn, CTime: wwtbn, EventType: types.EventType{UUID: "typeuuid 0", Name: "Clone", Severity: "e0.EventType.Severity", Stage: types.Stage{UUID: "e0.EventType.Stage.UUID", Name: "e0.EventType.Stage.Name"}}},
+		{UUID: "eventuuid 1", Temperature: 451, Humidity: 50, MTime: wwtbn, CTime: wwtbn, EventType: types.EventType{UUID: "typeuuid 1", Name: "e1.EventType.Name", Severity: "e1.EventType.Severity", Stage: types.Stage{UUID: "e1.EventType.Stage.UUID", Name: "e1.EventType.Stage.Name"}}},
+		{UUID: "eventuuid 2", Temperature: 10.0, Humidity: 100, MTime: wwtbn, CTime: wwtbn, EventType: types.EventType{UUID: "typeuuid 2", Name: "e2.EventType.Name", Severity: "e2.EventType.Severity", Stage: types.Stage{UUID: "e2.EventType.Stage.UUID", Name: "e2.EventType.Stage.Name"}}},
 	}
 	eventFields = row{
 		"id",
@@ -53,34 +53,25 @@ func Test_SelectByEventType(t *testing.T) {
 
 	l := log.WithField("test", "Test_GetLifecycleEvents")
 
-	e0, e1, e2 := types.Event{UUID: "0"},
-		types.Event{UUID: "1"},
-		types.Event{UUID: "2"}
-
 	tcs := map[string]struct {
 		db     getMockDB
 		result []types.Event
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"id", "temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "event_severity", "eventtype_name", "stage_uuid", "stage_name"}).
-						AddRow(e0.UUID, e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name).
-						AddRow(e1.UUID, e1.Temperature, e1.Humidity, e1.MTime, e1.CTime, e1.EventType.UUID, e1.EventType.Name, e1.EventType.Severity, e1.EventType.Stage.UUID, e1.EventType.Stage.Name).
-						AddRow(e2.UUID, e2.Temperature, e2.Humidity, e2.MTime, e2.CTime, e2.EventType.UUID, e2.EventType.Name, e2.EventType.Severity, e2.EventType.Stage.UUID, e2.EventType.Stage.Name))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, eventFields.set(eventValues...))
 				return db
 			},
-			result: []types.Event{e0, e1, e2},
+			result: []types.Event{
+				types.Event(_events[0]),
+				types.Event(_events[1]),
+				types.Event(_events[2]),
+			},
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			result: []types.Event{},
@@ -95,7 +86,7 @@ func Test_SelectByEventType(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectByEventType(context.Background(), types.EventType{}, "Test_SelectAllEventTypes")
@@ -111,8 +102,6 @@ func Test_SelectEvent(t *testing.T) {
 
 	l := log.WithField("test", "SelectEvent")
 
-	e0 := types.Event{UUID: "0"}
-
 	tcs := map[string]struct {
 		db     getMockDB
 		id     types.UUID
@@ -120,26 +109,19 @@ func Test_SelectEvent(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.ExpectQuery("").
-					WillReturnRows(sqlmock.
-						NewRows([]string{"temperature", "humidity", "mtime", "ctime", "eventtype_uuid", "eventtype_severity", "eventtype_name", "stage_uuid", "stage_name"}).
-						AddRow(e0.Temperature, e0.Humidity, e0.MTime, e0.CTime, e0.EventType.UUID, e0.EventType.Name, e0.EventType.Severity, e0.EventType.Stage.UUID, e0.EventType.Stage.Name))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, eventFields.set(eventValues[0]))
 				return db
 			},
 			id:     "0",
-			result: e0,
+			result: types.Event(_events[0]),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, eventFields.fail())
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			err: eventFields.err(),
 		},
 	}
 
@@ -149,7 +131,7 @@ func Test_SelectEvent(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectEvent(context.Background(), tc.id, "Test_SelectEvent")
@@ -172,8 +154,7 @@ func Test_notesAndPhotos(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				napFields.mock(mock, napValues...)
 				return db
 			},
@@ -249,17 +230,13 @@ func Test_notesAndPhotos(t *testing.T) {
 			},
 		},
 		"events_nil": {
-			db: func() *sql.DB {
-				db, _, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				return db
 			},
 		},
 		"event_error": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectQuery("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			in:  []types.Event{{}},
@@ -273,7 +250,7 @@ func Test_notesAndPhotos(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).notesAndPhotos(context.Background(), tc.in, "0", "Test_notesAndPhotos")

@@ -24,31 +24,27 @@ func Test_newRpt(t *testing.T) {
 		err    error
 	}{
 		"happy_path_no_children": {
-			db: func() *sql.DB {
-				db, _, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				return db
 			},
 			data: types.Vendor{UUID: "0"},
 		},
 		"has_cycle": {
-			db: func() *sql.DB {
-				db, _, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				return db
 			},
 			parent: &rpttree{id: "vendor#0"},
 			data:   types.Vendor{UUID: "0"},
 		},
 		"no_cycle": {
-			db: func() *sql.DB {
-				db, _, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				return db
 			},
 			parent: &rpttree{id: "strain#0"},
 			data:   types.Vendor{UUID: "0"},
 		},
 		"type_error": {
-			db: func() *sql.DB {
-				db, _, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				return db
 			},
 			data: struct{}{},
@@ -61,7 +57,7 @@ func Test_newRpt(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			_, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).newRpt(context.Background(), tc.data, "Test_newRpt", tc.parent)

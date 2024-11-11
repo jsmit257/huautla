@@ -17,7 +17,7 @@ type (
 )
 
 var (
-	attrs = []interface{}{
+	attributes = []interface{}{
 		mustObject(_attrs[0]),
 		mustObject(_attrs[1]),
 		mustObject(_attrs[2]),
@@ -27,7 +27,7 @@ var (
 		mustObject(_photos[1]),
 		mustObject(_photos[2]),
 	}
-	ings = []interface{}{
+	ingredients = []interface{}{
 		mustObject(_ingredients[0]),
 		mustObject(_ingredients[1]),
 		mustObject(_ingredients[2]),
@@ -74,6 +74,7 @@ func (x xformer) replace(xforms ...xform) []driver.Value {
 	return result
 }
 
+// deprecated: use set() in a builder instead
 func (r row) mock(mock sqlmock.Sqlmock, rows ...[]driver.Value) {
 	mock.ExpectQuery("").WillReturnRows(sqlmock.NewRows(r).AddRows(rows...))
 }
@@ -85,6 +86,7 @@ func (r row) set(rows ...[]driver.Value) func(*mocker) *mocker {
 	}
 }
 
+// this is what fail() throws, easy to test for and descriptive enough if it isn't caught
 func (r row) err() error {
 	return fmt.Errorf("fail error %v", r)
 }
@@ -98,13 +100,14 @@ func (r row) fail(...any) func(*mocker) *mocker {
 }
 
 func newBuilder(mock sqlmock.Sqlmock, fns ...func(*mocker) *mocker) *mocker {
-	result := &mocker{mock}
-	for _, fn := range fns {
-		result.add(fn)
-	}
-	return result
+	return (&mocker{mock}).add(fns...)
 }
 
-func (m *mocker) add(fn func(*mocker) *mocker) *mocker {
-	return fn(m)
+// seems redundant, but you can do conditional branching from a common root (think
+// lifecycles and generations: similar but not the same)
+func (m *mocker) add(fns ...func(*mocker) *mocker) *mocker {
+	for _, fn := range fns {
+		fn(m)
+	}
+	return m
 }

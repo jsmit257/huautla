@@ -35,9 +35,7 @@ func Test_SelectAllVendors(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				venFields.mock(mock, [][]driver.Value{
 					{"0", "vendor 0", "website"},
 					{"1", "vendor 1", "website"},
@@ -53,8 +51,7 @@ func Test_SelectAllVendors(t *testing.T) {
 			},
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -69,7 +66,7 @@ func Test_SelectAllVendors(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectAllVendors(context.Background(), "Test_SelectAllVendors")
@@ -92,8 +89,7 @@ func Test_SelectVendor(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				venFields.mock(mock, venValue)
 				return db
 			},
@@ -101,8 +97,7 @@ func Test_SelectVendor(t *testing.T) {
 			result: types.Vendor(_ven),
 		},
 		"no_result": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				venFields.mock(mock)
 				return db
 			},
@@ -110,8 +105,7 @@ func Test_SelectVendor(t *testing.T) {
 			err:    sql.ErrNoRows,
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -125,7 +119,7 @@ func Test_SelectVendor(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectVendor(context.Background(), tc.id, "Test_SelectVendors")
@@ -147,16 +141,14 @@ func Test_InsertVendor(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			result: types.Vendor{UUID: "30313233-3435-3637-3839-616263646566", Name: "vendor 0"},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -164,8 +156,7 @@ func Test_InsertVendor(t *testing.T) {
 			err:    fmt.Errorf("vendor was not added"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -173,8 +164,7 @@ func Test_InsertVendor(t *testing.T) {
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -190,7 +180,7 @@ func Test_InsertVendor(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).InsertVendor(
@@ -216,16 +206,14 @@ func Test_UpdateVendor(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -233,8 +221,7 @@ func Test_UpdateVendor(t *testing.T) {
 			err: fmt.Errorf("vendor was not updated: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -242,8 +229,7 @@ func Test_UpdateVendor(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -258,7 +244,7 @@ func Test_UpdateVendor(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateVendor(
@@ -284,16 +270,14 @@ func Test_DeleteVendor(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -301,8 +285,7 @@ func Test_DeleteVendor(t *testing.T) {
 			err: fmt.Errorf("vendor could not be deleted: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -310,8 +293,7 @@ func Test_DeleteVendor(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -326,7 +308,7 @@ func Test_DeleteVendor(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).DeleteVendor(
@@ -350,9 +332,7 @@ func Test_VendorReport(t *testing.T) {
 		err    error
 	}{
 		"happy_strain_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					venFields.set(venValue),
 					subFields.set(),
@@ -389,9 +369,7 @@ func Test_VendorReport(t *testing.T) {
 			}(mustEntity(_ven)),
 		},
 		"strain_path_fail": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					venFields.set(venValue),
 					subFields.set(),
@@ -404,9 +382,7 @@ func Test_VendorReport(t *testing.T) {
 			err: genFields.err(),
 		},
 		"happy_substrate_path_for_lifecycles": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					venFields.set(venValue),
 					subFields.set(subValues[1]),
@@ -435,9 +411,7 @@ func Test_VendorReport(t *testing.T) {
 			}(mustEntity(_ven)),
 		},
 		"substrate_path_for_lifecycles_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					venFields.set(venValue),
 					subFields.set(subValues[1]),
@@ -451,9 +425,7 @@ func Test_VendorReport(t *testing.T) {
 			err: eventFields.err(),
 		},
 		"happy_substrate_path_for_generations": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					venFields.set(venValue),
 					subFields.set(subValues[0]),
@@ -485,9 +457,7 @@ func Test_VendorReport(t *testing.T) {
 			}(mustEntity(_ven)),
 		},
 		"substrate_path_for_generations_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					venFields.set(venValue),
 					subFields.set(subValues[0]),
@@ -502,16 +472,14 @@ func Test_VendorReport(t *testing.T) {
 			err: eventFields.err(),
 		},
 		"happy_path_no_children": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, venFields.set(venValue), subFields.set(), strainFields.set())
 				return db
 			},
 			result: mustEntity(_ven),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -526,7 +494,7 @@ func Test_VendorReport(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).VendorReport(context.Background(), "tc.id", "Test_VendorReport")

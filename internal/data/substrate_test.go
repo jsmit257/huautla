@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
-	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 
@@ -44,9 +43,7 @@ func Test_SelectAllSubstrates(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					subFields.set(subValues...),
 					ingFields.set(),
@@ -62,8 +59,7 @@ func Test_SelectAllSubstrates(t *testing.T) {
 			},
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -77,7 +73,7 @@ func Test_SelectAllSubstrates(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectAllSubstrates(context.Background(), "Test_SelectAllSubstrates")
@@ -100,9 +96,7 @@ func Test_SelectSubstrate(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					subFields.set(subValues[0]),
 					ingFields.set(ingValues...))
@@ -121,8 +115,7 @@ func Test_SelectSubstrate(t *testing.T) {
 				}},
 		},
 		"ingredients_fail": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 
 				newBuilder(mock,
 					subFields.set(subValues[0]),
@@ -133,16 +126,14 @@ func Test_SelectSubstrate(t *testing.T) {
 			err: ingFields.err(),
 		},
 		"subs_empty": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, subFields.set())
 				return db
 			},
 			err: sql.ErrNoRows,
 		},
 		"missing_id": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, subFields.set())
 				return db
 			},
@@ -150,8 +141,7 @@ func Test_SelectSubstrate(t *testing.T) {
 			err:  fmt.Errorf("failed to find param values in the following fields: [substrate-id]"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.
 					ExpectQuery("").
 					WillReturnError(fmt.Errorf("some error"))
@@ -172,7 +162,7 @@ func Test_SelectSubstrate(t *testing.T) {
 			}
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SelectSubstrate(context.Background(), id, "Test_SelectSubstrate")
@@ -196,8 +186,7 @@ func Test_InsertSubstrate(t *testing.T) {
 		err    error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
@@ -206,8 +195,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			result: types.Substrate{UUID: "30313233-3435-3637-3839-616263646566", Name: "substrate 0", Type: types.GrainType, Vendor: types.Vendor{}},
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -217,8 +205,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			err:    fmt.Errorf("substrate was not added"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -228,8 +215,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -247,7 +233,7 @@ func Test_InsertSubstrate(t *testing.T) {
 			t.Parallel()
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).InsertSubstrate(
@@ -272,16 +258,14 @@ func Test_UpdateSubstrate(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -289,8 +273,7 @@ func Test_UpdateSubstrate(t *testing.T) {
 			err: fmt.Errorf("substrate was not updated: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
@@ -298,8 +281,7 @@ func Test_UpdateSubstrate(t *testing.T) {
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
@@ -314,7 +296,7 @@ func Test_UpdateSubstrate(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).UpdateSubstrate(
@@ -339,40 +321,30 @@ func Test_DeleteSubstrate(t *testing.T) {
 		err error
 	}{
 		"happy_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 1))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
 			id: "0",
 		},
 		"no_rows_affected": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("substrate could not be deleted: '0'"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
 			id:  "0",
 			err: fmt.Errorf("some error"),
 		},
 		"result_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.
 					ExpectExec("").
 					WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
@@ -389,7 +361,7 @@ func Test_DeleteSubstrate(t *testing.T) {
 			t.Parallel()
 
 			err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).DeleteSubstrate(
@@ -414,9 +386,7 @@ func Test_SubstrateReport(t *testing.T) {
 		err    error
 	}{
 		"happy_generation_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					subFields.set(subValues[0]),
 					ingFields.set(ingValues...),
@@ -433,36 +403,13 @@ func Test_SubstrateReport(t *testing.T) {
 			},
 
 			result: func(s types.Entity) types.Entity {
-				s["ingredients"] = []interface{}{
-					mustObject(_ingredients[0]),
-					mustObject(_ingredients[1]),
-					mustObject(_ingredients[2]),
-				}
 
-				s["generations"] = []types.Entity{mustEntity(_gen)}
+				g := mustEntity(_gen)
 
-				g := s["generations"].([]types.Entity)[0]
-
-				g["events"] = []interface{}{
-					map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "0", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0.0},
-					map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "1", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0.0},
-					map[string]interface{}{"ctime": wwtbn.Format(time.RFC3339Nano), "event_type": map[string]interface{}{"id": "", "name": "", "severity": "", "stage": map[string]interface{}{"id": "", "name": ""}}, "id": "2", "mtime": wwtbn.Format(time.RFC3339Nano), "temperature": 0.0},
-				}
-				g["plating_substrate"].(map[string]interface{})["ingredients"] = []interface{}{
-					mustObject(_ingredients[0]),
-					mustObject(_ingredients[1]),
-					mustObject(_ingredients[2]),
-				}
-				g["liquid_substrate"].(map[string]interface{})["ingredients"] = []interface{}{
-					mustObject(_ingredients[0]),
-					mustObject(_ingredients[1]),
-					mustObject(_ingredients[2]),
-				}
-				g["notes"] = []types.Entity{
-					mustEntity(_notes[0]),
-					mustEntity(_notes[1]),
-					mustEntity(_notes[2]),
-				}
+				g["events"] = events
+				g["plating_substrate"].(map[string]interface{})["ingredients"] = ingredients
+				g["liquid_substrate"].(map[string]interface{})["ingredients"] = ingredients
+				g["notes"] = notes
 				g["sources"] = []interface{}{
 					map[string]interface{}{
 						"id":     _src.UUID,
@@ -471,13 +418,14 @@ func Test_SubstrateReport(t *testing.T) {
 					},
 				}
 
+				s["generations"] = []types.Entity{g}
+				s["ingredients"] = ingredients
+
 				return s
 			}(mustEntity(_subs[0])),
 		},
 		"generation_path_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					subFields.set(subValues[0]),
 					ingFields.set(ingValues...),
@@ -488,9 +436,7 @@ func Test_SubstrateReport(t *testing.T) {
 			err: genFields.err(),
 		},
 		"happy_lifecycle_path": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					subFields.set(subValues[1]),
 					ingFields.set(),
@@ -511,9 +457,7 @@ func Test_SubstrateReport(t *testing.T) {
 			}(mustEntity(_subs[1])),
 		},
 		"lifecycle_path_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					subFields.set(subValues[1]),
 					ingFields.set(),
@@ -524,9 +468,7 @@ func Test_SubstrateReport(t *testing.T) {
 			err: lcFields.err(),
 		},
 		"happy_path_no_children": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
-
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock,
 					subFields.set(subValues[0]),
 					ingFields.set(ingValues...),
@@ -535,21 +477,19 @@ func Test_SubstrateReport(t *testing.T) {
 				return db
 			},
 			result: func(s types.Entity) types.Entity {
-				s["ingredients"] = ings
+				s["ingredients"] = ingredients
 				return s
 			}(mustEntity(_subs[0])),
 		},
 		"no_rows": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, subFields.set())
 				return db
 			},
 			err: sql.ErrNoRows,
 		},
 		"missing_id": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, subFields.set())
 				return db
 			},
@@ -557,8 +497,7 @@ func Test_SubstrateReport(t *testing.T) {
 			err:  fmt.Errorf("failed to find param values in the following fields: [substrate-id]"),
 		},
 		"query_fails": {
-			db: func() *sql.DB {
-				db, mock, _ := sqlmock.New()
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				newBuilder(mock, subFields.fail())
 				return db
 			},
@@ -577,7 +516,7 @@ func Test_SubstrateReport(t *testing.T) {
 			}
 
 			result, err := (&Conn{
-				query:        tc.db(),
+				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
 			}).SubstrateReport(context.Background(), id, "Test_SubstrateReport")
