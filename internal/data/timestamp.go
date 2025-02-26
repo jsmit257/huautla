@@ -27,14 +27,14 @@ func (db *Conn) updateMTime(ctx context.Context, table string, modified time.Tim
 	return modified, nil
 }
 
-func (db *Conn) UpdateTimestamps(ctx context.Context, table string, id types.UUID) error {
+func (db *Conn) UpdateTimestamps(ctx context.Context, table string, id types.UUID, data types.Timestamp) error {
 	var rows int64
 
-	var modified string
-	if result, err := db.ExecContext(
+	if updt, err := data.UpdateString(); err != nil {
+		return err
+	} else if result, err := db.ExecContext(
 		ctx,
-		fmt.Sprintf(psqls["timestamp"]["update"], table),
-		modified,
+		fmt.Sprintf(psqls["timestamp"]["update"], "uuids" /*table*/, updt),
 		id,
 	); err != nil {
 		return err
@@ -52,7 +52,7 @@ func (db *Conn) Undelete(ctx context.Context, table string, id types.UUID) error
 
 	if result, err := db.ExecContext(
 		ctx,
-		fmt.Sprintf(psqls["timestamp"]["undelete"], table),
+		fmt.Sprintf(psqls["timestamp"]["undelete"], "uuids" /*table*/),
 		id,
 	); err != nil {
 		return err

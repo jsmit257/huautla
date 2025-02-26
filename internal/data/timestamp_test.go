@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"testing"
+	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/jsmit257/huautla/types"
@@ -21,6 +22,8 @@ func Test_UpdateTimestamps(t *testing.T) {
 		db    getMockDB
 		table string
 		id    types.UUID
+		flds  []string
+		org   *time.Time
 		err   error
 	}{
 		"happy_path": {
@@ -28,31 +31,47 @@ func Test_UpdateTimestamps(t *testing.T) {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			id: "0",
+			id:   "0",
+			flds: []string{"mtime"},
+			org:  &wwtbn,
 		},
 		"no_rows_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			id:  "0",
-			err: fmt.Errorf("timestamps were not updated"),
+			id:   "0",
+			flds: []string{"mtime"},
+			org:  &wwtbn,
+			err:  fmt.Errorf("timestamps were not updated"),
 		},
 		"query_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			id:  "0",
-			err: fmt.Errorf("some error"),
+			id:   "0",
+			flds: []string{"mtime"},
+			org:  &wwtbn,
+			err:  fmt.Errorf("some error"),
 		},
 		"result_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
+			id:   "0",
+			flds: []string{"mtime"},
+			org:  &wwtbn,
+			err:  fmt.Errorf("some error"),
+		},
+		"validate_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				return db
+			},
 			id:  "0",
-			err: fmt.Errorf("some error"),
+			err: fmt.Errorf("no fields specified for update"),
 		},
 	}
 
@@ -68,7 +87,11 @@ func Test_UpdateTimestamps(t *testing.T) {
 			}).UpdateTimestamps(
 				context.Background(),
 				tc.table,
-				tc.id)
+				tc.id,
+				types.Timestamp{
+					Fields: tc.flds,
+					Origin: tc.org,
+				})
 
 			require.Equal(t, tc.err, err)
 		})

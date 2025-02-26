@@ -151,8 +151,8 @@ type (
 	}
 
 	Timestamper interface {
-		UpdateTimestamps(context.Context, string, UUID) error
 		Undelete(context.Context, string, UUID) error
+		UpdateTimestamps(context.Context, string, UUID, Timestamp) error
 	}
 
 	Vendorer interface {

@@ -511,8 +511,8 @@ var psqls = sqlMap{
 
 	"timestamp": {
 		"touch":    `update %s set mtime = $1 where uuid = $2`,
-		"update":   `update uuids set [[FIELDS]] where uuid = ?`,
-		"undelete": `update uuids set dtime = null where uuid = '?'`,
+		"update":   `update %s set %s where uuid = $1`,
+		"undelete": `update %s set dtime = null where uuid = $1`,
 	},
 
 	"note": {

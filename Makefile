@@ -6,7 +6,7 @@ build:
 
 .PHONY: unit
 unit:
-	go test -v -cover ./. ./types/... ./internal/...
+	go test -cover ./. ./types/... ./internal/...
 
 .PHONY: tag-dockerfile
 tag-dockerfile:

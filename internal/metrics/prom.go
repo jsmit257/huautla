@@ -13,10 +13,12 @@ var (
 
 func init() {
 	DataMetrics = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "datailed_data_access_metrics",
-		Help: "The packages, methods and possible errors when accessing data",
-	}, []string{"pkg", "method", "err"})
-
+		Namespace:   "cffc",
+		Subsystem:   "huautla",
+		Name:        "database",
+		Help:        "The packages, methods and possible errors when accessing data",
+		ConstLabels: prometheus.Labels{},
+	}, []string{"db", "pkg", "function", "status"})
 }
 
 func NewHandler(reg *prometheus.Registry) http.HandlerFunc {
