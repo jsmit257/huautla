@@ -170,9 +170,7 @@ func Test_UpdateString(t *testing.T) {
 				{"delta": 0, "interval": "day"}
 			]`), // this is why we don't nest anonymous structs
 			result: func(s string) string {
-				return fmt.Sprintf(`ctime = timestamp '%s' + interval '-3 week' + interval '1 day',
-mtime = timestamp '%s' + interval '-3 week' + interval '1 day',
-dtime = timestamp '%s' + interval '-3 week' + interval '1 day'`,
+				return fmt.Sprintf(`ctime = timestamp '%s' + interval '-3 week' + interval '1 day', mtime = timestamp '%s' + interval '-3 week' + interval '1 day', dtime = timestamp '%s' + interval '-3 week' + interval '1 day'`,
 					s, s, s) // must be a better way
 			}(ref.Format(time.RFC3339)),
 		},
