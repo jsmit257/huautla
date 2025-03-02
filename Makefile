@@ -50,10 +50,12 @@ docker-down:
 	docker-compose down --remove-orphans
 
 .PHONY: deploy
-deploy: # no hard dependency on `tests/public/etc` for mow
+deploy: # no hard dependency on `tests/public/etc` for now
 	docker-compose build postgres
 	docker tag jsmit257/huautla:latest jsmit257/huautla:lkg
+	git tag -f stable
 
 .PHONY: push
 push: # just docker, not git
 	docker push jsmit257/cffc:lkg
+	git push origin stable:stable
