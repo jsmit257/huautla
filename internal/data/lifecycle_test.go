@@ -503,7 +503,7 @@ func Test_UpdateLifecycle(t *testing.T) {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			err: fmt.Errorf("lifecycle was not updated"),
+			err: fmt.Errorf("one of strain, grain or bulk is not the right type"),
 		},
 		"query_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {

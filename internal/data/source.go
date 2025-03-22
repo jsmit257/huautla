@@ -67,6 +67,38 @@ func (db *Conn) GetSources(ctx context.Context, g *types.Generation, cid types.C
 	return err
 }
 
+func (db *Conn) AddSource(ctx context.Context, genid types.UUID, s types.Source, cid types.CID) (types.Source, error) {
+	var err error
+	deferred, l := initAccessFuncs("AddSource", db.logger, genid, cid)
+	defer deferred(&err, l)
+
+	s.UUID = types.UUID(db.generateUUID().String())
+
+	progenitor := s.Strain.UUID
+	if s.Type == "event" {
+		progenitor = s.Lifecycle.Events[0].UUID
+	}
+
+	var result sql.Result
+	if result, err = db.ExecContext(ctx, psqls["source"]["add"],
+		s.UUID,
+		s.Type,
+		progenitor,
+		genid,
+	); err != nil {
+		if isPrimaryKeyViolation(err) {
+			return db.AddSource(ctx, genid, s, cid)
+		}
+		return types.Source{}, err
+	} else if rows, err := result.RowsAffected(); err != nil {
+		return types.Source{}, err
+	} else if rows != 1 {
+		return types.Source{}, fmt.Errorf("source was not added")
+	}
+
+	return s, nil
+}
+
 func (db *Conn) AddStrainSource(ctx context.Context, g *types.Generation, s types.Source, cid types.CID) error {
 	var err error
 	deferred, l := initAccessFuncs("AddStrainSource", db.logger, g.UUID, cid)

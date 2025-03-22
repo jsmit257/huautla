@@ -101,6 +101,7 @@ type (
 
 	Sourcer interface {
 		// GetSources(ctx context.Context, g *Generation, cid CID) error
+		AddSource(context.Context, UUID, Source, CID) (Source, error)
 		AddStrainSource(ctx context.Context, g *Generation, s Source, cid CID) error
 		AddEventSource(ctx context.Context, g *Generation, e Event, cid CID) error
 		ChangeSource(ctx context.Context, g *Generation, s Source, cid CID) error

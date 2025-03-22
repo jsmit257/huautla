@@ -56,6 +56,6 @@ deploy: # no hard dependency on `tests/public/etc` for now
 	git tag -f stable
 
 .PHONY: push
-push: # just docker, not git
+push: # docker lkg and a stable tag for dependents
 	docker push jsmit257/cffc:lkg
 	git push origin stable:stable

@@ -13,7 +13,7 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	log "github.com/sirupsen/logrus"
 
-	_ "github.com/lib/pq"
+	pq "github.com/lib/pq"
 )
 
 type (
@@ -99,6 +99,14 @@ func initAccessFuncs(fn string, l *log.Entry, id any, cid types.CID) (deferred, 
 	}, l
 }
 
-func isPrimaryKeyViolation(error) bool {
-	return false
+func isPrimaryKeyViolation(err error) bool {
+	pqErr, ok := err.(*pq.Error)
+
+	return ok && pqErr.Code == "23505" // FIXME: may be right
+}
+
+func isForeignKeyViolation(err error) bool {
+	pqErr, ok := err.(*pq.Error)
+
+	return ok && pqErr.Code == "23503" // FIXME: should be right
 }
