@@ -90,70 +90,70 @@ func Test_GetSources(t *testing.T) {
 	}
 }
 
-func Test_AddStrainSource(t *testing.T) {
+func Test_InsertSource(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "AddStrainSource")
+	l := log.WithField("test", "InsertSource")
+
+	src := types.Source{
+		UUID:      types.UUID(mockUUIDGen().String()),
+		Lifecycle: &types.Lifecycle{Events: []types.Event{{}}}}
 
 	tcs := map[string]struct {
 		db     getMockDB
+		origin string
 		s      types.Source
-		result []types.Source
+		result types.Source
 		err    error
 	}{
-		"happy_path": {
+		"happy_event_path": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
-
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-
 				return db
 			},
-			s: types.Source{Type: "Clone"},
-			result: func(strain strain) []types.Source {
-				strain.Attributes = []types.StrainAttribute{
-					types.StrainAttribute(_attrs[0]),
-					types.StrainAttribute(_attrs[1]),
-					types.StrainAttribute(_attrs[2]),
-				}
-				return []types.Source{
-					{
-						UUID:   types.UUID(mockUUIDGen().String()),
-						Type:   "Clone",
-						Strain: types.Strain(strain),
-					},
-				}
-			}(_strain),
+			origin: "event",
+			s:      src,
+			result: src,
 		},
-		"select_strain_fails": {
+		"happy_strain_path": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			s:   types.Source{Type: "Clone"},
-			err: fmt.Errorf("couldn't fetch strain"),
+			origin: "strain",
+			s:      src,
+			result: src,
+		},
+		"origin_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				return nil
+			},
+			origin: "bad origin",
+			err:    fmt.Errorf("only origins of type 'strain' and 'event' are allowed: 'bad origin'"),
 		},
 		"no_rows_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			err: fmt.Errorf("source was not added"),
+			origin: "strain",
+			err:    fmt.Errorf("source was not added"),
 		},
 		"query_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			origin: "strain",
+			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			origin: "strain",
+			err:    fmt.Errorf("some error"),
 		},
 	}
 
@@ -162,188 +162,75 @@ func Test_AddStrainSource(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			g := types.Generation{}
-
-			err := (&Conn{
+			source, err := (&Conn{
 				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).AddStrainSource(
+			}).InsertSource(
 				context.Background(),
-				&g,
+				"generation id",
+				tc.origin,
 				tc.s,
 				"Test_AddStrainSource")
 
 			require.Equal(t, tc.err, err)
-			require.Equal(t, tc.result, g.Sources)
+			require.Equal(t, tc.result, source)
 		})
 	}
 }
 
-func Test_AddEventSource(t *testing.T) {
+func Test_UpdateSource(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "AddEventSource")
+	l := log.WithField("test", "UpdateSource")
 
 	tcs := map[string]struct {
 		db     getMockDB
-		e      types.Event
-		result []types.Source
+		origin string
+		s      types.Source
 		err    error
 	}{
 		"happy_path": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				row{"uuid"}.mock(mock, []driver.Value{"uuid"})
-				eventFields.mock(mock, eventValues[0])
-				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
-				strainFields.mock(mock, strainValues)
-				attrFields.mock(mock, attrValues...)
-				return db
-			},
-			e: types.Event{EventType: types.EventType{UUID: ""}},
-			result: func(strain strain) []types.Source {
-				strain.Attributes = []types.StrainAttribute{
-					types.StrainAttribute(_attrs[0]),
-					types.StrainAttribute(_attrs[1]),
-					types.StrainAttribute(_attrs[2]),
-				}
-				return []types.Source{{
-					UUID:   types.UUID(mockUUIDGen().String()),
-					Type:   "Clone",
-					Strain: types.Strain(strain),
-				}}
-			}(_strain),
-		},
-		"strain_id_fails": {
-			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
-				return db
-			},
-			err: fmt.Errorf("couldn't get strain for AddEventSource (%#v)", types.Event{}),
-		},
-		"select_eventtype_fails": {
-			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				row{"uuid"}.mock(mock, []driver.Value{"uuid"})
-				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
-				return db
-			},
-			err: fmt.Errorf("couldn't get eventtype for AddEventSource"),
-		},
-		"select_strain_fails": {
-			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				row{"uuid"}.mock(mock, []driver.Value{"uuid"})
-				eventFields.mock(mock, eventValues[0])
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			// e: types.Event{EventType: types.EventType{UUID: ""}},
-			err: fmt.Errorf("couldn't fetch strain"),
-		},
-		"no_rows_affected": {
-			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				row{"uuid"}.mock(mock, []driver.Value{"uuid"})
-				eventFields.mock(mock, eventValues[0])
-				mock.
-					ExpectExec("").
-					WillReturnResult(sqlmock.NewResult(0, 0))
-				return db
-			},
-			err: fmt.Errorf("source was not added"),
-		},
-		"query_fails": {
-			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				row{"uuid"}.mock(mock, []driver.Value{"uuid"})
-				eventFields.mock(mock, eventValues[0])
-				mock.
-					ExpectExec("").
-					WillReturnError(fmt.Errorf("some error"))
-				return db
-			},
-			err: fmt.Errorf("some error"),
-		},
-		"result_fails": {
-			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				row{"uuid"}.mock(mock, []driver.Value{"uuid"})
-				eventFields.mock(mock, eventValues[0])
-				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
-				return db
-			},
-			err: fmt.Errorf("some error"),
-		},
-	}
-
-	for name, tc := range tcs {
-		name, tc := name, tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			g := types.Generation{}
-
-			err := (&Conn{
-				query:        tc.db(sqlmock.New()),
-				generateUUID: mockUUIDGen,
-				logger:       l.WithField("name", name),
-			}).AddEventSource(
-				context.Background(),
-				&g,
-				tc.e,
-				"Test_AddEventSource")
-
-			require.Equal(t, tc.err, err)
-			require.Equal(t, tc.result, g.Sources)
-		})
-	}
-}
-
-func Test_ChangeSource(t *testing.T) {
-	t.Parallel()
-
-	l := log.WithField("test", "ChangeSource")
-
-	tcs := map[string]struct {
-		db getMockDB
-		s  types.Source
-		sources,
-		result []types.Source
-		err error
-	}{
-		"happy_path": {
-			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
-				return db
-			},
-			s: types.Source{UUID: "1", Type: "Spore"},
-			sources: []types.Source{
-				{UUID: "0"},
-				{UUID: "1", Type: "Clone"},
-				{UUID: "2"},
-			},
-			result: []types.Source{
-				{UUID: "1", Type: "Spore"},
-				{UUID: "0"},
-				{UUID: "2"},
-			},
+			origin: "strain",
+			s:      types.Source{UUID: "1", Type: "Spore"},
 		},
 		"no_rows_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
+			origin: "event",
+			s: types.Source{
+				Lifecycle: &types.Lifecycle{Events: []types.Event{{}}},
+			},
 			err: fmt.Errorf("source was not changed"),
+		},
+		"origin_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				return nil
+			},
+			origin: "bad origin",
+			err:    fmt.Errorf("only origins of type 'strain' and 'event' are allowed: 'bad origin'"),
 		},
 		"query_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			origin: "strain",
+			err:    fmt.Errorf("some error"),
 		},
 		"result_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			origin: "strain",
+			err:    fmt.Errorf("some error"),
 		},
 	}
 
@@ -352,20 +239,17 @@ func Test_ChangeSource(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			g := types.Generation{Sources: tc.sources}
-
 			err := (&Conn{
 				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).ChangeSource(
+			}).UpdateSource(
 				context.Background(),
-				&g,
+				tc.origin,
 				tc.s,
 				"Test_ChangeSource")
 
 			require.Equal(t, tc.err, err)
-			require.Equal(t, tc.result, g.Sources)
 		})
 	}
 }

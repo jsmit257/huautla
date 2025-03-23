@@ -96,7 +96,7 @@ func Test_AddStrainSource(t *testing.T) {
 			if v.g == nil {
 				v.g = &generation
 			}
-			err := db.AddStrainSource(context.Background(), v.g, v.s, types.CID(k))
+			_, err := db.InsertSource(context.Background(), v.g.UUID, "strain", v.s, types.CID(k))
 			equalErrorMessages(t, v.err, err)
 		})
 	}
@@ -163,7 +163,11 @@ func Test_AddEventSource(t *testing.T) {
 			if v.g == nil {
 				v.g = &generation
 			}
-			err := db.AddEventSource(context.Background(), v.g, v.e, types.CID(k))
+			_, err := db.InsertSource(context.Background(), v.g.UUID, "event", types.Source{
+				Lifecycle: &types.Lifecycle{
+					Events: []types.Event{v.e},
+				},
+			}, types.CID(k))
 			equalErrorMessages(t, v.err, err)
 		})
 	}
@@ -179,11 +183,12 @@ func Test_ChangeSource(t *testing.T) {
 
 	set := map[string]struct {
 		s      types.Source
-		g      *types.Generation
+		origin string
 		result []types.Source
 		err    error
 	}{
 		"happy_path": {
+			origin: "strain",
 			s: func(s types.Source) types.Source {
 				// s.Type = "Clone"
 				s.Strain = strains[3]
@@ -201,6 +206,7 @@ func Test_ChangeSource(t *testing.T) {
 			),
 		},
 		"cant_mix_types": {
+			origin: "strain",
 			s: func(s types.Source) types.Source {
 				s.Type = "Clone"
 				return s
@@ -209,25 +215,21 @@ func Test_ChangeSource(t *testing.T) {
 			err:    fmt.Errorf("pq: source types can't be mixed"),
 		},
 		"fail_type": {
+			origin: "strain",
 			s: func(s types.Source) types.Source {
 				s.Type = "Fail"
 				return s
 			}(g2.Sources[0]),
-			g:      &g2,
 			result: g2.Sources,
 			err:    fmt.Errorf(checkConstraintViolation, "sources", "sources_type_check"),
 		},
 	}
-	for k, v := range set {
-		k, v, g := k, v, g
-		t.Run(k, func(t *testing.T) {
+	for name, tc := range set {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			if v.g == nil {
-				v.g = &g
-			}
-			err := db.ChangeSource(context.Background(), v.g, v.s, types.CID(k))
-			equalErrorMessages(t, v.err, err)
-			require.ElementsMatch(t, v.result, v.g.Sources)
+			err := db.UpdateSource(context.Background(), tc.origin, tc.s, types.CID(name))
+			equalErrorMessages(t, tc.err, err)
 		})
 	}
 }

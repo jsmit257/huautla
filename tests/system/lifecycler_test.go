@@ -197,35 +197,35 @@ func Test_UpdateLifecycle(t *testing.T) {
 				lc.Strain = types.Strain{UUID: "missing"}
 				return lc
 			},
-			err: fmt.Errorf("lifecycle was not updated"),
+			err: fmt.Errorf("one of strain, grain or bulk is not the right type"),
 		},
 		"no_rows_affected_grain": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
 				lc.GrainSubstrate = types.Substrate{UUID: "missing"}
 				return lc
 			},
-			err: fmt.Errorf("lifecycle was not updated"),
+			err: fmt.Errorf("one of strain, grain or bulk is not the right type"),
 		},
 		"no_rows_affected_bulk": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
 				lc.BulkSubstrate = types.Substrate{UUID: "missing"}
 				return lc
 			},
-			err: fmt.Errorf("lifecycle was not updated"),
+			err: fmt.Errorf("one of strain, grain or bulk is not the right type"),
 		},
 		"check_grain_type": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
 				lc.GrainSubstrate = substrates[types.BulkType][0]
 				return lc
 			},
-			err: fmt.Errorf("lifecycle was not updated"),
+			err: fmt.Errorf("one of strain, grain or bulk is not the right type"),
 		},
 		"check_bulk_type": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {
 				lc.BulkSubstrate = substrates[types.GrainType][0]
 				return lc
 			},
-			err: fmt.Errorf("lifecycle was not updated"),
+			err: fmt.Errorf("one of strain, grain or bulk is not the right type"),
 		},
 		"unique_key_violation": {
 			xform: func(lc types.Lifecycle) types.Lifecycle {

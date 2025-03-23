@@ -58,4 +58,5 @@ deploy: # no hard dependency on `tests/public/etc` for now
 .PHONY: push
 push: # docker lkg and a stable tag for dependents
 	docker push jsmit257/cffc:lkg
+	# this should push the current commit; need `git ref ...`
 	git push origin stable:stable
