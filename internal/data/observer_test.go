@@ -38,7 +38,7 @@ var (
 		{_events[2].UUID, _events[2].Temperature, _events[2].Humidity, _events[2].MTime, _events[2].CTime, _events[2].EventType.UUID, _events[2].EventType.Name, _events[2].EventType.Severity, _events[2].EventType.Stage.UUID, _events[2].EventType.Stage.Name},
 	}
 
-	// nap == NotesAndPhotos; it's note really implemented for test
+	// nap == NotesAndPhotos; it's not really implemented for test
 	napFields = row{"uuid", "note_uuid", "note_note", "note_mtime", "note_ctime", "photo_uuid", "filename", "photo_mtime", "photo_ctime", "photonote_uuid", "photonote_note", "photonote_mtime", "photonote_ctime"}
 	napValues = [][]driver.Value{
 		{"0", "0", "note 0", wwtbn, wwtbn, "0", "photo 0", wwtbn, wwtbn, "0", "photonote 0", wwtbn, wwtbn},
@@ -142,6 +142,75 @@ func Test_SelectEvent(t *testing.T) {
 	}
 }
 
+func Test_UpdateEvent(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "UpdateEvent")
+
+	e0 := types.Event{UUID: "0"}
+
+	modifyevent := func(e types.Event) types.Event {
+		e.Temperature = 100.0
+		return e
+	}
+
+	tcs := map[string]struct {
+		db  getMockDB
+		evt types.Event
+		err error
+	}{
+		"happy_path": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				return db
+			},
+			evt: modifyevent(e0),
+		},
+		"exec_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			evt: modifyevent(e0),
+			err: fmt.Errorf("some error"),
+		},
+		"result_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				return db
+			},
+			evt: modifyevent(e0),
+			err: fmt.Errorf("some error"),
+		},
+		"no_rows_affected": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			evt: modifyevent(e0),
+			err: fmt.Errorf("event was not changed"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := (&Conn{
+				query:        tc.db(sqlmock.New()),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).UpdateEvent(
+				context.Background(),
+				tc.evt,
+				"Test_UpdateEvent")
+
+			require.Equal(t, tc.err, err)
+		})
+	}
+}
 func Test_notesAndPhotos(t *testing.T) {
 	t.Parallel()
 

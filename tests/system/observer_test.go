@@ -96,3 +96,37 @@ func Test_SelectEvent(t *testing.T) {
 		})
 	}
 }
+
+func Test_UpdateEvent(t *testing.T) {
+	t.Parallel()
+
+	set := map[string]struct {
+		e      types.Event
+		result types.EventType
+		err    error
+	}{
+		"happy_path": { // happy path needs to run first, synchronously
+			e:      types.Event{UUID: "change event", EventType: eventtypes[1]},
+			result: eventtypes[1],
+		},
+		"no_rows_affected": { // dunno how this would happen, but whatever
+			e:      types.Event{UUID: "missing", EventType: eventtypes[0]},
+			result: eventtypes[0],
+			err:    fmt.Errorf("event was not changed"),
+		},
+		"no_rows_affected_eventtype": {
+			e:      types.Event{EventType: types.EventType{UUID: "missing"}},
+			result: types.EventType{UUID: "missing"},
+			err:    fmt.Errorf("event was not changed"),
+		},
+	}
+	for name, tc := range set {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			evt, err := db.UpdateEvent(context.Background(), tc.e, types.CID(name))
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, evt.EventType)
+		})
+	}
+}
