@@ -155,13 +155,13 @@ func Test_InsertVendor(t *testing.T) {
 			result: types.Vendor{UUID: "30313233-3435-3637-3839-616263646566", Name: "vendor 0"},
 			err:    fmt.Errorf("vendor was not added"),
 		},
-		"query_fails": {
+		"pkey_error": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectExec("").WillReturnError(pkerr())
 				return db
 			},
 			result: types.Vendor{UUID: "30313233-3435-3637-3839-616263646566", Name: "vendor 0"},
-			err:    fmt.Errorf("some error"),
+			err:    pqerr(pkerr()),
 		},
 		"result_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {

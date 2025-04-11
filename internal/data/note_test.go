@@ -66,7 +66,8 @@ func Test_GetNotes(t *testing.T) {
 					WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			result: []types.Note{},
+			err:    fmt.Errorf("some error"),
 		},
 	}
 

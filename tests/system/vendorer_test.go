@@ -84,7 +84,7 @@ func Test_InsertVendor(t *testing.T) {
 		},
 		"duplicate_name_violation": {
 			v:   vendors["localhost"],
-			err: fmt.Errorf(`pq: duplicate key value violates unique constraint "vendors_name_key"`),
+			err: fmt.Errorf(`unique key violation: Key (name)=(127.0.0.1) already exists.`),
 		},
 	}
 	for k, v := range set {
@@ -112,7 +112,7 @@ func Test_UpdateVendor(t *testing.T) {
 		"duplicate_name_violation": {
 			id:  "update me!",
 			v:   vendors["localhost"],
-			err: fmt.Errorf(uniqueKeyViolation, "vendors_name_key"),
+			err: fmt.Errorf("unique key violation: Key (name)=(127.0.0.1) already exists."),
 		},
 		"no_rows_affected": {
 			id:  "missing",
@@ -143,11 +143,8 @@ func Test_DeleteVendor(t *testing.T) {
 			err: fmt.Errorf("vendor could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id: "localhost",
-			err: fmt.Errorf(foreignKeyViolation1toMany,
-				"vendors",
-				"substrates_vendor_uuid_fkey",
-				"substrates"),
+			id:  "localhost",
+			err: fmt.Errorf("foreign key violation: Key (uuid)=(localhost) is still referenced from table \"substrates\"., substrates."),
 		},
 	}
 	for k, v := range set {

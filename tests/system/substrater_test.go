@@ -175,11 +175,8 @@ func Test_DeleteSubstrate(t *testing.T) {
 			err: fmt.Errorf("substrate could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id: substrates[types.GrainType][0].UUID,
-			err: fmt.Errorf(foreignKeyViolation1toMany,
-				"substrates",
-				"substrate_ingredients_substrate_uuid_fkey",
-				"substrate_ingredients"),
+			id:  substrates[types.GrainType][0].UUID,
+			err: fmt.Errorf("foreign key violation: Key (uuid)=(0) is still referenced from table \"substrate_ingredients\"., substrate_ingredients."),
 		},
 	}
 	for k, v := range set {

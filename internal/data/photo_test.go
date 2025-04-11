@@ -47,9 +47,9 @@ func Test_GetPhotos(t *testing.T) {
 	l := log.WithField("test", "Test_GetPhotos")
 
 	set := map[string]struct {
-		db                       func() *sql.DB
-		result, actual, expected []types.Photo
-		err                      error
+		db     func() *sql.DB
+		result []types.Photo
+		err    error
 	}{
 		"happy_path": {
 			db: func() *sql.DB {
@@ -69,7 +69,8 @@ func Test_GetPhotos(t *testing.T) {
 				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
 				return db
 			},
-			err: fmt.Errorf("some error"),
+			result: []types.Photo{},
+			err:    fmt.Errorf("some error"),
 		},
 	}
 

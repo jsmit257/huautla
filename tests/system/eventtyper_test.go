@@ -157,11 +157,8 @@ func Test_DeleteEventType(t *testing.T) {
 			err: fmt.Errorf("eventtype could not be deleted: 'foobar'"),
 		},
 		"referential_violation": {
-			id: eventtypes[1].UUID,
-			err: fmt.Errorf(foreignKeyViolation1toMany,
-				"event_types",
-				"events_eventtype_uuid_fkey",
-				"events"),
+			id:  eventtypes[1].UUID,
+			err: fmt.Errorf("foreign key violation: Key (uuid)=(1) is still referenced from table \"events\"., events."),
 		},
 	}
 	for k, v := range set {

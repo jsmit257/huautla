@@ -148,11 +148,8 @@ func Test_DeleteStage(t *testing.T) {
 			err: fmt.Errorf("stage could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id: stages["Colonization"].UUID,
-			err: fmt.Errorf(foreignKeyViolation1toMany,
-				"stages",
-				"event_types_stage_uuid_fkey",
-				"event_types"),
+			id:  stages["Colonization"].UUID,
+			err: fmt.Errorf("foreign key violation: Key (uuid)=(1) is still referenced from table \"event_types\"., event_types."),
 		},
 	}
 	for k, v := range set {

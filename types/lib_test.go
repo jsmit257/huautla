@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jsmit257/huautla/internal/metrics"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
@@ -74,7 +73,7 @@ func Test_GetContextMetrics(t *testing.T) {
 		"happy_path": {
 			ctx: context.WithValue(context.TODO(),
 				Metrics,
-				metrics.DataMetrics),
+				DataMetrics),
 		},
 		"null_attr": {
 			ctx: context.TODO(),
@@ -85,7 +84,7 @@ func Test_GetContextMetrics(t *testing.T) {
 		name, tc := name, tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			m := GetContextMetrics(tc.ctx)
+			m := GetContextDataMetrics(tc.ctx)
 			require.NotNil(t, m.MustCurryWith)
 		})
 	}

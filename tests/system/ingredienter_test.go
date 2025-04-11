@@ -142,11 +142,8 @@ func Test_DeleteIngredient(t *testing.T) {
 			err: fmt.Errorf("ingredient could not be deleted: 'missing'"),
 		},
 		"referential_violation": {
-			id: ingredients[12].UUID,
-			err: fmt.Errorf(foreignKeyViolation1toMany,
-				"ingredients",
-				"substrate_ingredients_ingredient_uuid_fkey",
-				"substrate_ingredients"),
+			id:  ingredients[12].UUID,
+			err: fmt.Errorf("foreign key violation: Key (uuid)=(12) is still referenced from table \"substrate_ingredients\"., substrate_ingredients."),
 		},
 	}
 	for k, v := range set {
