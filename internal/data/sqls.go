@@ -593,6 +593,12 @@ var psqls = sqlMap{
          set  type = $1,
               mtime = current_timestamp
        where  s.uuid = $2`,
+		"change-new": `
+      update  sources s
+         set  type = $1, 
+              progenitor_uuid = $2
+              mtime = current_timestamp
+       where  s.uuid = $3`,
 		"delete": `delete from sources where uuid = $1`,
 		"strain-from-event": `
       select  lc.strain_uuid

@@ -2,17 +2,20 @@
 
 exec 1>&2
 
-cd "${BACKUP_DIR:-/pgbackup}" || exit 1
+: ${HUAUTLA_BACKUP_SOURCE_PORT:=5432}
+: ${HUAUTLA_BACKUP_SOURCE_USER:=postgres}
 
-echo "$SOURCE_HOST:${SOURCE_PORT:-5432}:huautla:${SOURCE_USER:-postgres}:$POSTGRES_PASSWORD" >~/.pgpass
+cd "${HUAUTLA_BACKUP_RESTORE_DIR:-/pgbackup}" || exit 1
+
+echo "$HUAUTLA_BACKUP_SOURCE_HOST:${HUAUTLA_BACKUP_SOURCE_PORT}:huautla:${HUAUTLA_BACKUP_SOURCE_USER}:$HUAUTLA_RESTORE_SOURCE_PASS" >~/.pgpass
 chmod 600 ~/.pgpass
 
 timestamp="`date +'%Y%m%dT%H%M%SZ'`"
 
 pg_dump \
-  -h"${SOURCE_HOST}" \
-  -p"${SOURCE_PORT:-5432}" \
-  -U"${SOURCE_USER:-postgres}" \
+  -h"${HUAUTLA_BACKUP_SOURCE_HOST}" \
+  -p"${HUAUTLA_BACKUP_SOURCE_PORT}" \
+  -U"${HUAUTLA_BACKUP_SOURCE_USER}" \
   -Fc \
   -f"$timestamp" \
   --compress=9 \

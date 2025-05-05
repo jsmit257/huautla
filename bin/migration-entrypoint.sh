@@ -16,9 +16,9 @@ sleep 2s
 
 psql_cmd=( 
   "psql" 
-  -h"${DEST_HOST:-localhost}" 
-  -p"${DEST_PORT:-5432}" 
-  -U"${DEST_USER:-postgres}" 
+  -h"${HUAUTLA_MIG_DEST_HOST:-localhost}" 
+  -p"${HUAUTLA_MIG_DEST_PORT:-5432}" 
+  -U"${HUAUTLA_MIG_DEST_USER:-postgres}" 
 )
 
 "${psql_cmd[@]}" <<-EOF
@@ -27,5 +27,9 @@ psql_cmd=(
   GRANT ALL PRIVILEGES ON DATABASE huautla TO huautla;
 EOF
 
-pg_dump -h${SOURCE_HOST} -p${SOURCE_PORT:-5432} -U${SOURCE_USER:-postgres} huautla \
+pg_dump \
+  -h${HUAUTLA_MIG_SOURCE_HOST} \
+  -p${HUAUTLA_MIG_SOURCE_PORT:-5432} \
+  -U${HUAUTLA_MIG_SOURCE_USER:-postgres} \
+  huautla \
 | "${psql_cmd[@]}" -dhuautla
