@@ -54,6 +54,7 @@ services:
   persistent-initialization:
     depends_on: [ persistent-source ]
     image: jsmit257/huautla:latest
+    build: .
     hostname: persistent-initialization
     volumes: [ "./persistent/data:/var/lib/postgresql/data" ]
     environment:
@@ -69,6 +70,7 @@ services:
   persistent-backup:
     depends_on: [ persistent ]
     image: jsmit257/huautla:latest
+    build: .
     hostname: persistent-backup
     volumes: [ "./persistent/backups:/pgbackup" ]
     environment:
@@ -82,6 +84,7 @@ services:
   persistent-restore:
     depends_on: [ persistent ]
     image: jsmit257/huautla:latest
+    build: .
     hostname: persistent-restore
     volumes: [ "./persistent/backups:/pgbackup" ]
     environment:
