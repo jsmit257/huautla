@@ -531,6 +531,84 @@ var psqls = sqlMap{
 	},
 
 	"photo": {
+		"all": `
+      with strain_sources as (
+        select  g.uuid
+               ,ss_strain.name as label
+          from  generations g
+          join  sources ss1
+            on  g.uuid = ss1.generation_uuid
+          join  strains ss_strain
+            on  ss1.progenitor_uuid = ss_strain.uuid
+      ), gen_strains as (
+        select  s.generation_uuid   as generation_uuid
+               ,min(lc.strain_uuid) as min_strain_id
+               ,max(lc.strain_uuid) as max_strain_id
+          from  sources s
+          join  events e
+            on  s.progenitor_uuid = e.uuid
+          join  lifecycles lc
+            on  e.observable_uuid = lc.uuid
+         group
+            by  s.generation_uuid
+      ), gen_sources as (
+        select  g.generation_uuid                         as uuid
+               ,s1.name || coalesce(' & ' || s2.name, '') as label
+          from  gen_strains g
+          join  strains s1
+            on  g.min_strain_id = s1.uuid
+          left
+          join  strains s2
+            on  g.max_strain_id = s2.uuid
+           and  s2.uuid != g.min_strain_id
+      ), owners as (
+        select  'lifecycle'                   as parent_type
+               ,e.uuid                        as owner_uuid
+               ,lc.uuid                       as parent_uuid
+              ,lc.location || '->' || et.name as label
+          from  lifecycles lc
+          join  events e
+            on  lc.uuid = e.observable_uuid
+          join  event_types et
+            on  e.eventtype_uuid = et.uuid
+         union  all
+        select  'generation'
+                ,e.uuid
+                ,g.uuid
+                ,g.label || '->' || et.name
+          from  strain_sources g
+          join  events e
+            on  g.uuid = e.observable_uuid
+          join  event_types et
+            on  e.eventtype_uuid = et.uuid
+         union  all
+        select  'generation'
+               ,e.uuid
+               ,g.uuid
+               ,g.label || '->' || et.name
+          from  gen_sources g
+          join  events e
+            on  g.uuid = e.observable_uuid
+          join  event_types et
+            on  e.eventtype_uuid = et.uuid
+         union  all
+        select  'strain'
+               ,s.uuid
+               ,null
+               ,s.name
+          from  strains s
+      )
+      select  p.uuid
+             ,p.filename
+             ,p.mtime
+             ,p.ctime
+             ,o.parent_type
+             ,o.owner_uuid
+             ,o.parent_uuid
+             ,o.label
+        from  photos p
+        join  owners o
+          on  p.photoable_uuid = o.owner_uuid`,
 		"get": `
       select  p.uuid,
               p.filename,

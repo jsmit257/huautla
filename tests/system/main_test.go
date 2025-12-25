@@ -62,6 +62,15 @@ func equalErrorMessages(t *testing.T, expected, actual error) {
 	}
 }
 
+func findEvent(events []types.Event, id types.UUID) (types.Event, error) {
+	for _, e := range events {
+		if e.UUID == id {
+			return e, nil
+		}
+	}
+	return types.Event{}, fmt.Errorf("id: '%s' was not found in '%#v'", id, events)
+}
+
 // type testAttrs map[string]string
 
 // func (ta testAttrs) Get(name string) *types.UUID {

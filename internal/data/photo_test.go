@@ -22,6 +22,23 @@ var (
 			types.Note(_notes[2]),
 		}},
 		{UUID: "id-2", Filename: "photo 2", MTime: wwtbn, CTime: wwtbn},
+		{UUID: "id-3", Filename: "photo 3", MTime: wwtbn, CTime: wwtbn, Owner: &types.PhotoOwner{
+			ParentType: "generation",
+			OwnerUUID:  "genowner",
+			ParentUUID: "genuuid3",
+			Label:      "sourcestrain->genowner",
+		}},
+		{UUID: "id-4", Filename: "photo 4", MTime: wwtbn, CTime: wwtbn, Owner: &types.PhotoOwner{
+			ParentType: "lifecycle",
+			OwnerUUID:  "lcowner",
+			ParentUUID: "lcuuid4",
+			Label:      "lcname->lcowner",
+		}},
+		{UUID: "id-5", Filename: "photo 5", MTime: wwtbn, CTime: wwtbn, Owner: &types.PhotoOwner{
+			ParentType: "strain",
+			OwnerUUID:  "strainowner",
+			Label:      "strain->genowner",
+		}},
 	}
 	photoFields = row{
 		"id",
@@ -39,7 +56,72 @@ var (
 		{_photos[1].UUID, _photos[1].Filename, _photos[1].MTime, _photos[1].CTime, _photos[1].Notes[1].UUID, _photos[1].Notes[1].Note, _photos[1].Notes[1].MTime, _photos[1].Notes[1].CTime},
 		{_photos[2].UUID, _photos[2].Filename, _photos[2].MTime, _photos[2].CTime, nil, nil, nil, nil},
 	}
+	allPhotoFields = row{
+		"id",
+		"filename",
+		"mtime",
+		"ctime",
+		"parent_type",
+		"owner_uuid",
+		"parent_uuid",
+		"label",
+	}
+	allPhotoValues = [][]driver.Value{
+		{_photos[3].UUID, _photos[3].Filename, _photos[3].MTime, _photos[3].CTime, _photos[3].Owner.ParentType, _photos[3].Owner.OwnerUUID, _photos[3].Owner.ParentUUID, _photos[3].Owner.Label},
+		{_photos[4].UUID, _photos[4].Filename, _photos[4].MTime, _photos[4].CTime, _photos[4].Owner.ParentType, _photos[4].Owner.OwnerUUID, _photos[4].Owner.ParentUUID, _photos[4].Owner.Label},
+		{_photos[5].UUID, _photos[5].Filename, _photos[5].MTime, _photos[5].CTime, _photos[5].Owner.ParentType, _photos[5].Owner.OwnerUUID, _photos[5].Owner.ParentUUID, _photos[5].Owner.Label},
+	}
 )
+
+func Test_AllPhotos(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "Test_AllPhotos")
+
+	set := map[string]struct {
+		db     func() *sql.DB
+		result []types.Photo
+		err    error
+	}{
+		"happy_path": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				allPhotoFields.mock(mock, allPhotoValues...)
+				return db
+			},
+			result: []types.Photo{
+				types.Photo(_photos[3]),
+				types.Photo(_photos[4]),
+				types.Photo(_photos[5]),
+			},
+		},
+		"db_error": {
+			db: func() *sql.DB {
+				db, mock, _ := sqlmock.New()
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			result: []types.Photo{},
+			err:    fmt.Errorf("some error"),
+		},
+	}
+
+	for k, v := range set {
+		k, v := k, v
+		t.Run(k, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := (&Conn{
+				query:        v.db(),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", k),
+			}).AllPhotos(context.Background(), "Test_AllPhotos")
+
+			require.Equal(t, v.err, err)
+			require.Equal(t, v.result, result)
+		})
+	}
+}
 
 func Test_GetPhotos(t *testing.T) {
 	t.Parallel()

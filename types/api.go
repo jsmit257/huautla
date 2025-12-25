@@ -88,6 +88,7 @@ type (
 	}
 
 	Photoer interface {
+		AllPhotos(ctx context.Context, cid CID) ([]Photo, error)
 		GetPhotos(ctx context.Context, id UUID, cid CID) ([]Photo, error)
 		AddPhoto(ctx context.Context, id UUID, photos []Photo, p Photo, cid CID) ([]Photo, error)
 		ChangePhoto(ctx context.Context, photos []Photo, p Photo, cid CID) ([]Photo, error)

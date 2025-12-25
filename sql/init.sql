@@ -126,10 +126,10 @@ create table lifecycles (
   grain_cost          decimal(8,2) not null default 0.0,
   bulk_cost           decimal(8,2) not null default 0.0,
   -- the net weight, fresh or dried; for dried, 1.0-(yield/gross) is how much water they typically contain
-  yield               decimal(84,2) not null default 0,
-  headcount           decimal(5) not null default 0,
+  yield               decimal(8,2) not null default 0,
+  headcount           decimal(6)   not null default 0,
   -- gross the fresh weight, regardless of whether they're sold fresh or dry (see yield)
-  gross               decimal(5,2) not null default 0, 
+  gross               decimal(8,2) not null default 0,
   strain_uuid         varchar(40)  not null references strains(uuid),
   grainsubstrate_uuid varchar(40)  not null references substrates(uuid),
   bulksubstrate_uuid  varchar(40)  not null references substrates(uuid),

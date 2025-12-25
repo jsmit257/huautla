@@ -149,12 +149,3 @@ func Test_RemoveLifecycleEvent(t *testing.T) {
 		})
 	}
 }
-
-func findEvent(events []types.Event, id types.UUID) (types.Event, error) {
-	for _, e := range events {
-		if e.UUID == id {
-			return e, nil
-		}
-	}
-	return types.Event{}, fmt.Errorf("id: '%s' was not found in '%#v'", id, events)
-}
