@@ -10,6 +10,29 @@ import (
 	"github.com/jsmit257/huautla/types"
 )
 
+func Test_AllPhotos(t *testing.T) {
+	// t.Parallel()
+
+	set := map[string]struct {
+		photos int
+		err    error
+	}{
+		"happy_path": {
+			photos: 2,
+		},
+	}
+
+	for k, v := range set {
+		k, v := k, v
+		t.Run(k, func(t *testing.T) {
+			// t.Parallel()
+			result, err := db.AllPhotos(context.Background(), types.CID(k))
+			require.Equal(t, v.err, err)
+			require.Equal(t, v.photos, len(result))
+		})
+	}
+}
+
 func Test_GetPhotos(t *testing.T) {
 	t.Parallel()
 
