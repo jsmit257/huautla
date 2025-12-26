@@ -25,13 +25,13 @@ var (
 		{UUID: "id-3", Filename: "photo 3", MTime: wwtbn, CTime: wwtbn, Owner: &types.PhotoOwner{
 			ParentType: "generation",
 			OwnerUUID:  "genowner",
-			ParentUUID: "genuuid3",
+			ParentUUID: uuidptr("genuuid3"),
 			Label:      "sourcestrain->genowner",
 		}},
 		{UUID: "id-4", Filename: "photo 4", MTime: wwtbn, CTime: wwtbn, Owner: &types.PhotoOwner{
 			ParentType: "lifecycle",
 			OwnerUUID:  "lcowner",
-			ParentUUID: "lcuuid4",
+			ParentUUID: uuidptr("lcuuid4"),
 			Label:      "lcname->lcowner",
 		}},
 		{UUID: "id-5", Filename: "photo 5", MTime: wwtbn, CTime: wwtbn, Owner: &types.PhotoOwner{

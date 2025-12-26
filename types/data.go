@@ -102,7 +102,7 @@ type (
 	PhotoOwner struct {
 		ParentType ParentType `json:"parent_type"`
 		OwnerUUID  UUID       `json:"owner_id"`
-		ParentUUID UUID       `json:"parent_id,omitempty"`
+		ParentUUID *UUID      `json:"parent_id,omitempty"`
 		Label      string     `json:"label"`
 	}
 

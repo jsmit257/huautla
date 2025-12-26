@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jsmit257/huautla/types"
 	pq "github.com/lib/pq"
 )
 
@@ -23,6 +24,10 @@ func pqError(code, detail, table, field, constraint string) error {
 
 func pkerr() error {
 	return PKeyError(pqError("23505", "unique/primary key", "table", "field", "constraint"))
+}
+
+func uuidptr(uuid types.UUID) *types.UUID {
+	return &uuid
 }
 
 var wwtbn = time.Now() // time.Soon()
