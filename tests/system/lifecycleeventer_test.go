@@ -78,7 +78,7 @@ func Test_AddLifecycleEvent(t *testing.T) {
 func Test_ChangeLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lc, err := db.SelectLifecycle(context.Background(), "change event", types.CID("Test_ChangeLifecycleEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "lc change event", types.CID("Test_ChangeLifecycleEvent"))
 	require.Nil(t, err)
 
 	set := map[string]struct {
@@ -87,7 +87,7 @@ func Test_ChangeLifecycleEvent(t *testing.T) {
 		err    error
 	}{
 		"happy_path": { // happy path needs to run first, synchronously
-			e:      types.Event{UUID: "change event", EventType: eventtypes[1]},
+			e:      types.Event{UUID: "lc change event", EventType: eventtypes[1]},
 			result: eventtypes[1],
 		},
 		"no_rows_affected": { // dunno how this would happen, but whatever

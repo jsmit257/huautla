@@ -48,10 +48,10 @@ var (
 	}
 )
 
-func Test_SelectByEventType(t *testing.T) {
+func Test_SelectByObservable(t *testing.T) {
 	t.Parallel()
 
-	l := log.WithField("test", "Test_GetLifecycleEvents")
+	l := log.WithField("test", "Test_SelectByObservable")
 
 	tcs := map[string]struct {
 		db     getMockDB
@@ -89,7 +89,56 @@ func Test_SelectByEventType(t *testing.T) {
 				query:        tc.db(sqlmock.New()),
 				generateUUID: mockUUIDGen,
 				logger:       l.WithField("name", name),
-			}).SelectByEventType(context.Background(), types.EventType{}, "Test_SelectAllEventTypes")
+			}).SelectByObservable(context.Background(), "UUID", "Test_SelectByObservable")
+
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.result, result)
+		})
+	}
+}
+
+func Test_SelectByEventType(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "Test_SelectByEventType")
+
+	tcs := map[string]struct {
+		db     getMockDB
+		result []types.Event
+		err    error
+	}{
+		"happy_path": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				newBuilder(mock, eventFields.set(eventValues...))
+				return db
+			},
+			result: []types.Event{
+				types.Event(_events[0]),
+				types.Event(_events[1]),
+				types.Event(_events[2]),
+			},
+		},
+		"query_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectQuery("").WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			result: []types.Event{},
+			err:    fmt.Errorf("some error"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := (&Conn{
+				query:        tc.db(sqlmock.New()),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).SelectByEventType(context.Background(), types.EventType{}, "Test_SelectByEventType")
 
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.result, result)
@@ -142,17 +191,88 @@ func Test_SelectEvent(t *testing.T) {
 	}
 }
 
+func Test_InsertEvent(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "Test_InsertEvent")
+
+	tcs := map[string]struct {
+		db  getMockDB
+		err error
+	}{
+		"happy_path": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				return db
+			},
+		},
+		"insert_event_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("insert_event_fails"))
+				return db
+			},
+			err: fmt.Errorf("insert_event_fails"),
+		},
+		"insert_event_result_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("insert_event_result_fails")))
+				return db
+			},
+			err: fmt.Errorf("insert_event_result_fails"),
+		},
+		"no_update_event": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			err: fmt.Errorf("event was not added"),
+		},
+		"observable_mtime_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
+				return db
+			},
+			err: fmt.Errorf("some error"),
+		},
+		"no_update_observable": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			err: fmt.Errorf("observable was not changed"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			evt, err := (&Conn{
+				query:        tc.db(sqlmock.New()),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).InsertEvent(
+				context.Background(),
+				"UUID",
+				types.Event{},
+				"Test_InsertEvent")
+
+			require.Equal(t, tc.err, err)
+			require.NotEmpty(t, evt.UUID)
+			require.NotEmpty(t, evt.MTime)
+			require.Equal(t, evt.MTime, evt.CTime)
+		})
+	}
+}
+
 func Test_UpdateEvent(t *testing.T) {
 	t.Parallel()
 
 	l := log.WithField("test", "UpdateEvent")
-
-	e0 := types.Event{UUID: "0"}
-
-	modifyevent := func(e types.Event) types.Event {
-		e.Temperature = 100.0
-		return e
-	}
 
 	tcs := map[string]struct {
 		db  getMockDB
@@ -162,33 +282,46 @@ func Test_UpdateEvent(t *testing.T) {
 		"happy_path": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				return db
 			},
-			evt: modifyevent(e0),
 		},
-		"exec_fails": {
+		"update_event_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				mock.ExpectExec("").WillReturnError(fmt.Errorf("some error"))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("update_event_fails"))
 				return db
 			},
-			evt: modifyevent(e0),
-			err: fmt.Errorf("some error"),
+			err: fmt.Errorf("update_event_fails"),
 		},
-		"result_fails": {
+		"update_event_result_fails": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("some error")))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("update_event_result_fails")))
 				return db
 			},
-			evt: modifyevent(e0),
-			err: fmt.Errorf("some error"),
+			err: fmt.Errorf("update_event_result_fails"),
 		},
-		"no_rows_affected": {
+		"no_events_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
-			evt: modifyevent(e0),
 			err: fmt.Errorf("event was not changed"),
+		},
+		"update_observable_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("update_observable_fails"))
+				return db
+			},
+			err: fmt.Errorf("update_observable_fails"),
+		},
+		"no_observables_affected": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			err: fmt.Errorf("observable was not changed"),
 		},
 	}
 
@@ -204,13 +337,98 @@ func Test_UpdateEvent(t *testing.T) {
 				logger:       l.WithField("name", name),
 			}).UpdateEvent(
 				context.Background(),
-				tc.evt,
+				"UUID",
+				types.Event{},
 				"Test_UpdateEvent")
 
 			require.Equal(t, tc.err, err)
 		})
 	}
 }
+
+func Test_DeleteEvent(t *testing.T) {
+	t.Parallel()
+
+	l := log.WithField("test", "Test_DeleteEvent")
+
+	tcs := map[string]struct {
+		db  getMockDB
+		err error
+	}{
+		"happy_path": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				return db
+			},
+		},
+		"delete_event_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("delete_event_fails"))
+				return db
+			},
+			err: fmt.Errorf("delete_event_fails"),
+		},
+		"delete_event_result_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("delete_event_result_fails")))
+				return db
+			},
+			err: fmt.Errorf("delete_event_result_fails"),
+		},
+		"no_events_affected": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			err: fmt.Errorf("event could not be removed"),
+		},
+		"update_modifiable_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnError(fmt.Errorf("update_modifiable_fails"))
+				return db
+			},
+			err: fmt.Errorf("update_modifiable_fails"),
+		},
+		"update_observable_result_fails": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf("delete_event_result_fails")))
+				return db
+			},
+			err: fmt.Errorf("delete_event_result_fails"),
+		},
+		"no_observables_affected": {
+			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
+				return db
+			},
+			err: fmt.Errorf("observable was not changed"),
+		},
+	}
+
+	for name, tc := range tcs {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := (&Conn{
+				query:        tc.db(sqlmock.New()),
+				generateUUID: mockUUIDGen,
+				logger:       l.WithField("name", name),
+			}).DeleteEvent(
+				context.Background(),
+				"observable",
+				"event",
+				"Test_DeleteEvent")
+
+			require.Equal(t, tc.err, err)
+		})
+	}
+}
+
 func Test_notesAndPhotos(t *testing.T) {
 	t.Parallel()
 

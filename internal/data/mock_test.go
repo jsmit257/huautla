@@ -79,6 +79,18 @@ func (r row) mock(mock sqlmock.Sqlmock, rows ...[]driver.Value) {
 	mock.ExpectQuery("").WillReturnRows(sqlmock.NewRows(r).AddRows(rows...))
 }
 
+// need to call rows.Err() to get the actual error
+func (r row) mockRowErr(mock sqlmock.Sqlmock, rows ...[]driver.Value) {
+	mock.ExpectQuery("").WillReturnRows(sqlmock.NewRows(r).AddRows(rows...).RowError(0, r.err()))
+}
+
+// works, but catching the error parameterised with column index and name correctly
+// is tricky, so currently unused
+func (r row) mockScanErr(mock sqlmock.Sqlmock, rows ...[]driver.Value) {
+	rows[0][0] = nil
+	mock.ExpectQuery("").WillReturnRows(sqlmock.NewRows(r).AddRows(rows...).RowError(1, r.err()))
+}
+
 func (r row) set(rows ...[]driver.Value) func(*mocker) *mocker {
 	return func(mock *mocker) *mocker {
 		mock.ExpectQuery("").WillReturnRows(sqlmock.NewRows(r).AddRows(rows...))

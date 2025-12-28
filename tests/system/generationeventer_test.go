@@ -99,7 +99,7 @@ func Test_AddGenerationEvent(t *testing.T) {
 func Test_ChangeGenerationEvent(t *testing.T) {
 	t.Parallel()
 
-	g, err := db.SelectGeneration(context.Background(), "change event", types.CID("Test_ChangeGenerationEvent"))
+	g, err := db.SelectGeneration(context.Background(), "gen change event", types.CID("Test_ChangeGenerationEvent"))
 	require.Nil(t, err)
 
 	set := map[string]struct {
@@ -108,7 +108,7 @@ func Test_ChangeGenerationEvent(t *testing.T) {
 		err    error
 	}{
 		"happy_path": { // happy path needs to run first, synchronously
-			e:      types.Event{UUID: "change event", EventType: eventtypes[1]},
+			e:      types.Event{UUID: "gen change event", EventType: eventtypes[1]},
 			result: eventtypes[1],
 		},
 		"no_rows_affected": { // dunno how this would happen, but whatever

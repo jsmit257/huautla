@@ -70,22 +70,22 @@ var psqls = sqlMap{
        order
           by  e.uuid, n.mtime, p.mtime, pn.mtime`,
 		"select": `
-    select e.uuid,
-           e.temperature,
-           e.humidity,
-           e.mtime,
-           e.ctime,
-           et.uuid as eventtype_uuid,
-           et.name as eventtype_name,
-           et.severity as eventtype_severity,
-           s.uuid as stage_uuid,
-           s.name as stage_name
-      from events e
-      join event_types et
-        on e.eventtype_uuid = et.uuid
-      join stages s
-        on et.stage_uuid = s.uuid
-     where e.uuid = $1`,
+      select e.uuid,
+            e.temperature,
+            e.humidity,
+            e.mtime,
+            e.ctime,
+            et.uuid as eventtype_uuid,
+            et.name as eventtype_name,
+            et.severity as eventtype_severity,
+            s.uuid as stage_uuid,
+            s.name as stage_name
+        from events e
+        join event_types et
+          on e.eventtype_uuid = et.uuid
+        join stages s
+          on et.stage_uuid = s.uuid
+      where e.uuid = $1`,
 		"add": `
       insert
         into  events(uuid, temperature, humidity, mtime, ctime, observable_uuid, eventtype_uuid)
@@ -102,6 +102,10 @@ var psqls = sqlMap{
        where  e.uuid = $4
          and  et.uuid = $5`,
 		"remove": `delete from events where uuid = $1`,
+		"observable-mtime": `
+      update  observables
+         set  mtime = $1
+       where  uuid = $2`,
 	},
 
 	"eventtype": {

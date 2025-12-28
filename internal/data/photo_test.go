@@ -95,6 +95,17 @@ func Test_AllPhotos(t *testing.T) {
 				types.Photo(_photos[5]),
 			},
 		},
+		// "scan_fails": {
+		// 	db: func() *sql.DB {
+		// 		db, mock, _ := sqlmock.New()
+		// 		allPhotoFields.mockScanErr(mock, allPhotoValues...)
+		// 		return db
+		// 	},
+		// 	result: []types.Photo{},
+		// 	// while err.Error() may equal the returned error, the actual errors are
+		// 	// different; requires reworking how errors are tested
+		// 	err:    fmt.Errorf("sql: Scan error on column index 0, name \"id\": converting NULL to string is unsupported"),
+		// },
 		"db_error": {
 			db: func() *sql.DB {
 				db, mock, _ := sqlmock.New()
