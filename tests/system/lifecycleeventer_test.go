@@ -45,7 +45,7 @@ func Test_GetLifecycleEvents(t *testing.T) {
 func Test_AddLifecycleEvent(t *testing.T) {
 	t.Parallel()
 
-	lc, err := db.SelectLifecycle(context.Background(), "add event", types.CID("Test_AddLifecycleEvent"))
+	lc, err := db.SelectLifecycle(context.Background(), "add lc event", types.CID("Test_AddLifecycleEvent"))
 	require.Nil(t, err)
 
 	set := map[string]struct {

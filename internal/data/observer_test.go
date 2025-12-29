@@ -302,6 +302,7 @@ func Test_UpdateEvent(t *testing.T) {
 		},
 		"no_events_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -317,7 +318,6 @@ func Test_UpdateEvent(t *testing.T) {
 		},
 		"no_observables_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -378,6 +378,7 @@ func Test_DeleteEvent(t *testing.T) {
 		},
 		"no_events_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
+				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},
@@ -401,7 +402,6 @@ func Test_DeleteEvent(t *testing.T) {
 		},
 		"no_observables_affected": {
 			db: func(db *sql.DB, mock sqlmock.Sqlmock, err error) *sql.DB {
-				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 1))
 				mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(0, 0))
 				return db
 			},

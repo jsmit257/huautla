@@ -20,4 +20,4 @@ files=(
   ./tests/system/photoer_test.go
 )
 
-go test -v "${files[@]}"
+go test "${files[@]}"

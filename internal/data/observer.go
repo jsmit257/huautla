@@ -139,7 +139,8 @@ func (db *Conn) InsertEvent(ctx context.Context, oID types.UUID, e types.Event, 
 		return e, fmt.Errorf("event was not added")
 	}
 
-	err = db.UpdateObservableMtime(ctx, oID, e.MTime, cid)
+	err = db.UpdateObservableMtime(ctx, oID, e.UUID, e.MTime, cid)
+
 	return e, err
 }
 
@@ -153,7 +154,9 @@ func (db *Conn) UpdateEvent(ctx context.Context, oID types.UUID, e types.Event, 
 
 	e.MTime = time.Now().UTC()
 
-	if result, err = db.ExecContext(ctx, psqls["event"]["change"],
+	if err = db.UpdateObservableMtime(ctx, oID, e.UUID, e.MTime, cid); err != nil {
+		return e, err
+	} else if result, err = db.ExecContext(ctx, psqls["event"]["change"],
 		e.Temperature,
 		e.Humidity,
 		e.MTime,
@@ -167,20 +170,20 @@ func (db *Conn) UpdateEvent(ctx context.Context, oID types.UUID, e types.Event, 
 		return e, fmt.Errorf("event was not changed")
 	}
 
-	err = db.UpdateObservableMtime(ctx, oID, e.MTime, cid)
-
 	return e, err
 }
 
-func (db *Conn) DeleteEvent(ctx context.Context, oID types.UUID, id types.UUID, cid types.CID) error {
+func (db *Conn) DeleteEvent(ctx context.Context, oID types.UUID, evID types.UUID, cid types.CID) error {
 	var err error
 	var result sql.Result
 	var rows int64
 
-	deferred, l := initAccessFuncs("DeleteEvent", db.logger, id, cid)
+	deferred, l := initAccessFuncs("DeleteEvent", db.logger, evID, cid)
 	defer deferred(&err, l)
 
-	if result, err = db.ExecContext(ctx, psqls["event"]["remove"], id); err != nil {
+	if err = db.UpdateObservableMtime(ctx, oID, evID, time.Now().UTC(), cid); err != nil {
+		return err
+	} else if result, err = db.ExecContext(ctx, psqls["event"]["remove"], evID); err != nil {
 		return err
 	} else if rows, err = result.RowsAffected(); err != nil {
 		return err
@@ -188,20 +191,18 @@ func (db *Conn) DeleteEvent(ctx context.Context, oID types.UUID, id types.UUID, 
 		return fmt.Errorf("event could not be removed")
 	}
 
-	err = db.UpdateObservableMtime(ctx, oID, time.Now().UTC(), cid)
-
 	return err
 }
 
-func (db *Conn) UpdateObservableMtime(ctx context.Context, id types.UUID, mtime time.Time, cid types.CID) error {
+func (db *Conn) UpdateObservableMtime(ctx context.Context, oID types.UUID, evID types.UUID, mtime time.Time, cid types.CID) error {
 	var err error
 	var result sql.Result
 	var rows int64
 
-	deferred, l := initAccessFuncs("UpdateObservableMtime", db.logger, id, cid)
+	deferred, l := initAccessFuncs("UpdateObservableMtime", db.logger, oID, cid)
 	defer deferred(&err, l)
 
-	if result, err = db.ExecContext(ctx, psqls["event"]["observable-mtime"], mtime, id); err != nil {
+	if result, err = db.ExecContext(ctx, psqls["event"]["observable-mtime"], mtime, oID, evID); err != nil {
 		return err
 	} else if rows, err = result.RowsAffected(); err != nil {
 		return err

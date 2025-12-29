@@ -89,9 +89,11 @@ var psqls = sqlMap{
 		"add": `
       insert
         into  events(uuid, temperature, humidity, mtime, ctime, observable_uuid, eventtype_uuid)
-      select  $1, $2, $3, $4, $5, $6, et.uuid
-        from  event_types et
-      where  et.uuid = $7`,
+      select  $1, $2, $3, $4, $5, o.uuid, et.uuid
+        from  observables o
+             ,event_types et
+       where  o.uuid = $6
+         and  et.uuid = $7`,
 		"change": `
       update  events e
          set  temperature = $1,
@@ -103,9 +105,12 @@ var psqls = sqlMap{
          and  et.uuid = $5`,
 		"remove": `delete from events where uuid = $1`,
 		"observable-mtime": `
-      update  observables
+      update  observables o
          set  mtime = $1
-       where  uuid = $2`,
+        from  events ev
+       where  o.uuid = ev.observable_uuid
+         and  o.uuid = $2
+         and  ev.uuid = $3`,
 	},
 
 	"eventtype": {
